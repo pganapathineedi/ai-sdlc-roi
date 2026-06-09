@@ -17,10 +17,10 @@ p{line-height:1.6;color:#555}
 .metric .lbl{font-size:11px;color:#888;margin-bottom:4px}
 .metric .val{font-size:19px;font-weight:600}
 .metric .sub{font-size:10px;color:#aaa;margin-top:2px}
-.highlight{background:#EAF3DE;border:1px solid #c0dd97;border-radius:10px;padding:12px}
-.highlight .lbl{font-size:11px;color:#3B6D11;margin-bottom:4px}
-.highlight .val{font-size:19px;font-weight:600;color:#3B6D11}
-.highlight .sub{font-size:10px;color:#5a9020;margin-top:2px}
+.ok{background:#EAF3DE;border:1px solid #c0dd97;border-radius:10px;padding:12px}
+.ok .lbl{font-size:11px;color:#3B6D11;margin-bottom:4px}
+.ok .val{font-size:19px;font-weight:600;color:#3B6D11}
+.ok .sub{font-size:10px;color:#5a9020;margin-top:2px}
 .warn{background:#FAEEDA;border:1px solid #f5c47a;border-radius:10px;padding:12px}
 .warn .lbl{font-size:11px;color:#854F0B;margin-bottom:4px}
 .warn .val{font-size:19px;font-weight:600;color:#854F0B}
@@ -28,15 +28,14 @@ p{line-height:1.6;color:#555}
 .card{background:#fff;border:1px solid #e0ddd6;border-radius:10px;padding:14px;margin-bottom:12px}
 table{width:100%;border-collapse:collapse;font-size:12px}
 th{text-align:left;padding:7px 8px;font-weight:600;font-size:11px;color:#888;border-bottom:1px solid #e8e6e0;background:#faf9f6}
-td{padding:7px 8px;border-bottom:1px solid #f0ede8;vertical-align:top}
+td{padding:7px 8px;border-bottom:1px solid #f0ede8;vertical-align:middle}
 tr:last-child td{border-bottom:none}
 tr:hover td{background:#faf9f6}
 .badge{display:inline-block;font-size:10px;padding:2px 7px;border-radius:6px;font-weight:600}
-.b-green{background:#EAF3DE;color:#3B6D11}
-.b-blue{background:#E6F1FB;color:#185FA5}
-.b-amber{background:#FAEEDA;color:#854F0B}
-.b-gray{background:#F1EFE8;color:#5F5E5A}
-.b-purple{background:#EEEDFE;color:#3C3489}
+.bg{background:#EAF3DE;color:#3B6D11}
+.bb{background:#E6F1FB;color:#185FA5}
+.ba{background:#FAEEDA;color:#854F0B}
+.bx{background:#F1EFE8;color:#5F5E5A}
 .mgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:10px;margin-bottom:12px}
 .mcard{background:#fff;border:1px solid #e0ddd6;border-radius:10px;padding:12px;font-size:12px}
 .mcard.rec{border:2px solid #185FA5}
@@ -44,393 +43,338 @@ tr:hover td{background:#faf9f6}
 .bar{background:#f0ede8;border-radius:4px;height:5px;margin:4px 0 6px}
 .fill{height:100%;border-radius:4px}
 .tcol{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-@media(max-width:500px){.tcol{grid-template-columns:1fr}}
 .tag{display:inline-block;font-size:10px;padding:2px 6px;border-radius:5px;background:#f0ede8;color:#555;margin:2px 2px 0 0}
 .note{font-size:11px;color:#888;margin-bottom:10px;line-height:1.6}
 .chart-wrap{position:relative;width:100%;height:250px;margin:10px 0}
 .legend{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:6px;font-size:11px;color:#666}
 .legend span{display:flex;align-items:center;gap:4px}
 .lsq{width:9px;height:9px;border-radius:2px;display:inline-block}
-.slider-row{display:flex;align-items:center;gap:10px;margin-bottom:12px}
-.slider-row label{font-size:12px;color:#555;min-width:170px}
-.slider-row input[type=range]{flex:1}
-.slider-row .readout{font-size:13px;font-weight:600;min-width:64px;text-align:right}
-.formula-box{background:#faf9f6;border:1px solid #e0ddd6;border-radius:8px;padding:12px;font-size:12px;color:#555;line-height:1.9;margin-bottom:12px}
-.formula-box code{background:#f0ede8;padding:1px 5px;border-radius:4px;font-family:monospace;font-size:11px}
+.srow{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.srow label{font-size:12px;color:#555;min-width:170px}
+.srow .rout{font-size:13px;font-weight:600;min-width:64px;text-align:right}
+.fbox{background:#faf9f6;border:1px solid #e0ddd6;border-radius:8px;padding:12px;font-size:12px;color:#555;line-height:1.9;margin-bottom:12px}
+.fbox code{background:#f0ede8;padding:1px 5px;border-radius:4px;font-family:monospace;font-size:11px}
 .src{font-size:10px;color:#aaa;font-style:italic}
-.section-divider{font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:.5px;margin:16px 0 8px;padding-bottom:4px;border-bottom:1px solid #e8e6e0}
-.cost-band{display:flex;gap:8px;margin-bottom:12px}
-.cost-pill{flex:1;text-align:center;border-radius:8px;padding:10px 6px;font-size:12px}
+.sdiv{font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:.5px;margin:16px 0 8px;padding-bottom:4px;border-bottom:1px solid #e8e6e0}
+.ei{width:72px;border:1px solid #d0cdc6;border-radius:6px;padding:3px 6px;font-size:12px;text-align:right;background:#fff;color:#1a1a1a}
+.eiw{width:160px;text-align:left}
+.cfield{background:#fff;border:1px solid #e0ddd6;border-radius:8px;padding:10px 12px}
+.cfield label{display:block;font-size:11px;color:#888;margin-bottom:5px}
+.cfield input,.cfield select{width:100%;border:1px solid #d0cdc6;border-radius:6px;padding:5px 8px;font-size:13px;color:#1a1a1a;background:#fff}
+.cgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:4px}
+.rbtn{background:transparent;border:1px solid #d0cdc6;border-radius:6px;padding:5px 12px;font-size:11px;color:#888;cursor:pointer;float:right;margin-top:-2px}
+.abtn{background:#1a1a1a;color:#fff;border:none;border-radius:8px;padding:9px 20px;font-size:13px;cursor:pointer;margin-top:4px}
+.chg{border-color:#185FA5 !important;background:#f0f7ff !important}
+.ebtn{background:transparent;border:1px solid #d0cdc6;border-radius:8px;padding:9px 16px;font-size:13px;cursor:pointer;color:#555}
+.xbtn{font-size:11px;background:#f0ede8;border:1px solid #e0ddd6;border-radius:6px;padding:4px 10px;cursor:pointer;color:#555}
 select{background:#fff;border:1px solid #d0cdc6;border-radius:6px;padding:4px 8px;font-size:12px;color:#1a1a1a;cursor:pointer}
+@keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
 
-<h1>AI in SDLC — ROI business case</h1>
-<p style="font-size:12px;color:#888;margin-top:4px">Full cost model including tokens, licences &amp; infrastructure · Salesforce-aware · Adjustable</p>
-
-<div class="nav">
-  <button class="active" onclick="showTab('exec',this)">Executive summary</button>
-  <button onclick="showTab('phases',this)">SDLC phases</button>
-  <button onclick="showTab('models',this)">Crawl / Walk / Run / Fly</button>
-  <button onclick="showTab('costmodel',this)">💰 Cost model</button>
-  <button onclick="showTab('costs',this)">Investment vs savings</button>
-  <button onclick="showTab('csm',this)">Current → target state</button>
-  <button onclick="showTab('workings',this)">📐 Workings</button>
-  <button onclick="showTab('assumptions',this)">Assumptions</button>
+<div id="gate" style="position:fixed;inset:0;background:#f8f7f4;display:flex;align-items:center;justify-content:center;z-index:9999">
+  <div style="background:#fff;border:1px solid #e0ddd6;border-radius:14px;padding:32px;width:320px;text-align:center">
+    <div style="font-size:28px;margin-bottom:12px">&#128274;</div>
+    <h3 style="margin-bottom:6px">Access required</h3>
+    <p style="font-size:12px;color:#888;margin-bottom:20px">Enter the passphrase to view this document</p>
+    <input id="pw-input" type="password" placeholder="Enter passphrase" style="width:100%;padding:10px 12px;border:1px solid #d0cdc6;border-radius:8px;font-size:14px;margin-bottom:10px;outline:none">
+    <div id="pw-err" style="font-size:12px;color:#a32d2d;margin-bottom:8px;display:none">Incorrect passphrase. Try again.</div>
+    <button id="pw-btn" style="width:100%;padding:10px;background:#1a1a1a;color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer">Unlock</button>
+  </div>
 </div>
 
-<!-- EXEC SUMMARY -->
+<h1>AI in SDLC &mdash; ROI business case</h1>
+<p style="font-size:12px;color:#888;margin-top:4px">Full cost model &middot; Fully configurable &middot; Use case estimator</p>
+
+<div class="nav">
+  <button id="nav-exec" class="active">Executive summary</button>
+  <button id="nav-phases">SDLC phases</button>
+  <button id="nav-models">Crawl / Walk / Run / Fly</button>
+  <button id="nav-costmodel">Cost model</button>
+  <button id="nav-costs">Investment vs savings</button>
+  <button id="nav-csm">Current to target</button>
+  <button id="nav-workings">Workings</button>
+  <button id="nav-config">Configure</button>
+  <button id="nav-usecase">Use case estimator</button>
+</div>
+
 <div id="tab-exec" class="tab active">
   <div class="metrics">
     <div class="metric"><div class="lbl">Avg effort reduction</div><div class="val" style="color:#185FA5" id="ex-eff">32%</div><div class="sub">Across all SDLC phases</div></div>
-    <div class="metric"><div class="lbl">Annual FTE savings</div><div class="val" style="color:#3B6D11" id="ex-fte">3.5 FTE</div><div class="sub">On baseline team</div></div>
+    <div class="metric"><div class="lbl">FTE savings</div><div class="val" style="color:#3B6D11" id="ex-fte">3.5 FTE</div><div class="sub">On baseline team</div></div>
     <div class="metric"><div class="lbl">Gross annual saving</div><div class="val" style="color:#3B6D11" id="ex-save">$420k</div><div class="sub">Run model</div></div>
-    <div class="metric"><div class="lbl">Total AI cost (Run)</div><div class="val" style="color:#854F0B" id="ex-cost">$148k</div><div class="sub">All-in annual</div></div>
+    <div class="metric"><div class="lbl">Total AI cost</div><div class="val" style="color:#854F0B" id="ex-cost">$148k</div><div class="sub">All-in annual</div></div>
     <div class="metric"><div class="lbl">Net annual benefit</div><div class="val" style="color:#3B6D11" id="ex-net">$272k</div><div class="sub">After all AI costs</div></div>
-    <div class="metric"><div class="lbl">Payback period</div><div class="val" style="color:#854F0B" id="ex-pay">14 mo</div><div class="sub">Walk → Run</div></div>
+    <div class="metric"><div class="lbl">Payback period</div><div class="val" style="color:#854F0B" id="ex-pay">14 mo</div><div class="sub">One-off cost recovery</div></div>
   </div>
-  <div class="card">
-    <h3>The opportunity</h3>
-    <p>Traditional SDLC is labour-intensive and slow to adapt. This model quantifies AI savings <b>and</b> the true all-in cost — tokens, SaaS licences, Salesforce add-ons, infrastructure, and training — so the net benefit is fully defensible. Use the <b>💰 Cost model</b> and <b>📐 Workings</b> tabs to tailor every input to your client.</p>
-  </div>
+  <div class="card"><h3>The opportunity</h3><p>Traditional SDLC is labour-intensive and slow to adapt. This model quantifies AI savings and the true all-in cost. Use the Configure tab to tailor every assumption without touching code.</p></div>
   <div class="tcol">
-    <div class="card">
-      <h3>Where AI wins most</h3>
-      <div style="line-height:2;font-size:12px;color:#555">
-        <div>🏆 Development — up to <b>45%</b> effort reduction</div>
-        <div>🏆 Testing / QA — up to <b>40%</b> effort reduction</div>
-        <div>🏆 Documentation — up to <b>50%</b> effort reduction</div>
-        <div>📊 Requirements — up to <b>25%</b> effort reduction</div>
-        <div>📊 Monitoring — up to <b>25%</b> effort reduction</div>
-      </div>
-    </div>
-    <div class="card">
-      <h3>Key cost risks</h3>
-      <div style="line-height:2;font-size:12px;color:#555">
-        <div>⚠️ Token costs scale with usage — monitor closely</div>
-        <div>⚠️ Agentforce priced per conversation, not per seat</div>
-        <div>⚠️ SF licence bundles can obscure true AI add-on cost</div>
-        <div>⚠️ Self-hosted GPU compute has high fixed cost</div>
-        <div>⚠️ Training costs recur as team turns over</div>
-      </div>
-    </div>
+    <div class="card"><h3>Where AI wins most</h3><div id="exec-wins" style="line-height:2;font-size:12px;color:#555"></div></div>
+    <div class="card"><h3>Key cost risks</h3><div style="line-height:2;font-size:12px;color:#555">
+      <div>Token costs scale with usage</div><div>Agentforce priced per conversation</div>
+      <div>SF licence bundles can obscure AI costs</div><div>Self-hosted GPU has high fixed cost</div>
+      <div>Training costs recur as team turns over</div>
+    </div></div>
   </div>
 </div>
 
-<!-- SDLC PHASES -->
 <div id="tab-phases" class="tab">
-  <p class="note">Savings shown at selected maturity level. Adjust in Workings tab.</p>
-  <div class="card" style="overflow-x:auto">
-    <table>
-      <thead><tr><th>Phase</th><th>% effort</th><th>AI saving</th><th>FTE saved</th><th>Annual $</th><th>Time gain</th><th>Key AI tools</th></tr></thead>
-      <tbody id="phase-tbody"></tbody>
-    </table>
-  </div>
+  <p class="note">Savings shown at selected maturity level.</p>
+  <div class="card" style="overflow-x:auto"><table><thead><tr><th>Phase</th><th>% effort</th><th>AI saving</th><th>FTE saved</th><th>Annual $</th><th>Time gain</th><th>Key AI tools</th></tr></thead><tbody id="phase-tbody"></tbody></table></div>
   <div class="card">
     <h3 style="margin-bottom:10px">Effort reduction by phase</h3>
-    <div class="legend">
-      <span><span class="lsq" style="background:#378ADD"></span>% of project effort</span>
-      <span><span class="lsq" style="background:#1D9E75"></span>AI effort reduction %</span>
-    </div>
-    <div class="chart-wrap"><canvas id="phaseChart" role="img" aria-label="Bar chart AI effort reduction by phase">Phase chart</canvas></div>
+    <div class="legend"><span><span class="lsq" style="background:#378ADD"></span>% of project effort</span><span><span class="lsq" style="background:#1D9E75"></span>AI effort reduction %</span></div>
+    <div class="chart-wrap"><canvas id="phaseChart" role="img" aria-label="Phase chart">Phase chart</canvas></div>
   </div>
 </div>
 
-<!-- MODELS -->
 <div id="tab-models" class="tab">
-  <p class="note">Four maturity options. Net benefit now reflects full AI cost model.</p>
+  <p class="note">Net benefit reflects full AI cost model.</p>
   <div class="mgrid" id="model-cards"></div>
-  <div class="card" style="overflow-x:auto">
-    <h3 style="margin-bottom:10px">Transition costs between levels</h3>
-    <table>
-      <thead><tr><th>Transition</th><th>Tooling / licences</th><th>Training</th><th>Implementation</th><th>Total one-off</th><th>Payback</th></tr></thead>
-      <tbody id="trans-tbody"></tbody>
-    </table>
+  <div class="card" style="overflow-x:auto"><h3 style="margin-bottom:10px">Transition costs</h3>
+    <table><thead><tr><th>Transition</th><th>Tooling</th><th>Training</th><th>Implementation</th><th>Total one-off</th><th>Payback</th></tr></thead><tbody id="trans-tbody"></tbody></table>
   </div>
 </div>
 
-<!-- COST MODEL TAB -->
 <div id="tab-costmodel" class="tab">
-  <p class="note">Model the true all-in AI cost across tokens, SaaS licences, Salesforce add-ons, infrastructure, and training. All figures feed into the net benefit calculation.</p>
-
-  <!-- TOKEN COSTS -->
-  <div class="section-divider">1 · API / token costs by SDLC phase</div>
+  <p class="note">True all-in AI cost. Edit values in Configure tab.</p>
+  <div class="sdiv">1 - API / token costs by phase</div>
   <div class="card">
-    <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:14px">
-      <div style="font-size:12px;color:#555">Primary LLM model:</div>
-      <select id="llm-model" onchange="recalc()">
-        <option value="sonnet">Claude Sonnet 4 ($3/$15 per 1M tokens)</option>
-        <option value="gpt4o">GPT-4o ($5/$15 per 1M tokens)</option>
-        <option value="haiku">Claude Haiku ($0.80/$4 per 1M tokens)</option>
-        <option value="gpt4mini">GPT-4o mini ($0.15/$0.60 per 1M tokens)</option>
-        <option value="opus">Claude Opus ($15/$75 per 1M tokens)</option>
-      </select>
-      <div style="font-size:11px;color:#aaa">Cheaper models used for simpler tasks per phase</div>
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap">
+      <div style="font-size:12px;color:#555">Primary LLM:</div>
+      <select id="llm-model"><option value="sonnet">Claude Sonnet ($3/$15 per 1M)</option><option value="gpt4o">GPT-4o ($5/$15 per 1M)</option><option value="haiku">Claude Haiku ($0.80/$4 per 1M)</option><option value="gpt4mini">GPT-4o mini ($0.15/$0.60 per 1M)</option><option value="opus">Claude Opus ($15/$75 per 1M)</option></select>
     </div>
-    <div style="overflow-x:auto">
-    <table>
-      <thead><tr><th>Phase</th><th>Primary task</th><th>Model used</th><th>Avg tokens/task</th><th>Tasks/dev/day</th><th>Cost/dev/day</th><th>Monthly (team)</th><th>Annual (team)</th></tr></thead>
-      <tbody id="token-tbody"></tbody>
-    </table>
-    </div>
+    <div style="overflow-x:auto"><table><thead><tr><th>Phase</th><th>Task</th><th>Model tier</th><th>Tokens in/out</th><th>Tasks/dev/day</th><th>Cost/dev/day</th><th>Monthly</th><th>Annual</th></tr></thead><tbody id="token-tbody"></tbody></table></div>
     <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap">
-      <div class="warn" style="flex:1;min-width:120px"><div class="lbl">Monthly token cost</div><div class="val" id="tok-month">$0</div><div class="sub">Whole team</div></div>
-      <div class="warn" style="flex:1;min-width:120px"><div class="lbl">Annual token cost</div><div class="val" id="tok-year">$0</div><div class="sub">Whole team</div></div>
+      <div class="warn" style="flex:1;min-width:120px"><div class="lbl">Monthly token cost</div><div class="val" id="tok-month">$0</div></div>
+      <div class="warn" style="flex:1;min-width:120px"><div class="lbl">Annual token cost</div><div class="val" id="tok-year">$0</div></div>
     </div>
   </div>
-
-  <!-- SAAS LICENCES -->
-  <div class="section-divider">2 · SaaS licence costs</div>
-  <div class="card">
-    <div style="overflow-x:auto">
-    <table>
-      <thead><tr><th>Tool</th><th>Tier</th><th>Per seat/mo</th><th>Seats</th><th>Monthly</th><th>Annual</th><th>Crawl</th><th>Walk</th><th>Run</th><th>Fly</th></tr></thead>
-      <tbody id="saas-tbody"></tbody>
-    </table>
-    </div>
+  <div class="sdiv">2 - SaaS licence costs</div>
+  <div class="card"><div style="overflow-x:auto"><table><thead><tr><th>Tool</th><th>Per seat/mo</th><th>Seats</th><th>Monthly</th><th>Annual</th><th>Crawl</th><th>Walk</th><th>Run</th><th>Fly</th></tr></thead><tbody id="saas-tbody"></tbody></table></div>
     <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap">
-      <div class="warn" style="flex:1;min-width:120px"><div class="lbl">Monthly SaaS cost</div><div class="val" id="saas-month">$0</div><div class="sub">Active licences</div></div>
-      <div class="warn" style="flex:1;min-width:120px"><div class="lbl">Annual SaaS cost</div><div class="val" id="saas-year">$0</div><div class="sub">Active licences</div></div>
+      <div class="warn" style="flex:1;min-width:120px"><div class="lbl">Monthly SaaS cost</div><div class="val" id="saas-month">$0</div></div>
+      <div class="warn" style="flex:1;min-width:120px"><div class="lbl">Annual SaaS cost</div><div class="val" id="saas-year">$0</div></div>
     </div>
   </div>
-
-  <!-- SALESFORCE ADD-ONS -->
-  <div class="section-divider">3 · Salesforce add-on licence costs</div>
-  <div class="card">
-    <div style="overflow-x:auto">
-    <table>
-      <thead><tr><th>SF Add-on</th><th>Pricing model</th><th>Unit cost</th><th>Est. monthly usage</th><th>Monthly $</th><th>Annual $</th><th>Notes</th></tr></thead>
-      <tbody id="sf-tbody"></tbody>
-    </table>
-    </div>
+  <div class="sdiv">3 - Salesforce add-on costs</div>
+  <div class="card"><div style="overflow-x:auto"><table><thead><tr><th>SF Add-on</th><th>Pricing model</th><th>Unit cost</th><th>Monthly usage</th><th>Monthly $</th><th>Annual $</th><th>Notes</th></tr></thead><tbody id="sf-tbody"></tbody></table></div>
     <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap">
-      <div class="warn" style="flex:1;min-width:120px"><div class="lbl">Monthly SF AI cost</div><div class="val" id="sf-month">$0</div><div class="sub">Add-ons only</div></div>
-      <div class="warn" style="flex:1;min-width:120px"><div class="lbl">Annual SF AI cost</div><div class="val" id="sf-year">$0</div><div class="sub">Add-ons only</div></div>
+      <div class="warn" style="flex:1;min-width:120px"><div class="lbl">Monthly SF cost</div><div class="val" id="sf-month">$0</div></div>
+      <div class="warn" style="flex:1;min-width:120px"><div class="lbl">Annual SF cost</div><div class="val" id="sf-year">$0</div></div>
     </div>
   </div>
-
-  <!-- INFRASTRUCTURE -->
-  <div class="section-divider">4 · Infrastructure / compute</div>
-  <div class="card">
-    <p class="note">Only relevant if the client is considering self-hosted or private-cloud LLMs (e.g. Llama 3, Mistral on AWS/Azure). Otherwise set to $0.</p>
-    <div style="overflow-x:auto">
-    <table>
-      <thead><tr><th>Component</th><th>Option</th><th>Monthly cost</th><th>Annual cost</th><th>Notes</th></tr></thead>
-      <tbody>
-        <tr><td>GPU compute (self-hosted LLM)</td><td><select id="gpu-opt" onchange="recalc()"><option value="0">Not applicable (SaaS only)</option><option value="2000">AWS p3.2xlarge (~$2k/mo)</option><option value="5000">AWS p3.8xlarge (~$5k/mo)</option><option value="10000">On-prem A100 cluster (~$10k/mo)</option></select></td><td id="gpu-month">$0</td><td id="gpu-year">$0</td><td class="src">Required if self-hosting Llama/Mistral etc.</td></tr>
-        <tr><td>Vector DB / embeddings store</td><td><select id="vdb-opt" onchange="recalc()"><option value="0">Not needed</option><option value="200">Pinecone Starter (~$200/mo)</option><option value="700">Pinecone Standard (~$700/mo)</option><option value="1500">Weaviate Cloud (~$1.5k/mo)</option></select></td><td id="vdb-month">$0</td><td id="vdb-year">$0</td><td class="src">For RAG / codebase search</td></tr>
-        <tr><td>MLOps / model monitoring</td><td><select id="mlops-opt" onchange="recalc()"><option value="0">Not needed</option><option value="300">Basic (Weights &amp; Biases ~$300/mo)</option><option value="1000">Enterprise (~$1k/mo)</option></select></td><td id="mlops-month">$0</td><td id="mlops-year">$0</td><td class="src">For fine-tuning or custom model tracking</td></tr>
-      </tbody>
-    </table>
-    </div>
+  <div class="sdiv">4 - Infrastructure / compute</div>
+  <div class="card"><div style="overflow-x:auto"><table><thead><tr><th>Component</th><th>Option</th><th>Monthly</th><th>Annual</th></tr></thead>
+    <tbody>
+      <tr><td>GPU compute</td><td><select id="gpu-opt"><option value="0">Not applicable</option><option value="2000">AWS p3.2xlarge ~$2k/mo</option><option value="5000">AWS p3.8xlarge ~$5k/mo</option><option value="10000">On-prem A100 ~$10k/mo</option></select></td><td id="gpu-month">$0</td><td id="gpu-year">$0</td></tr>
+      <tr><td>Vector DB</td><td><select id="vdb-opt"><option value="0">Not needed</option><option value="200">Pinecone Starter ~$200/mo</option><option value="700">Pinecone Standard ~$700/mo</option><option value="1500">Weaviate Cloud ~$1.5k/mo</option></select></td><td id="vdb-month">$0</td><td id="vdb-year">$0</td></tr>
+      <tr><td>MLOps</td><td><select id="mlops-opt"><option value="0">Not needed</option><option value="300">W and B Basic ~$300/mo</option><option value="1000">Enterprise ~$1k/mo</option></select></td><td id="mlops-month">$0</td><td id="mlops-year">$0</td></tr>
+    </tbody></table></div>
     <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap">
       <div class="warn" style="flex:1;min-width:120px"><div class="lbl">Monthly infra cost</div><div class="val" id="infra-month">$0</div></div>
       <div class="warn" style="flex:1;min-width:120px"><div class="lbl">Annual infra cost</div><div class="val" id="infra-year">$0</div></div>
     </div>
   </div>
-
-  <!-- TRAINING -->
-  <div class="section-divider">5 · Training &amp; enablement costs</div>
-  <div class="card">
-    <div style="overflow-x:auto">
-    <table>
-      <thead><tr><th>Item</th><th>Type</th><th>Unit cost</th><th>Units</th><th>One-off $</th><th>Annual recurring $</th></tr></thead>
-      <tbody id="train-tbody"></tbody>
-    </table>
-    </div>
+  <div class="sdiv">5 - Training and enablement</div>
+  <div class="card"><div style="overflow-x:auto"><table><thead><tr><th>Item</th><th>Type</th><th>Unit cost</th><th>Units</th><th>One-off $</th><th>Annual $</th></tr></thead><tbody id="train-tbody"></tbody></table></div>
     <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap">
-      <div class="warn" style="flex:1;min-width:120px"><div class="lbl">One-off training cost</div><div class="val" id="train-oneoff">$0</div></div>
-      <div class="warn" style="flex:1;min-width:120px"><div class="lbl">Annual training cost</div><div class="val" id="train-year">$0</div></div>
+      <div class="warn" style="flex:1;min-width:120px"><div class="lbl">One-off training</div><div class="val" id="train-oneoff">$0</div></div>
+      <div class="warn" style="flex:1;min-width:120px"><div class="lbl">Annual training</div><div class="val" id="train-year">$0</div></div>
     </div>
   </div>
-
-  <!-- TOTAL COST ROLLUP -->
-  <div class="section-divider">6 · Total cost roll-up by model</div>
-  <div class="card" style="overflow-x:auto">
-    <table>
-      <thead><tr><th>Cost category</th><th>Crawl</th><th>Walk</th><th>Run</th><th>Fly</th></tr></thead>
-      <tbody id="rollup-tbody"></tbody>
-    </table>
-  </div>
+  <div class="sdiv">6 - Total cost roll-up by model</div>
+  <div class="card" style="overflow-x:auto"><table><thead><tr><th>Cost category</th><th>Crawl</th><th>Walk</th><th>Run</th><th>Fly</th></tr></thead><tbody id="rollup-tbody"></tbody></table></div>
   <div class="metrics" id="cost-summary-metrics"></div>
 </div>
 
-<!-- INVESTMENT VS SAVINGS -->
 <div id="tab-costs" class="tab">
   <p class="note">Cumulative net benefit over 3 years using full cost model.</p>
   <div class="metrics" id="roi-metrics"></div>
   <div class="card">
-    <h3 style="margin-bottom:10px">Cumulative net benefit — all models over 36 months</h3>
-    <div class="legend">
-      <span><span class="lsq" style="background:#B4B2A9"></span>Crawl</span>
-      <span><span class="lsq" style="background:#378ADD"></span>Walk</span>
-      <span><span class="lsq" style="background:#639922"></span>Run</span>
-      <span><span class="lsq" style="background:#7F77DD"></span>Fly</span>
-    </div>
+    <h3 style="margin-bottom:10px">Cumulative net benefit - 36 months</h3>
+    <div class="legend"><span><span class="lsq" style="background:#B4B2A9"></span>Crawl</span><span><span class="lsq" style="background:#378ADD"></span>Walk</span><span><span class="lsq" style="background:#639922"></span>Run</span><span><span class="lsq" style="background:#7F77DD"></span>Fly</span></div>
     <div class="chart-wrap"><canvas id="roiChart" role="img" aria-label="ROI curves">ROI chart</canvas></div>
   </div>
 </div>
 
-<!-- CURRENT STATE -->
 <div id="tab-csm" class="tab">
-  <p class="note">Before/after per SDLC phase with gap indicators.</p>
-  <div class="card" style="overflow-x:auto">
-    <table>
-      <thead><tr><th style="width:12%">Phase</th><th style="width:38%">Current state</th><th style="width:38%">Target state (AI-augmented)</th><th style="width:12%">Gap</th></tr></thead>
-      <tbody>
-        <tr><td><b>Requirements</b></td><td style="color:#666">Manual workshops, Word/Confluence docs. High rework from ambiguity.</td><td>AI auto-generates user stories. Agentforce drafts acceptance criteria. Conflict detection automated.</td><td><span class="badge b-amber">Medium</span></td></tr>
-        <tr><td><b>Design</b></td><td style="color:#666">Manual diagrams. No reuse detection. Architects work in silos.</td><td>AI suggests patterns from existing org architecture. Auto-generates SF data models.</td><td><span class="badge b-amber">Medium</span></td></tr>
-        <tr><td><b>Development</b></td><td style="color:#666">Boilerplate coded from scratch. Manual Apex &amp; LWC. Long PR cycles.</td><td>GitHub Copilot / Einstein Code generates 40–60% of code. AI-assisted PRs. LWC templates auto-generated.</td><td><span class="badge b-green">High</span></td></tr>
-        <tr><td><b>Testing / QA</b></td><td style="color:#666">Manual test case writing. Brittle regression suites. SF sandboxes managed manually.</td><td>AI generates test cases from user stories. Self-healing Copado scripts. AI-driven coverage dashboards.</td><td><span class="badge b-green">High</span></td></tr>
-        <tr><td><b>Deployment</b></td><td style="color:#666">Manual release notes. Change-set deployments. Config drift risk across orgs.</td><td>Copado AI predicts deployment risk. Automated rollback. AI-generated release notes from commits.</td><td><span class="badge b-blue">Low–Med</span></td></tr>
-        <tr><td><b>Monitoring</b></td><td style="color:#666">Reactive alert-based ops. Manual log trawling. Slow incident response.</td><td>Einstein Analytics &amp; Splunk AI detect anomalies proactively. AI-driven RCA. MTTR reduced ~35%.</td><td><span class="badge b-amber">Medium</span></td></tr>
-        <tr><td><b>Docs</b></td><td style="color:#666">Written after the fact, often incomplete. No sync with code changes.</td><td>AI auto-generates and updates docs from code changes. Notion AI &amp; Confluence AI keep docs current.</td><td><span class="badge b-green">High</span></td></tr>
-      </tbody>
-    </table>
-  </div>
+  <p class="note">Before/after per SDLC phase.</p>
+  <div class="card" style="overflow-x:auto"><table><thead><tr><th style="width:12%">Phase</th><th style="width:38%">Current state</th><th style="width:38%">Target state</th><th style="width:12%">Gap</th></tr></thead>
+  <tbody>
+    <tr><td><b>Requirements</b></td><td style="color:#666">Manual workshops, Word docs. High rework.</td><td>AI auto-generates user stories. Agentforce drafts acceptance criteria.</td><td><span class="badge ba">Medium</span></td></tr>
+    <tr><td><b>Design</b></td><td style="color:#666">Manual diagrams. No reuse detection.</td><td>AI suggests patterns from existing org. Auto-generates SF data models.</td><td><span class="badge ba">Medium</span></td></tr>
+    <tr><td><b>Development</b></td><td style="color:#666">Boilerplate from scratch. Manual Apex and LWC.</td><td>Copilot / Einstein Code generates 40-60% of code. AI-assisted PRs.</td><td><span class="badge bg">High</span></td></tr>
+    <tr><td><b>Testing / QA</b></td><td style="color:#666">Manual test cases. Brittle regression suites.</td><td>AI generates test cases from stories. Self-healing Copado scripts.</td><td><span class="badge bg">High</span></td></tr>
+    <tr><td><b>Deployment</b></td><td style="color:#666">Manual release notes. Change-set deployments.</td><td>Copado AI predicts risk. Automated rollback. AI release notes.</td><td><span class="badge bb">Low-Med</span></td></tr>
+    <tr><td><b>Monitoring</b></td><td style="color:#666">Reactive alert-based ops. Manual log trawling.</td><td>Einstein Analytics detects anomalies proactively. AI-driven RCA.</td><td><span class="badge ba">Medium</span></td></tr>
+    <tr><td><b>Docs</b></td><td style="color:#666">Written after the fact, often incomplete.</td><td>AI auto-generates and updates docs from code changes.</td><td><span class="badge bg">High</span></td></tr>
+  </tbody></table></div>
 </div>
 
-<!-- WORKINGS -->
 <div id="tab-workings" class="tab">
   <div class="card">
-    <h3 style="margin-bottom:14px">Adjust your client's parameters</h3>
-    <div class="slider-row"><label>Team size (FTE)</label><input type="range" min="2" max="50" step="1" id="sl-fte" value="10" oninput="recalc()"><span class="readout" id="rd-fte">10</span></div>
-    <div class="slider-row"><label>Blended annual rate (USD)</label><input type="range" min="60000" max="250000" step="5000" id="sl-rate" value="120000" oninput="recalc()"><span class="readout" id="rd-rate">$120k</span></div>
-    <div class="slider-row"><label>AI adoption rate</label><input type="range" min="20" max="100" step="5" id="sl-adopt" value="70" oninput="recalc()"><span class="readout" id="rd-adopt">70%</span></div>
-    <div class="slider-row"><label>Quality review overhead</label><input type="range" min="0" max="50" step="5" id="sl-overhead" value="25" oninput="recalc()"><span class="readout" id="rd-overhead">25%</span></div>
-    <div class="slider-row"><label>Maturity level</label><input type="range" min="0" max="3" step="1" id="sl-level" value="2" oninput="recalc()"><span class="readout" id="rd-level">Run</span></div>
+    <h3 style="margin-bottom:14px">Adjust parameters</h3>
+    <div class="srow"><label>Team size (FTE)</label><input type="range" min="2" max="50" step="1" id="sl-fte" value="10"><span class="rout" id="rd-fte">10</span></div>
+    <div class="srow"><label>Blended annual rate (USD)</label><input type="range" min="60000" max="250000" step="5000" id="sl-rate" value="120000"><span class="rout" id="rd-rate">$120k</span></div>
+    <div class="srow"><label>AI adoption rate</label><input type="range" min="20" max="100" step="5" id="sl-adopt" value="70"><span class="rout" id="rd-adopt">70%</span></div>
+    <div class="srow"><label>Quality review overhead</label><input type="range" min="0" max="50" step="5" id="sl-overhead" value="25"><span class="rout" id="rd-overhead">25%</span></div>
+    <div class="srow"><label>Maturity level</label><input type="range" min="0" max="3" step="1" id="sl-level" value="2"><span class="rout" id="rd-level">Run</span></div>
   </div>
-  <div class="formula-box">
+  <div class="fbox">
     <b>Core formula:</b><br>
-    <code>FTE saved = phase_effort% × team_FTE × AI_reduction% × adoption% × (1 − overhead%)</code><br>
-    <code>Gross annual saving = total_FTE_saved × blended_rate</code><br>
-    <code>Total AI cost = token_cost + SaaS_licences + SF_addons + infra + training</code><br>
-    <code>Net annual benefit = Gross saving − Total AI cost</code>
+    <code>FTE saved = phase_effort% x team_FTE x AI_reduction% x adoption% x (1 - overhead%)</code><br>
+    <code>Gross saving = total_FTE_saved x blended_rate</code><br>
+    <code>Total AI cost = tokens + SaaS + SF_addons + infra + training</code><br>
+    <code>Net benefit = Gross saving - Total AI cost</code>
   </div>
   <div class="metrics" id="w-metrics"></div>
   <div class="card" style="overflow-x:auto;margin-top:12px">
     <h3 style="margin-bottom:10px">Phase-by-phase calculation</h3>
-    <table>
-      <thead><tr><th>Phase</th><th>Effort %</th><th>FTE on phase</th><th>AI reduction</th><th>Adoption</th><th>Overhead</th><th>Net FTE saved</th><th>Annual $</th></tr></thead>
-      <tbody id="calc-tbody"></tbody>
-    </table>
-  </div>
-  <div class="card" style="margin-top:12px">
-    <h3 style="margin-bottom:10px">Evidence base for AI reduction %</h3>
-    <table>
-      <thead><tr><th>Phase</th><th>Reduction</th><th>Source</th><th>Notes</th></tr></thead>
-      <tbody>
-        <tr><td><b>Development</b></td><td>45%</td><td>GitHub Copilot study 2023; McKinsey GenAI 2023</td><td>GitHub: 55% task speed-up. McKinsey: 20–45% for experienced devs. Conservative end used.</td></tr>
-        <tr><td><b>Testing / QA</b></td><td>40%</td><td>Gartner 2024; Copado Robotic benchmarks</td><td>AI test generation reduces authoring effort 30–50%. Copado: 40% regression cycle reduction.</td></tr>
-        <tr><td><b>Documentation</b></td><td>50%</td><td>Notion AI; GitHub; Confluence AI</td><td>40–60% reduction in doc writing time across vendors.</td></tr>
-        <tr><td><b>Requirements</b></td><td>25%</td><td>Salesforce/IDC Agentforce study; McKinsey</td><td>McKinsey: AI reduces knowledge-work tasks 20–30%.</td></tr>
-        <tr><td><b>Monitoring</b></td><td>25%</td><td>Splunk AI; Dynatrace benchmarks</td><td>Conservative — MTTR improvements often 30–35%.</td></tr>
-        <tr><td><b>Design</b></td><td>20%</td><td>Figma AI early data; GitHub Copilot</td><td>Least mature AI category. Conservative pending more evidence.</td></tr>
-        <tr><td><b>Deployment</b></td><td>20%</td><td>Copado AI; GitLab Duo</td><td>Release note generation + risk prediction. Adoption still early.</td></tr>
-      </tbody>
-    </table>
+    <table><thead><tr><th>Phase</th><th>Effort %</th><th>FTE on phase</th><th>AI reduction</th><th>Adoption</th><th>Overhead</th><th>FTE saved</th><th>Annual $</th></tr></thead><tbody id="calc-tbody"></tbody></table>
   </div>
 </div>
 
-<!-- ASSUMPTIONS -->
-<div id="tab-assumptions" class="tab">
-  <div class="tcol">
-    <div class="card">
-      <h3>Baseline assumptions</h3>
-      <table style="margin-top:8px">
-        <tbody>
-          <tr><td style="color:#888">Team size</td><td>10 FTE (adjustable)</td></tr>
-          <tr><td style="color:#888">Blended rate</td><td>$120k/yr (adjustable)</td></tr>
-          <tr><td style="color:#888">AI adoption rate</td><td>70% (adjustable)</td></tr>
-          <tr><td style="color:#888">Quality overhead</td><td>25% review buffer (adjustable)</td></tr>
-          <tr><td style="color:#888">Ramp-up period</td><td>6 months to full benefit</td></tr>
-        </tbody>
-      </table>
+<div id="tab-config" class="tab">
+  <p class="note">Edit any value then click Apply. Changed fields highlight blue.</p>
+  <div style="margin-bottom:20px">
+    <div class="sdiv">Team and financial defaults <button id="rst-team" class="rbtn">Reset</button></div>
+    <div class="cgrid" id="cfg-team"></div>
+  </div>
+  <div style="margin-bottom:20px">
+    <div class="sdiv">SDLC phase effort % and AI reduction % <button id="rst-phases" class="rbtn">Reset</button></div>
+    <p class="note">Effort % across all phases must add up to 100%.</p>
+    <div class="card" style="overflow-x:auto"><table><thead><tr><th>Phase</th><th>Effort %</th><th>AI reduction %</th><th>Time gain %</th><th>Tools</th></tr></thead><tbody id="cfg-phase-tbody"></tbody></table></div>
+    <div id="effort-warn" style="font-size:12px;color:#a32d2d;margin-top:6px;display:none">Effort % adds up to <span id="effort-sum"></span>% - should be 100%.</div>
+  </div>
+  <div style="margin-bottom:20px">
+    <div class="sdiv">Model multipliers <button id="rst-models" class="rbtn">Reset</button></div>
+    <p class="note">Relative to Run = 1.00.</p>
+    <div class="cgrid" id="cfg-models"></div>
+  </div>
+  <div style="margin-bottom:20px">
+    <div class="sdiv">SaaS licence seats and rates <button id="rst-saas" class="rbtn">Reset</button></div>
+    <div class="card" style="overflow-x:auto"><table><thead><tr><th>Tool</th><th>Per seat/mo ($)</th><th>Seats</th><th>Crawl</th><th>Walk</th><th>Run</th><th>Fly</th></tr></thead><tbody id="cfg-saas-tbody"></tbody></table></div>
+  </div>
+  <div style="margin-bottom:20px">
+    <div class="sdiv">Salesforce add-on usage <button id="rst-sf" class="rbtn">Reset</button></div>
+    <div class="card" style="overflow-x:auto"><table><thead><tr><th>SF Add-on</th><th>Unit cost ($)</th><th>Monthly usage</th></tr></thead><tbody id="cfg-sf-tbody"></tbody></table></div>
+  </div>
+  <div style="margin-bottom:20px">
+    <div class="sdiv">Token usage per phase <button id="rst-tokens" class="rbtn">Reset</button></div>
+    <div class="card" style="overflow-x:auto"><table><thead><tr><th>Phase</th><th>Tokens in</th><th>Tokens out</th><th>Tasks/dev/day</th><th>Model tier</th></tr></thead><tbody id="cfg-token-tbody"></tbody></table></div>
+  </div>
+  <div style="margin-top:16px;display:flex;gap:10px;align-items:center">
+    <button id="apply-btn" class="abtn">Apply all changes</button>
+    <span id="apply-msg" style="font-size:12px;color:#3B6D11;display:none">Changes applied</span>
+  </div>
+</div>
+
+<div id="tab-usecase" class="tab">
+  <p class="note">Describe any IT or Salesforce use case. The AI agent breaks it into SDLC tasks, recommends the best AI tools, estimates effort and cost, and shows a delivery timeline comparison.</p>
+  <div class="card">
+    <h3 style="margin-bottom:12px">Describe your use case</h3>
+    <textarea id="uc-input" rows="4" placeholder="e.g. Build an automated Salesforce lead qualification workflow that scores inbound leads using AI and routes high-value leads to senior reps" style="width:100%;border:1px solid #d0cdc6;border-radius:8px;padding:10px;font-size:13px;resize:vertical;font-family:inherit;color:#1a1a1a;background:#fff"></textarea>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:10px;align-items:center">
+      <div style="font-size:12px;color:#555">Team size:</div>
+      <input type="number" id="uc-fte" value="5" min="1" max="50" style="width:60px;border:1px solid #d0cdc6;border-radius:6px;padding:4px 8px;font-size:12px">
+      <div style="font-size:12px;color:#555">Blended rate ($/yr):</div>
+      <input type="number" id="uc-rate" value="120000" min="50000" step="5000" style="width:100px;border:1px solid #d0cdc6;border-radius:6px;padding:4px 8px;font-size:12px">
+      <div style="font-size:12px;color:#555">Platform:</div>
+      <select id="uc-platform"><option value="salesforce">Salesforce</option><option value="generic">Generic IT</option><option value="both">Salesforce + Custom dev</option></select>
     </div>
-    <div class="card">
-      <h3>Token pricing (indicative)</h3>
-      <table style="margin-top:8px">
-        <tbody>
-          <tr><td style="color:#888">Claude Sonnet 4</td><td>$3 in / $15 out per 1M</td></tr>
-          <tr><td style="color:#888">Claude Haiku</td><td>$0.80 in / $4 out per 1M</td></tr>
-          <tr><td style="color:#888">GPT-4o</td><td>$5 in / $15 out per 1M</td></tr>
-          <tr><td style="color:#888">GPT-4o mini</td><td>$0.15 in / $0.60 out per 1M</td></tr>
-          <tr><td style="color:#888">Claude Opus</td><td>$15 in / $75 out per 1M</td></tr>
-        </tbody>
-      </table>
+    <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+      <button id="uc-btn" class="abtn">Estimate with AI agent</button>
+      <button id="uc-clear" class="ebtn">Clear</button>
+    </div>
+    <div style="margin-top:12px">
+      <div style="font-size:11px;color:#aaa;margin-bottom:6px">Quick examples:</div>
+      <div id="uc-examples" style="display:flex;flex-wrap:wrap;gap:6px"></div>
     </div>
   </div>
-  <div class="card">
-    <h3>Important caveats</h3>
-    <p style="margin-top:8px;font-size:12px">Token costs are estimates based on average task complexity and frequency — actual usage will vary significantly. Salesforce add-on pricing (Agentforce, Einstein) changes frequently; always validate with Salesforce AE. FTE savings represent effort reduction, not headcount reduction. All figures should be validated against actual contract rates and tool agreements before client presentation.</p>
+  <div id="uc-status" style="display:none" class="card">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div id="uc-spinner" style="width:16px;height:16px;border:2px solid #e0ddd6;border-top-color:#185FA5;border-radius:50%;animation:spin 0.8s linear infinite"></div>
+      <span id="uc-status-text" style="font-size:13px;color:#555">Analysing...</span>
+    </div>
+    <div id="uc-log" style="margin-top:10px;font-size:11px;color:#aaa;font-family:monospace;line-height:1.8;max-height:80px;overflow:hidden"></div>
+  </div>
+  <div id="uc-results" style="display:none">
+    <div class="metrics" id="uc-metrics"></div>
+    <div id="uc-banner" class="card" style="border-left:4px solid #185FA5;border-radius:0 10px 10px 0"></div>
+    <div class="card">
+      <h3 style="margin-bottom:10px">SDLC task breakdown - AI vs manual</h3>
+      <div style="overflow-x:auto"><table><thead><tr><th>Phase</th><th>Task</th><th>Recommended AI tool</th><th>Manual</th><th>With AI</th><th>Saved</th><th>Tool cost/mo</th><th>Confidence</th></tr></thead><tbody id="uc-task-tbody"></tbody></table></div>
+    </div>
+    <div class="card">
+      <h3 style="margin-bottom:4px">Delivery timeline - Traditional vs AI-augmented SDLC</h3>
+      <p style="font-size:11px;color:#aaa;margin-bottom:14px">Sequential Gantt view in calendar weeks. Hover bars for details.</p>
+      <div style="display:flex;gap:12px;margin-bottom:12px;font-size:11px;color:#666;flex-wrap:wrap">
+        <span style="display:flex;align-items:center;gap:5px"><span style="width:14px;height:10px;background:#B4B2A9;border-radius:2px;display:inline-block"></span>Traditional SDLC</span>
+        <span style="display:flex;align-items:center;gap:5px"><span style="width:14px;height:10px;background:#1D9E75;border-radius:2px;display:inline-block"></span>AI-augmented SDLC</span>
+      </div>
+      <div id="uc-gantt" style="font-size:12px"></div>
+      <div id="uc-gantt-summary" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px"></div>
+    </div>
+    <div class="card"><h3 style="margin-bottom:10px">Recommended toolchain to production</h3><div id="uc-toolchain"></div></div>
+    <div class="tcol">
+      <div class="card"><h3 style="margin-bottom:8px">Key risks</h3><div id="uc-risks" style="font-size:12px;color:#555;line-height:1.8"></div></div>
+      <div class="card"><h3 style="margin-bottom:8px">Architecture notes</h3><div id="uc-arch" style="font-size:12px;color:#555;line-height:1.8"></div></div>
+    </div>
+    <div style="text-align:center;margin-top:8px"><span style="font-size:11px;color:#aaa">AI-generated estimates. Validate with your delivery team before committing.</span></div>
   </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
-var phaseChart, roiChart;
+var PASSPHRASE = 'aiROI2026';
 
-var PHASES = [
-  {name:'Requirements', pct:0.10, aiR:0.25, time:'-20%', tools:'Claude / GPT-4, Agentforce'},
-  {name:'Design',       pct:0.10, aiR:0.20, time:'-18%', tools:'GitHub Copilot, Figma AI'},
-  {name:'Development',  pct:0.35, aiR:0.45, time:'-35%', tools:'GitHub Copilot, Einstein Code, Cursor'},
-  {name:'Testing / QA', pct:0.20, aiR:0.40, time:'-30%', tools:'Copado AI, SF Test AI'},
-  {name:'Deployment',   pct:0.10, aiR:0.20, time:'-15%', tools:'Copado, GitLab Duo'},
-  {name:'Monitoring',   pct:0.10, aiR:0.25, time:'-20%', tools:'Splunk AI, Einstein Analytics'},
-  {name:'Docs',         pct:0.05, aiR:0.50, time:'-50%', tools:'Notion AI, Claude'}
+var DEF_PHASES = [
+  {name:'Requirements', pct:10, aiR:25, time:20, tools:'Claude / GPT-4, Agentforce'},
+  {name:'Design',       pct:10, aiR:20, time:18, tools:'GitHub Copilot, Figma AI'},
+  {name:'Development',  pct:35, aiR:45, time:35, tools:'GitHub Copilot, Einstein Code, Cursor'},
+  {name:'Testing / QA', pct:20, aiR:40, time:30, tools:'Copado AI, SF Test AI'},
+  {name:'Deployment',   pct:10, aiR:20, time:15, tools:'Copado, GitLab Duo'},
+  {name:'Monitoring',   pct:10, aiR:25, time:20, tools:'Splunk AI, Einstein Analytics'},
+  {name:'Docs',         pct:5,  aiR:50, time:50, tools:'Notion AI, Claude'}
 ];
-
-// token model per phase: [primary task, model tier, tokensIn, tokensOut, tasksPerDevPerDay]
-// model tiers: 'primary','mid','cheap'
-var TOKEN_PHASES = [
-  {phase:'Requirements', task:'User story & AC generation',     tier:'primary', tIn:2000, tOut:1500, tpd:3},
-  {phase:'Design',       task:'Architecture pattern suggestion', tier:'primary', tIn:3000, tOut:2000, tpd:2},
-  {phase:'Development',  task:'Code generation & completion',   tier:'primary', tIn:1500, tOut:2000, tpd:25},
-  {phase:'Testing / QA', task:'Test case generation',           tier:'mid',     tIn:2000, tOut:2500, tpd:10},
-  {phase:'Deployment',   task:'Release notes & risk check',     tier:'cheap',   tIn:1000, tOut:800,  tpd:2},
-  {phase:'Monitoring',   task:'Alert triage & RCA summary',     tier:'mid',     tIn:1500, tOut:1000, tpd:4},
-  {phase:'Docs',         task:'Documentation generation',       tier:'cheap',   tIn:2000, tOut:3000, tpd:3}
+var DEF_MODELS = [
+  {name:'Crawl', label:'AI-assisted',  color:'#5F5E5A', bg:'#F1EFE8', mult:0.42, saasScale:0.3, sfScale:0.2, infraScale:0,   trainScale:0.5},
+  {name:'Walk',  label:'AI-integrated',color:'#185FA5', bg:'#E6F1FB', mult:0.70, saasScale:0.6, sfScale:0.5, infraScale:0,   trainScale:0.8},
+  {name:'Run',   label:'AI-augmented', color:'#3B6D11', bg:'#EAF3DE', mult:1.00, saasScale:1.0, sfScale:1.0, infraScale:0.5, trainScale:1.0, rec:true},
+  {name:'Fly',   label:'AI-native',    color:'#3C3489', bg:'#EEEDFE', mult:1.43, saasScale:1.3, sfScale:1.5, infraScale:1.0, trainScale:1.2}
 ];
-
-// SaaS licences: name, perSeatPerMonth, defaultSeats, models active [C,W,R,F]
-var SAAS = [
-  {name:'GitHub Copilot Business', rate:19,  seats:10, active:[0,1,1,1]},
-  {name:'GitHub Copilot Enterprise',rate:39, seats:0,  active:[0,0,1,1]},
-  {name:'Copado Robotic Testing',  rate:150, seats:2,  active:[0,1,1,1]},
-  {name:'Mabl / Testim AI',        rate:200, seats:0,  active:[0,0,1,1]},
-  {name:'GitLab Duo Pro',          rate:19,  seats:0,  active:[0,0,1,1]},
-  {name:'Notion AI',               rate:10,  seats:5,  active:[1,1,1,1]},
-  {name:'Splunk AI',               rate:300, seats:0,  active:[0,0,1,1]}
+var DEF_SAAS = [
+  {name:'GitHub Copilot Business',  rate:19,  seats:10, active:[0,1,1,1]},
+  {name:'GitHub Copilot Enterprise',rate:39,  seats:0,  active:[0,0,1,1]},
+  {name:'Copado Robotic Testing',   rate:150, seats:2,  active:[0,1,1,1]},
+  {name:'Mabl / Testim AI',         rate:200, seats:0,  active:[0,0,1,1]},
+  {name:'GitLab Duo Pro',           rate:19,  seats:0,  active:[0,0,1,1]},
+  {name:'Notion AI',                rate:10,  seats:5,  active:[1,1,1,1]},
+  {name:'Splunk AI',                rate:300, seats:0,  active:[0,0,1,1]}
 ];
-
-// SF add-ons: name, pricingModel, unitCost, monthlyUnits, notes
-var SF_ADDONS = [
-  {name:'Agentforce (Dev productivity)', model:'per conversation', unit:0.10, monthly:500, note:'~500 AI interactions/mo for dev team'},
-  {name:'Einstein Copilot seats',        model:'per seat/mo',      unit:50,   monthly:5,   note:'5 power-user seats'},
-  {name:'Einstein Code (Apex/LWC gen)',  model:'per seat/mo',      unit:25,   monthly:10,  note:'All developers'},
-  {name:'Data Cloud credits',            model:'per credit',       unit:0.012,monthly:5000, note:'~5k credits/mo for AI features'}
+var DEF_SF = [
+  {name:'Agentforce', model:'per conversation', unit:0.10,  monthly:500,  note:'~500 AI interactions/mo'},
+  {name:'Einstein Copilot seats', model:'per seat/mo', unit:50, monthly:5, note:'5 power-user seats'},
+  {name:'Einstein Code', model:'per seat/mo', unit:25, monthly:10, note:'All developers'},
+  {name:'Data Cloud credits', model:'per credit', unit:0.012, monthly:5000, note:'~5k credits/mo'}
 ];
-
-// Training items: name, type, unitCost, units (team-size multiplied if perPerson), recurring annual
-var TRAINING = [
-  {name:'Prompt engineering workshop',  type:'One-off',   unitCost:500,  perPerson:true,  annual:0},
-  {name:'Salesforce Trailhead AI certs',type:'One-off',   unitCost:200,  perPerson:true,  annual:0},
-  {name:'AI Champion internal program', type:'Recurring', unitCost:0,    perPerson:false, annual:5000},
-  {name:'Ongoing micro-learning',       type:'Recurring', unitCost:100,  perPerson:true,  annual:100}
+var DEF_TOKENS = [
+  {phase:'Requirements', task:'User story generation',    tier:'primary', tIn:2000, tOut:1500, tpd:3},
+  {phase:'Design',       task:'Architecture suggestion',  tier:'primary', tIn:3000, tOut:2000, tpd:2},
+  {phase:'Development',  task:'Code generation',          tier:'primary', tIn:1500, tOut:2000, tpd:25},
+  {phase:'Testing / QA', task:'Test case generation',     tier:'mid',     tIn:2000, tOut:2500, tpd:10},
+  {phase:'Deployment',   task:'Release notes',            tier:'cheap',   tIn:1000, tOut:800,  tpd:2},
+  {phase:'Monitoring',   task:'Alert triage summary',     tier:'mid',     tIn:1500, tOut:1000, tpd:4},
+  {phase:'Docs',         task:'Documentation generation', tier:'cheap',   tIn:2000, tOut:3000, tpd:3}
 ];
-
-var MODELS_DEF = [
-  {name:'Crawl',emoji:'🐛',label:'AI-assisted', color:'#5F5E5A',bg:'#F1EFE8',mult:0.42,saasScale:0.3,sfScale:0.2,infraScale:0,trainScale:0.5},
-  {name:'Walk', emoji:'🚶',label:'AI-integrated',color:'#185FA5',bg:'#E6F1FB',mult:0.70,saasScale:0.6,sfScale:0.5,infraScale:0,trainScale:0.8},
-  {name:'Run',  emoji:'🏃',label:'AI-augmented', color:'#3B6D11',bg:'#EAF3DE',mult:1.00,saasScale:1.0,sfScale:1.0,infraScale:0.5,trainScale:1.0,rec:true},
-  {name:'Fly',  emoji:'✈️',label:'AI-native',    color:'#3C3489',bg:'#EEEDFE',mult:1.43,saasScale:1.3,sfScale:1.5,infraScale:1.0,trainScale:1.2}
+var DEF_TRAINING = [
+  {name:'Prompt engineering workshop',   type:'One-off',  unitCost:500, perPerson:true,  annual:0},
+  {name:'Salesforce Trailhead AI certs', type:'One-off',  unitCost:200, perPerson:true,  annual:0},
+  {name:'AI Champion program',           type:'Recurring',unitCost:0,   perPerson:false, annual:5000},
+  {name:'Ongoing micro-learning',        type:'Recurring',unitCost:100, perPerson:true,  annual:100}
 ];
-
-var LEVEL_NAMES=['Crawl','Walk','Run','Fly'];
-var ROI_COLORS=['#888780','#378ADD','#639922','#7F77DD'];
-
-// LLM pricing: inPer1M, outPer1M, midInPer1M, midOutPer1M, cheapIn, cheapOut
 var LLM_PRICES = {
   sonnet:  {pIn:3,    pOut:15,   mIn:0.80, mOut:4,    cIn:0.15, cOut:0.60},
   gpt4o:   {pIn:5,    pOut:15,   mIn:0.15, mOut:0.60, cIn:0.15, cOut:0.60},
@@ -438,349 +382,860 @@ var LLM_PRICES = {
   gpt4mini:{pIn:0.15, pOut:0.60, mIn:0.15, mOut:0.60, cIn:0.15, cOut:0.60},
   opus:    {pIn:15,   pOut:75,   mIn:3,    mOut:15,   cIn:0.80, cOut:4}
 };
+var DEF_TEAM = {fte:10, rate:120000, adopt:70, overhead:25, level:2};
+var LEVEL_NAMES = ['Crawl','Walk','Run','Fly'];
+var ROI_COLORS  = ['#888780','#378ADD','#639922','#7F77DD'];
+var UC_EXAMPLES = ['Salesforce lead qualification AI','AI-powered Apex code review bot','Automated regression test suite for SF org','AI document generation from Salesforce records','Intelligent support ticket triage and routing'];
+var TC_BG = {'Code Gen':'#E6F1FB','Test Automation':'#EAF3DE','Requirements':'#EEEDFE','Deployment':'#FAEEDA','Monitoring':'#f0ede8','Docs':'#F1EFE8','LLM/Agent':'#E1F5EE'};
+var TC_FG = {'Code Gen':'#185FA5','Test Automation':'#3B6D11','Requirements':'#3C3489','Deployment':'#854F0B','Monitoring':'#5F5E5A','Docs':'#5F5E5A','LLM/Agent':'#0F6E56'};
 
-function getParams(){
+var PHASES, MODELS_DEF, SAAS, SF_ADDONS, TOKEN_PHASES, TRAINING;
+function resetLiveData() {
+  PHASES       = DEF_PHASES.map(function(d){return Object.assign({},d);});
+  MODELS_DEF   = DEF_MODELS.map(function(d){return Object.assign({},d);});
+  SAAS         = DEF_SAAS.map(function(d){return Object.assign({},d,{active:d.active.slice()});});
+  SF_ADDONS    = DEF_SF.map(function(d){return Object.assign({},d);});
+  TOKEN_PHASES = DEF_TOKENS.map(function(d){return Object.assign({},d);});
+  TRAINING     = DEF_TRAINING.map(function(d){return Object.assign({},d);});
+}
+resetLiveData();
+
+var phaseChart, roiChart;
+
+function init() {
+  document.getElementById('pw-btn').addEventListener('click', checkPw);
+  document.getElementById('pw-input').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') { checkPw(); }
+  });
+  document.getElementById('pw-input').focus();
+
+  var navIds = ['exec','phases','models','costmodel','costs','csm','workings','config','usecase'];
+  navIds.forEach(function(id) {
+    document.getElementById('nav-' + id).addEventListener('click', function() { showTab(id); });
+  });
+
+  ['sl-fte','sl-rate','sl-adopt','sl-overhead','sl-level'].forEach(function(id) {
+    document.getElementById(id).addEventListener('input', recalc);
+  });
+  ['llm-model','gpu-opt','vdb-opt','mlops-opt'].forEach(function(id) {
+    document.getElementById(id).addEventListener('change', recalc);
+  });
+
+  document.getElementById('rst-team').addEventListener('click', function(){ resetSection('team'); });
+  document.getElementById('rst-phases').addEventListener('click', function(){ resetSection('phases'); });
+  document.getElementById('rst-models').addEventListener('click', function(){ resetSection('models'); });
+  document.getElementById('rst-saas').addEventListener('click', function(){ resetSection('saas'); });
+  document.getElementById('rst-sf').addEventListener('click', function(){ resetSection('sf'); });
+  document.getElementById('rst-tokens').addEventListener('click', function(){ resetSection('tokens'); });
+  document.getElementById('apply-btn').addEventListener('click', applyConfig);
+
+  document.getElementById('uc-btn').addEventListener('click', runEstimator);
+  document.getElementById('uc-clear').addEventListener('click', function() {
+    document.getElementById('uc-input').value = '';
+    document.getElementById('uc-results').style.display = 'none';
+    document.getElementById('uc-status').style.display  = 'none';
+  });
+
+  var exDiv = document.getElementById('uc-examples');
+  UC_EXAMPLES.forEach(function(ex) {
+    var b = document.createElement('button');
+    b.className = 'xbtn';
+    b.textContent = ex;
+    b.addEventListener('click', function() { document.getElementById('uc-input').value = ex; });
+    exDiv.appendChild(b);
+  });
+}
+
+function checkPw() {
+  if (document.getElementById('pw-input').value === PASSPHRASE) {
+    document.getElementById('gate').style.display = 'none';
+    buildConfigUI();
+    recalc();
+  } else {
+    document.getElementById('pw-err').style.display = 'block';
+    document.getElementById('pw-input').value = '';
+    document.getElementById('pw-input').focus();
+  }
+}
+
+function showTab(id) {
+  var tabs = document.querySelectorAll('.tab');
+  for (var i = 0; i < tabs.length; i++) { tabs[i].classList.remove('active'); }
+  var btns = document.querySelectorAll('.nav button');
+  for (var j = 0; j < btns.length; j++) { btns[j].classList.remove('active'); }
+  document.getElementById('tab-' + id).classList.add('active');
+  document.getElementById('nav-' + id).classList.add('active');
+  if (id === 'phases' && !phaseChart) { buildPhaseChart(); }
+  if (id === 'costs'  && !roiChart)   { buildRoiChart(); }
+  if (phaseChart) { updPhase(getP()); }
+  if (roiChart)   { updRoi(getP()); }
+}
+
+function getP() {
   return {
-    fte:      parseInt(document.getElementById('sl-fte').value),
-    rate:     parseInt(document.getElementById('sl-rate').value),
-    adopt:    parseInt(document.getElementById('sl-adopt').value)/100,
-    overhead: parseInt(document.getElementById('sl-overhead').value)/100,
-    level:    parseInt(document.getElementById('sl-level').value)
+    fte:      parseInt(document.getElementById('sl-fte').value, 10),
+    rate:     parseInt(document.getElementById('sl-rate').value, 10),
+    adopt:    parseInt(document.getElementById('sl-adopt').value, 10) / 100,
+    overhead: parseInt(document.getElementById('sl-overhead').value, 10) / 100,
+    level:    parseInt(document.getElementById('sl-level').value, 10)
   };
 }
 
-function getTokenAnnual(p){
-  var llmKey = document.getElementById('llm-model').value;
-  var pr = LLM_PRICES[llmKey];
-  var workDays = 220;
-  var total = 0;
-  TOKEN_PHASES.forEach(function(tp){
-    var rates = tp.tier==='primary'?[pr.pIn,pr.pOut]: tp.tier==='mid'?[pr.mIn,pr.mOut]:[pr.cIn,pr.cOut];
-    var costPerTask = (tp.tIn/1e6)*rates[0] + (tp.tOut/1e6)*rates[1];
-    var activeDevs = Math.round(p.fte * p.adopt);
-    total += costPerTask * tp.tpd * activeDevs * workDays;
+function calcSaving(p, i) {
+  var t = 0;
+  PHASES.forEach(function(ph){ t += ph.pct * p.fte * ph.aiR * p.adopt * (1 - p.overhead); });
+  return t * MODELS_DEF[i].mult;
+}
+
+function tokAnn(p) {
+  var k = document.getElementById('llm-model').value;
+  var pr = LLM_PRICES[k];
+  var days = 220;
+  var tot = 0;
+  TOKEN_PHASES.forEach(function(tp) {
+    var rIn, rOut;
+    if (tp.tier === 'primary') { rIn = pr.pIn; rOut = pr.pOut; }
+    else if (tp.tier === 'mid') { rIn = pr.mIn; rOut = pr.mOut; }
+    else { rIn = pr.cIn; rOut = pr.cOut; }
+    tot += (tp.tIn / 1e6 * rIn + tp.tOut / 1e6 * rOut) * tp.tpd * Math.round(p.fte * p.adopt) * days;
   });
-  return Math.round(total * MODELS_DEF[p.level].mult);
+  return Math.round(tot * MODELS_DEF[p.level].mult);
 }
 
-function getSaasAnnual(p){
-  var total=0;
-  SAAS.forEach(function(s){
-    if(s.active[p.level]) total += s.rate * s.seats * 12;
+function saasAnn(p) {
+  var t = 0;
+  SAAS.forEach(function(s){ if (s.active[p.level]) { t += s.rate * s.seats * 12; } });
+  return Math.round(t * MODELS_DEF[p.level].saasScale);
+}
+
+function sfAnn(p) {
+  var t = 0;
+  SF_ADDONS.forEach(function(a){ t += a.unit * a.monthly * 12; });
+  return Math.round(t * MODELS_DEF[p.level].sfScale);
+}
+
+function infraAnn(p) {
+  var g = parseInt(document.getElementById('gpu-opt').value, 10) || 0;
+  var v = parseInt(document.getElementById('vdb-opt').value, 10) || 0;
+  var m = parseInt(document.getElementById('mlops-opt').value, 10) || 0;
+  return Math.round((g + v + m) * 12 * MODELS_DEF[p.level].infraScale);
+}
+
+function trainCosts(p) {
+  var oo = 0, an = 0;
+  TRAINING.forEach(function(t) {
+    var u = t.perPerson ? p.fte : 1;
+    if (t.type === 'One-off') { oo += t.unitCost * u; }
+    an += t.annual * (t.perPerson ? p.fte : 1);
   });
-  return Math.round(total * MODELS_DEF[p.level].saasScale);
+  return {oo: Math.round(oo * MODELS_DEF[p.level].trainScale), an: Math.round(an * MODELS_DEF[p.level].trainScale)};
 }
 
-function getSfAnnual(p){
-  var total=0;
-  SF_ADDONS.forEach(function(a){ total += a.unit * a.monthly * 12; });
-  return Math.round(total * MODELS_DEF[p.level].sfScale);
+function totalCost(p) {
+  return tokAnn(p) + saasAnn(p) + sfAnn(p) + infraAnn(p) + trainCosts(p).an;
 }
 
-function getInfraAnnual(p){
-  var gpu  = parseInt(document.getElementById('gpu-opt').value)||0;
-  var vdb  = parseInt(document.getElementById('vdb-opt').value)||0;
-  var ml   = parseInt(document.getElementById('mlops-opt').value)||0;
-  return Math.round((gpu+vdb+ml)*12 * MODELS_DEF[p.level].infraScale);
-}
+function fk(n) { return '$' + Math.round(n / 1000) + 'k'; }
+function fm(n) { return '$' + Math.round(n).toLocaleString(); }
 
-function getTrainCosts(p){
-  var oneoff=0, annual=0;
-  TRAINING.forEach(function(t){
-    var units = t.perPerson ? p.fte : 1;
-    if(t.type==='One-off') oneoff += t.unitCost * units;
-    annual += t.annual * (t.perPerson ? p.fte : 1);
-  });
-  return {oneoff:Math.round(oneoff * MODELS_DEF[p.level].trainScale), annual:Math.round(annual * MODELS_DEF[p.level].trainScale)};
-}
+function recalc() {
+  var p = getP();
+  document.getElementById('rd-fte').textContent      = p.fte;
+  document.getElementById('rd-rate').textContent     = '$' + Math.round(p.rate / 1000) + 'k';
+  document.getElementById('rd-adopt').textContent    = Math.round(p.adopt * 100) + '%';
+  document.getElementById('rd-overhead').textContent = Math.round(p.overhead * 100) + '%';
+  document.getElementById('rd-level').textContent    = LEVEL_NAMES[p.level];
 
-function getTotalAnnualCost(p){
-  var tr = getTrainCosts(p);
-  return getTokenAnnual(p) + getSaasAnnual(p) + getSfAnnual(p) + getInfraAnnual(p) + tr.annual;
-}
+  var fte2  = calcSaving(p, p.level);
+  var gross = Math.round(fte2 * p.rate / 1000);
+  var cost  = Math.round(totalCost(p) / 1000);
+  var net   = gross - cost;
+  var tr2   = trainCosts(p);
+  var pb    = net > 0 ? Math.round((tr2.oo / Math.max(net, 1)) * 12) : 999;
+  var avgEff = 0;
+  PHASES.forEach(function(ph){ avgEff += ph.pct * ph.aiR; });
 
-function calcRunSaving(p){
-  var total=0;
-  PHASES.forEach(function(ph){ total += ph.pct * p.fte * ph.aiR * p.adopt * (1-p.overhead); });
-  return total;
-}
+  document.getElementById('ex-eff').textContent  = Math.round(avgEff * 100) + '%';
+  document.getElementById('ex-fte').textContent  = fte2.toFixed(1) + ' FTE';
+  document.getElementById('ex-save').textContent = fk(fte2 * p.rate);
+  document.getElementById('ex-cost').textContent = fk(totalCost(p));
+  document.getElementById('ex-net').textContent  = fk(net * 1000);
+  document.getElementById('ex-pay').textContent  = (pb > 36 ? '>36' : '~' + pb) + ' mo';
 
-function calcModelSaving(p,mIdx){
-  return calcRunSaving(p) * MODELS_DEF[mIdx].mult;
-}
+  var sorted = PHASES.slice().sort(function(a, b){ return b.aiR - a.aiR; });
+  var wins = '';
+  sorted.forEach(function(ph, i){ wins += '<div>' + (i < 3 ? 'Top: ' : '') + ph.name + ' - up to <b>' + Math.round(ph.aiR * 100) + '%</b> reduction</div>'; });
+  document.getElementById('exec-wins').innerHTML = wins;
 
-function fmt(n){return '$'+Math.round(n).toLocaleString()}
-function fmtk(n){return '$'+Math.round(n/1000)+'k'}
-
-function recalc(){
-  var p = getParams();
-  document.getElementById('rd-fte').textContent    = p.fte;
-  document.getElementById('rd-rate').textContent   = '$'+Math.round(p.rate/1000)+'k';
-  document.getElementById('rd-adopt').textContent  = Math.round(p.adopt*100)+'%';
-  document.getElementById('rd-overhead').textContent = Math.round(p.overhead*100)+'%';
-  document.getElementById('rd-level').textContent  = LEVEL_NAMES[p.level];
-
-  var runFTE    = calcModelSaving(p, p.level);
-  var grossSave = Math.round(runFTE * p.rate / 1000);
-  var totalCost = Math.round(getTotalAnnualCost(p)/1000);
-  var netBen    = grossSave - totalCost;
-  var tr        = getTrainCosts(p);
-  var oneoff    = tr.oneoff;
-  var payback   = netBen>0 ? Math.round((oneoff/Math.max(netBen,1))*12) : 999;
-
-  // exec summary
-  var avgEff=0; PHASES.forEach(function(ph){avgEff+=ph.pct*ph.aiR;});
-  document.getElementById('ex-eff').textContent  = Math.round(avgEff*100)+'%';
-  document.getElementById('ex-fte').textContent  = runFTE.toFixed(1)+' FTE';
-  document.getElementById('ex-save').textContent = fmtk(runFTE*p.rate);
-  document.getElementById('ex-cost').textContent = fmtk(getTotalAnnualCost(p));
-  document.getElementById('ex-net').textContent  = fmtk(netBen*1000);
-  document.getElementById('ex-pay').textContent  = (payback>36?'>36':'~'+payback)+' mo';
-
-  // token table
-  var llmKey = document.getElementById('llm-model').value;
-  var pr = LLM_PRICES[llmKey];
-  var workDays=220; var tokMonth=0, tokYear=0;
-  var trows='';
-  TOKEN_PHASES.forEach(function(tp){
-    var rates = tp.tier==='primary'?[pr.pIn,pr.pOut]:tp.tier==='mid'?[pr.mIn,pr.mOut]:[pr.cIn,pr.cOut];
-    var modelLabel = tp.tier==='primary'?llmKey.replace('gpt4o','GPT-4o').replace('sonnet','Claude Sonnet').replace('haiku','Claude Haiku').replace('gpt4mini','GPT-4o mini').replace('opus','Claude Opus'):
-                     tp.tier==='mid'?'Mid-tier':'Lightweight';
-    var costPerTask = (tp.tIn/1e6)*rates[0] + (tp.tOut/1e6)*rates[1];
-    var activeDevs = Math.round(p.fte * p.adopt);
-    var dayVal = costPerTask * tp.tpd * activeDevs;
-    var mVal = dayVal * (workDays/12);
-    var yVal = dayVal * workDays;
-    tokMonth += mVal; tokYear += yVal;
-    trows += '<tr><td><b>'+tp.phase+'</b></td><td class="src">'+tp.task+'</td><td><span class="badge b-gray">'+modelLabel+'</span></td><td>'+tp.tIn.toLocaleString()+' / '+tp.tOut.toLocaleString()+'</td><td>'+tp.tpd+'</td><td>$'+dayVal.toFixed(2)+'</td><td>$'+Math.round(mVal)+'</td><td><b>$'+Math.round(yVal)+'</b></td></tr>';
+  var llmK = document.getElementById('llm-model').value;
+  var pr = LLM_PRICES[llmK];
+  var days = 220;
+  var tokM = 0, tokY = 0, trows = '';
+  TOKEN_PHASES.forEach(function(tp) {
+    var rIn, rOut, mLbl;
+    if (tp.tier === 'primary') { rIn = pr.pIn; rOut = pr.pOut; mLbl = llmK; }
+    else if (tp.tier === 'mid') { rIn = pr.mIn; rOut = pr.mOut; mLbl = 'Mid-tier'; }
+    else { rIn = pr.cIn; rOut = pr.cOut; mLbl = 'Lightweight'; }
+    var cpt = tp.tIn / 1e6 * rIn + tp.tOut / 1e6 * rOut;
+    var ad = Math.round(p.fte * p.adopt);
+    var dv = cpt * tp.tpd * ad;
+    var mv = dv * (days / 12);
+    var yv = dv * days;
+    tokM += mv; tokY += yv;
+    trows += '<tr><td><b>' + tp.phase + '</b></td><td class="src">' + tp.task + '</td><td><span class="badge bx">' + mLbl + '</span></td><td>' + tp.tIn.toLocaleString() + '/' + tp.tOut.toLocaleString() + '</td><td>' + tp.tpd + '</td><td>$' + dv.toFixed(2) + '</td><td>$' + Math.round(mv) + '</td><td><b>$' + Math.round(yv) + '</b></td></tr>';
   });
   document.getElementById('token-tbody').innerHTML = trows;
-  document.getElementById('tok-month').textContent = fmt(tokMonth);
-  document.getElementById('tok-year').textContent  = fmt(tokYear);
+  document.getElementById('tok-month').textContent = fm(tokM);
+  document.getElementById('tok-year').textContent  = fm(tokY);
 
-  // saas table
-  var srows=''; var saasM=0, saasY=0;
-  SAAS.forEach(function(s){
-    var mo = s.rate * s.seats;
-    saasM += mo; saasY += mo*12;
-    srows += '<tr><td><b>'+s.name+'</b></td><td>Business</td><td>$'+s.rate+'</td><td>'+s.seats+'</td><td>$'+mo+'</td><td>$'+(mo*12)+'</td>'+
-      [0,1,2,3].map(function(i){return '<td>'+(s.active[i]?'✅':'—')+'</td>';}).join('')+'</tr>';
+  var saasM = 0, saasY = 0, srows = '';
+  SAAS.forEach(function(s) {
+    var mo = s.rate * s.seats; saasM += mo; saasY += mo * 12;
+    var checks = '';
+    for (var ci = 0; ci < 4; ci++) { checks += '<td>' + (s.active[ci] ? 'Yes' : '') + '</td>'; }
+    srows += '<tr><td><b>' + s.name + '</b></td><td>$' + s.rate + '</td><td>' + s.seats + '</td><td>$' + mo + '</td><td>$' + (mo * 12) + '</td>' + checks + '</tr>';
   });
   document.getElementById('saas-tbody').innerHTML = srows;
-  document.getElementById('saas-month').textContent = fmt(saasM);
-  document.getElementById('saas-year').textContent  = fmt(saasY);
+  document.getElementById('saas-month').textContent = fm(saasM);
+  document.getElementById('saas-year').textContent  = fm(saasY);
 
-  // sf addons
-  var sfrows=''; var sfM=0, sfY=0;
-  SF_ADDONS.forEach(function(a){
-    var mo = a.unit * a.monthly;
-    sfM += mo; sfY += mo*12;
-    sfrows += '<tr><td><b>'+a.name+'</b></td><td>'+a.model+'</td><td>$'+a.unit+'</td><td>'+a.monthly.toLocaleString()+'</td><td>$'+Math.round(mo)+'</td><td><b>$'+Math.round(mo*12)+'</b></td><td class="src">'+a.note+'</td></tr>';
+  var sfM = 0, sfY = 0, sfrows = '';
+  SF_ADDONS.forEach(function(a) {
+    var mo = a.unit * a.monthly; sfM += mo; sfY += mo * 12;
+    sfrows += '<tr><td><b>' + a.name + '</b></td><td>' + a.model + '</td><td>$' + a.unit + '</td><td>' + a.monthly.toLocaleString() + '</td><td>$' + Math.round(mo) + '</td><td><b>$' + Math.round(mo * 12) + '</b></td><td class="src">' + a.note + '</td></tr>';
   });
   document.getElementById('sf-tbody').innerHTML = sfrows;
-  document.getElementById('sf-month').textContent = fmt(sfM);
-  document.getElementById('sf-year').textContent  = fmt(sfY);
+  document.getElementById('sf-month').textContent = fm(sfM);
+  document.getElementById('sf-year').textContent  = fm(sfY);
 
-  // infra
-  var gpu=parseInt(document.getElementById('gpu-opt').value)||0;
-  var vdb=parseInt(document.getElementById('vdb-opt').value)||0;
-  var ml=parseInt(document.getElementById('mlops-opt').value)||0;
-  var infraM=gpu+vdb+ml; var infraY=infraM*12;
-  document.getElementById('gpu-month').textContent='$'+gpu;
-  document.getElementById('gpu-year').textContent='$'+(gpu*12);
-  document.getElementById('vdb-month').textContent='$'+vdb;
-  document.getElementById('vdb-year').textContent='$'+(vdb*12);
-  document.getElementById('mlops-month').textContent='$'+ml;
-  document.getElementById('mlops-year').textContent='$'+(ml*12);
-  document.getElementById('infra-month').textContent=fmt(infraM);
-  document.getElementById('infra-year').textContent=fmt(infraY);
+  var g  = parseInt(document.getElementById('gpu-opt').value, 10) || 0;
+  var v  = parseInt(document.getElementById('vdb-opt').value, 10) || 0;
+  var ml = parseInt(document.getElementById('mlops-opt').value, 10) || 0;
+  document.getElementById('gpu-month').textContent   = '$' + g;   document.getElementById('gpu-year').textContent   = '$' + (g * 12);
+  document.getElementById('vdb-month').textContent   = '$' + v;   document.getElementById('vdb-year').textContent   = '$' + (v * 12);
+  document.getElementById('mlops-month').textContent = '$' + ml;  document.getElementById('mlops-year').textContent = '$' + (ml * 12);
+  document.getElementById('infra-month').textContent = fm(g + v + ml);
+  document.getElementById('infra-year').textContent  = fm((g + v + ml) * 12);
 
-  // training
-  var trnRows=''; var trainOneoff=0, trainAnn=0;
-  TRAINING.forEach(function(t){
-    var units = t.perPerson ? p.fte : 1;
-    var oo = t.type==='One-off' ? t.unitCost*units : 0;
-    var an = t.annual * (t.perPerson?p.fte:1);
-    trainOneoff += oo; trainAnn += an;
-    trnRows += '<tr><td><b>'+t.name+'</b></td><td>'+t.type+'</td><td>$'+t.unitCost+'</td><td>'+units+'</td><td><b>$'+oo+'</b></td><td><b>$'+an+'</b></td></tr>';
+  var trRows = '', trnOO = 0, trnAn = 0;
+  TRAINING.forEach(function(t) {
+    var u = t.perPerson ? p.fte : 1;
+    var oo2 = t.type === 'One-off' ? t.unitCost * u : 0;
+    var an2 = t.annual * (t.perPerson ? p.fte : 1);
+    trnOO += oo2; trnAn += an2;
+    trRows += '<tr><td><b>' + t.name + '</b></td><td>' + t.type + '</td><td>$' + t.unitCost + '</td><td>' + u + '</td><td><b>$' + oo2 + '</b></td><td><b>$' + an2 + '</b></td></tr>';
   });
-  document.getElementById('train-tbody').innerHTML=trnRows;
-  document.getElementById('train-oneoff').textContent=fmt(trainOneoff);
-  document.getElementById('train-year').textContent=fmt(trainAnn);
+  document.getElementById('train-tbody').innerHTML = trRows;
+  document.getElementById('train-oneoff').textContent = fm(trnOO);
+  document.getElementById('train-year').textContent   = fm(trnAn);
 
-  // cost rollup per model
-  var rrows=''; var categories=['API / Token costs','SaaS licences','Salesforce add-ons','Infrastructure','Training (annual)','<b>Total annual AI cost</b>'];
-  var allCosts=[];
-  MODELS_DEF.forEach(function(m,i){
-    var pp=Object.assign({},p,{level:i});
-    var trr=getTrainCosts(pp);
-    allCosts.push([getTokenAnnual(pp),getSaasAnnual(pp),getSfAnnual(pp),getInfraAnnual(pp),trr.annual,getTotalAnnualCost(pp)]);
+  var allC = [];
+  MODELS_DEF.forEach(function(m, i) {
+    var pp = Object.assign({}, p, {level: i});
+    var tr3 = trainCosts(pp);
+    allC.push([tokAnn(pp), saasAnn(pp), sfAnn(pp), infraAnn(pp), tr3.an, totalCost(pp)]);
   });
-  for(var r=0;r<6;r++){
-    var bold=r===5;
-    rrows+='<tr'+(bold?' style="background:#faf9f6"':'')+'><td>'+(bold?'':'')+categories[r]+'</td>'+
-      allCosts.map(function(c){return '<td'+(bold?' style="font-weight:600"':'')+'>'+fmtk(c[r])+'</td>';}).join('')+'</tr>';
+  var cats = ['API / Token costs','SaaS licences','Salesforce add-ons','Infrastructure','Training (annual)','Total annual AI cost'];
+  var rrows = '';
+  for (var r2 = 0; r2 < 6; r2++) {
+    var bold = r2 === 5;
+    var cells = '';
+    for (var ci2 = 0; ci2 < allC.length; ci2++) {
+      cells += '<td' + (bold ? ' style="font-weight:600"' : '') + '>' + fk(allC[ci2][r2]) + '</td>';
+    }
+    rrows += '<tr' + (bold ? ' style="background:#faf9f6"' : '') + '><td>' + (bold ? '<b>' : '') + cats[r2] + (bold ? '</b>' : '') + '</td>' + cells + '</tr>';
   }
-  document.getElementById('rollup-tbody').innerHTML=rrows;
+  document.getElementById('rollup-tbody').innerHTML = rrows;
 
-  // cost summary metrics
-  var csm='';
-  MODELS_DEF.forEach(function(m,i){
-    var pp=Object.assign({},p,{level:i});
-    var gross=Math.round(calcModelSaving(pp,i)*p.rate/1000);
-    var cost=Math.round(getTotalAnnualCost(pp)/1000);
-    var net=gross-cost;
-    csm+='<div class="'+(net>0?'highlight':'warn')+'"><div class="lbl">'+m.emoji+' '+m.name+' net/yr</div><div class="val">'+fmtk(net*1000)+'</div><div class="sub">'+fmtk(gross*1000)+' saved − '+fmtk(cost*1000)+' cost</div></div>';
+  var csm = '';
+  MODELS_DEF.forEach(function(m, i) {
+    var pp = Object.assign({}, p, {level: i});
+    var gr2 = Math.round(calcSaving(pp, i) * p.rate / 1000);
+    var co2 = Math.round(totalCost(pp) / 1000);
+    var ne2 = gr2 - co2;
+    csm += '<div class="' + (ne2 > 0 ? 'ok' : 'warn') + '"><div class="lbl">' + m.name + ' net/yr</div><div class="val">' + fk(ne2 * 1000) + '</div><div class="sub">' + fk(gr2 * 1000) + ' saved - ' + fk(co2 * 1000) + ' cost</div></div>';
   });
-  document.getElementById('cost-summary-metrics').innerHTML=csm;
+  document.getElementById('cost-summary-metrics').innerHTML = csm;
 
-  // phase table
-  var prows=''; var totFTE=0, totSave=0;
-  PHASES.forEach(function(ph){
-    var netFTE=ph.pct*p.fte*ph.aiR*p.adopt*(1-p.overhead)*MODELS_DEF[p.level].mult;
-    var save=Math.round(netFTE*p.rate/1000);
-    totFTE+=netFTE; totSave+=save;
-    prows+='<tr><td><b>'+ph.name+'</b></td><td>'+Math.round(ph.pct*100)+'%</td><td><span class="badge b-blue">'+Math.round(ph.aiR*100)+'%</span></td><td>'+netFTE.toFixed(2)+'</td><td>$'+save+'k</td><td>'+ph.time+'</td><td>'+ph.tools.split(',').map(function(t){return '<span class="tag">'+t.trim()+'</span>';}).join('')+'</td></tr>';
+  var prows = '', totFTE = 0, totSave = 0;
+  PHASES.forEach(function(ph) {
+    var nf = ph.pct * p.fte * ph.aiR * p.adopt * (1 - p.overhead) * MODELS_DEF[p.level].mult;
+    var sv = Math.round(nf * p.rate / 1000);
+    totFTE += nf; totSave += sv;
+    var toolTags = ph.tools.split(',').map(function(t){ return '<span class="tag">' + t.trim() + '</span>'; }).join('');
+    prows += '<tr><td><b>' + ph.name + '</b></td><td>' + Math.round(ph.pct * 100) + '%</td><td><span class="badge bb">' + Math.round(ph.aiR * 100) + '%</span></td><td>' + nf.toFixed(2) + '</td><td>$' + sv + 'k</td><td>-' + ph.time + '%</td><td>' + toolTags + '</td></tr>';
   });
-  prows+='<tr style="background:#faf9f6"><td><b>Total</b></td><td>100%</td><td><b>~'+Math.round(avgEff*100)+'% avg</b></td><td><b>'+totFTE.toFixed(2)+'</b></td><td><b>$'+totSave+'k</b></td><td></td><td></td></tr>';
-  document.getElementById('phase-tbody').innerHTML=prows;
+  prows += '<tr style="background:#faf9f6"><td><b>Total</b></td><td>100%</td><td><b>~' + Math.round(avgEff * 100) + '% avg</b></td><td><b>' + totFTE.toFixed(2) + '</b></td><td><b>$' + totSave + 'k</b></td><td></td><td></td></tr>';
+  document.getElementById('phase-tbody').innerHTML = prows;
 
-  // model cards
-  var cards='';
-  MODELS_DEF.forEach(function(m,i){
-    var pp=Object.assign({},p,{level:i});
-    var mFTE=calcModelSaving(pp,i);
-    var mSave=Math.round(mFTE*p.rate/1000);
-    var mCost=Math.round(getTotalAnnualCost(pp)/1000);
-    var mNet=mSave-mCost;
-    var mPct=Math.round(mFTE/p.fte*100);
-    cards+='<div class="mcard'+(m.rec?' rec':'')+'">'+
-      (m.rec?'<div style="font-size:10px;font-weight:600;background:#E6F1FB;color:#185FA5;padding:2px 8px;border-radius:6px;display:inline-block;margin-bottom:4px">★ Recommended</div>':'')+
-      '<div class="mtag" style="background:'+m.bg+';color:'+m.color+'">'+m.emoji+' '+m.name+'</div>'+
-      '<h3>'+m.label+'</h3>'+
-      '<div style="color:#888;font-size:11px;margin:4px 0 2px">Effort saving</div>'+
-      '<div class="bar"><div class="fill" style="width:'+Math.min(mPct,100)+'%;background:'+m.color+'"></div></div>'+
-      '<div style="font-size:12px">~'+mPct+'% · <b>'+mFTE.toFixed(1)+' FTE saved</b></div>'+
-      '<div style="color:#777;font-size:12px;margin-top:4px">Gross saving: <b>$'+mSave+'k/yr</b></div>'+
-      '<div style="color:#854F0B;font-size:12px">All-in AI cost: <b>$'+mCost+'k/yr</b></div>'+
-      '<div style="color:#3B6D11;font-size:12px;margin-top:4px">Net benefit: <b>$'+mNet+'k/yr</b></div>'+
-      '</div>';
+  var cards = '';
+  MODELS_DEF.forEach(function(m, i) {
+    var pp = Object.assign({}, p, {level: i});
+    var mFTE  = calcSaving(pp, i);
+    var mSave = Math.round(mFTE * p.rate / 1000);
+    var mCost = Math.round(totalCost(pp) / 1000);
+    var mNet  = mSave - mCost;
+    var mPct  = Math.round(mFTE / p.fte * 100);
+    var recBadge = m.rec ? '<div style="font-size:10px;font-weight:600;background:#E6F1FB;color:#185FA5;padding:2px 8px;border-radius:6px;display:inline-block;margin-bottom:4px">Recommended</div>' : '';
+    cards += '<div class="mcard' + (m.rec ? ' rec' : '') + '">' + recBadge +
+      '<div class="mtag" style="background:' + m.bg + ';color:' + m.color + '">' + m.name + '</div>' +
+      '<h3>' + m.label + '</h3>' +
+      '<div style="color:#888;font-size:11px;margin:4px 0 2px">Effort saving</div>' +
+      '<div class="bar"><div class="fill" style="width:' + Math.min(mPct, 100) + '%;background:' + m.color + '"></div></div>' +
+      '<div style="font-size:12px">~' + mPct + '% &middot; <b>' + mFTE.toFixed(1) + ' FTE saved</b></div>' +
+      '<div style="color:#777;font-size:12px;margin-top:4px">Gross: <b>$' + mSave + 'k/yr</b></div>' +
+      '<div style="color:#854F0B;font-size:12px">AI cost: <b>$' + mCost + 'k/yr</b></div>' +
+      '<div style="color:#3B6D11;font-size:12px;margin-top:4px">Net: <b>$' + mNet + 'k/yr</b></div></div>';
   });
-  document.getElementById('model-cards').innerHTML=cards;
+  document.getElementById('model-cards').innerHTML = cards;
 
-  // transition table
-  var trows2=''; var pays=['3 mo','7 mo','14 mo','18–24 mo'];
-  MODELS_DEF.forEach(function(m,i){
-    var pp=Object.assign({},p,{level:i});
-    var trr=getTrainCosts(pp);
-    trows2+='<tr><td>→ '+m.name+'</td><td>'+fmtk(getSaasAnnual(pp)+getSfAnnual(pp))+'</td><td>'+fmtk(trr.oneoff)+'</td><td>'+fmtk(trr.oneoff*0.5)+'</td><td>'+fmtk(trr.oneoff*1.5)+'</td><td>'+pays[i]+'</td></tr>';
+  var trows2 = '';
+  var pays = ['3 mo','7 mo','14 mo','18-24 mo'];
+  MODELS_DEF.forEach(function(m, i) {
+    var pp = Object.assign({}, p, {level: i});
+    var tr4 = trainCosts(pp);
+    trows2 += '<tr><td>To ' + m.name + '</td><td>' + fk(saasAnn(pp) + sfAnn(pp)) + '</td><td>' + fk(tr4.oo) + '</td><td>' + fk(tr4.oo * 0.5) + '</td><td>' + fk(tr4.oo * 1.5) + '</td><td>' + pays[i] + '</td></tr>';
   });
-  document.getElementById('trans-tbody').innerHTML=trows2;
+  document.getElementById('trans-tbody').innerHTML = trows2;
 
-  // roi metrics
-  var rmhtml='';
-  MODELS_DEF.forEach(function(m,i){
-    var pp=Object.assign({},p,{level:i});
-    var gross3=Math.round(calcModelSaving(pp,i)*p.rate/1000*3);
-    var cost3=Math.round(getTotalAnnualCost(pp)/1000*3)+Math.round(getTrainCosts(pp).oneoff/1000);
-    var net3=gross3-cost3;
-    rmhtml+='<div class="metric"><div class="lbl">'+m.name+' — 3yr net</div><div class="val" style="color:'+m.color+'">$'+net3+'k</div></div>';
+  var rmhtml = '';
+  MODELS_DEF.forEach(function(m, i) {
+    var pp = Object.assign({}, p, {level: i});
+    var g3 = Math.round(calcSaving(pp, i) * p.rate / 1000 * 3);
+    var c3 = Math.round(totalCost(pp) / 1000 * 3) + Math.round(trainCosts(pp).oo / 1000);
+    var n3 = g3 - c3;
+    rmhtml += '<div class="metric"><div class="lbl">' + m.name + ' 3yr net</div><div class="val" style="color:' + m.color + '">' + (n3 < 0 ? '-$' + Math.abs(n3) + 'k' : '$' + n3 + 'k') + '</div></div>';
   });
-  document.getElementById('roi-metrics').innerHTML=rmhtml;
+  document.getElementById('roi-metrics').innerHTML = rmhtml;
 
-  // workings metrics
-  document.getElementById('w-metrics').innerHTML=
-    wmet('FTE saved',runFTE.toFixed(2)+' FTE','At '+LEVEL_NAMES[p.level],true)+
-    wmet('Gross saving','$'+grossSave+'k','Annual effort value',true)+
-    wmet('Total AI cost','$'+totalCost+'k','Tokens+licences+infra+training',false,true)+
-    wmet('Net benefit','$'+netBen+'k','Saving minus all AI costs',netBen>0)+
-    wmet('Break-even',(payback>36?'>36 mo':'~'+payback+' mo'),'One-off cost recovery',false,true);
+  document.getElementById('w-metrics').innerHTML =
+    wm('FTE saved', fte2.toFixed(2) + ' FTE', 'At ' + LEVEL_NAMES[p.level], true) +
+    wm('Gross saving', '$' + gross + 'k', 'Annual effort value', true) +
+    wm('Total AI cost', '$' + cost + 'k', 'All-in annual', false, true) +
+    wm('Net benefit', '$' + net + 'k', 'After all AI costs', net > 0) +
+    wm('Break-even', (pb > 36 ? '>36 mo' : '~' + pb + ' mo'), 'One-off recovery', false, true);
 
-  // calc table
-  var crows=''; var ctotFTE=0, ctotSave=0;
-  PHASES.forEach(function(ph){
-    var ftePh=ph.pct*p.fte;
-    var netFTE=ftePh*ph.aiR*p.adopt*(1-p.overhead)*MODELS_DEF[p.level].mult;
-    var save=Math.round(netFTE*p.rate/1000);
-    ctotFTE+=netFTE; ctotSave+=save;
-    crows+='<tr><td><b>'+ph.name+'</b></td><td>'+Math.round(ph.pct*100)+'%</td><td>'+ftePh.toFixed(1)+'</td><td>'+Math.round(ph.aiR*100)+'%</td><td>'+Math.round(p.adopt*100)+'%</td><td>'+Math.round(p.overhead*100)+'%</td><td><b>'+netFTE.toFixed(2)+'</b></td><td><b>$'+save+'k</b></td></tr>';
+  var crows = '', ctot = 0, csav = 0;
+  PHASES.forEach(function(ph) {
+    var ftePh = ph.pct * p.fte;
+    var nf = ftePh * ph.aiR * p.adopt * (1 - p.overhead) * MODELS_DEF[p.level].mult;
+    var sv = Math.round(nf * p.rate / 1000);
+    ctot += nf; csav += sv;
+    crows += '<tr><td><b>' + ph.name + '</b></td><td>' + Math.round(ph.pct * 100) + '%</td><td>' + ftePh.toFixed(1) + '</td><td>' + Math.round(ph.aiR * 100) + '%</td><td>' + Math.round(p.adopt * 100) + '%</td><td>' + Math.round(p.overhead * 100) + '%</td><td><b>' + nf.toFixed(2) + '</b></td><td><b>$' + sv + 'k</b></td></tr>';
   });
-  crows+='<tr style="background:#faf9f6"><td><b>Total</b></td><td></td><td><b>'+p.fte+'</b></td><td></td><td></td><td></td><td><b>'+ctotFTE.toFixed(2)+'</b></td><td><b>$'+ctotSave+'k</b></td></tr>';
-  document.getElementById('calc-tbody').innerHTML=crows;
+  crows += '<tr style="background:#faf9f6"><td><b>Total</b></td><td></td><td><b>' + p.fte + '</b></td><td></td><td></td><td></td><td><b>' + ctot.toFixed(2) + '</b></td><td><b>$' + csav + 'k</b></td></tr>';
+  document.getElementById('calc-tbody').innerHTML = crows;
 
-  if(phaseChart) updatePhaseChart(p);
-  if(roiChart)   updateRoiChart(p);
+  if (phaseChart) { updPhase(p); }
+  if (roiChart)   { updRoi(p); }
 }
 
-function wmet(lbl,val,sub,good,neutral){
-  var cls = neutral?'metric':good?'highlight':'warn';
-  return '<div class="'+cls+'"><div class="lbl">'+lbl+'</div><div class="val">'+val+'</div><div class="sub">'+sub+'</div></div>';
+function wm(lbl, val, sub, good, neutral) {
+  var cls = neutral ? 'metric' : good ? 'ok' : 'warn';
+  return '<div class="' + cls + '"><div class="lbl">' + lbl + '</div><div class="val">' + val + '</div><div class="sub">' + sub + '</div></div>';
 }
 
-function roiPoints(p,i){
-  var pp=Object.assign({},p,{level:i});
-  var trr=getTrainCosts(pp);
-  var oneoff=trr.oneoff;
-  var annNet=Math.round(calcModelSaving(pp,i)*p.rate/1000)-Math.round(getTotalAnnualCost(pp)/1000);
-  var pts=[-oneoff];
-  [6,12,18,24,30,36].forEach(function(mo){ pts.push(Math.round(-oneoff+annNet*(mo/12))); });
+function roiPts(p, i) {
+  var pp = Object.assign({}, p, {level: i});
+  var tr2 = trainCosts(pp);
+  var annNet = Math.round(calcSaving(pp, i) * p.rate / 1000) - Math.round(totalCost(pp) / 1000);
+  var pts = [-tr2.oo];
+  var months = [6, 12, 18, 24, 30, 36];
+  months.forEach(function(mo){ pts.push(Math.round(-tr2.oo + annNet * (mo / 12))); });
   return pts;
 }
 
-function buildPhaseChart(){
-  var p=getParams();
-  var ctx=document.getElementById('phaseChart');
-  if(!ctx)return;
-  phaseChart=new Chart(ctx,{type:'bar',data:{
-    labels:PHASES.map(function(ph){return ph.name}),
-    datasets:[
-      {label:'% of project effort',data:PHASES.map(function(ph){return Math.round(ph.pct*100)}),backgroundColor:'#378ADD',borderRadius:3},
-      {label:'AI effort reduction %',data:PHASES.map(function(ph){return Math.round(ph.aiR*100)}),backgroundColor:'#1D9E75',borderRadius:3}
-    ]
-  },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
-    scales:{x:{ticks:{autoSkip:false,maxRotation:35,font:{size:10}},grid:{display:false}},
-    y:{ticks:{callback:function(v){return v+'%'},font:{size:10}},grid:{color:'rgba(0,0,0,0.05)'}}}}});
+function buildPhaseChart() {
+  var ctx = document.getElementById('phaseChart');
+  if (!ctx) { return; }
+  phaseChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: PHASES.map(function(ph){ return ph.name; }),
+      datasets: [
+        {label: '% effort',     data: PHASES.map(function(ph){ return Math.round(ph.pct * 100); }), backgroundColor: '#378ADD', borderRadius: 3},
+        {label: 'AI reduction', data: PHASES.map(function(ph){ return Math.round(ph.aiR * 100); }), backgroundColor: '#1D9E75', borderRadius: 3}
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, plugins: {legend: {display: false}},
+      scales: {
+        x: {ticks: {autoSkip: false, maxRotation: 35, font: {size: 10}}, grid: {display: false}},
+        y: {ticks: {callback: function(v){ return v + '%'; }, font: {size: 10}}, grid: {color: 'rgba(0,0,0,0.05)'}}
+      }
+    }
+  });
 }
 
-function buildRoiChart(){
-  var p=getParams();
-  var ctx=document.getElementById('roiChart');
-  if(!ctx)return;
-  roiChart=new Chart(ctx,{type:'line',data:{
-    labels:['M0','M6','M12','M18','M24','M30','M36'],
-    datasets:MODELS_DEF.map(function(m,i){
-      return {label:m.name,data:roiPoints(p,i),borderColor:ROI_COLORS[i],backgroundColor:'rgba(0,0,0,0)',tension:.4,pointRadius:3,borderDash:i===3?[5,3]:[]};
-    })
-  },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
-    scales:{x:{ticks:{font:{size:10}},grid:{display:false}},
-    y:{ticks:{callback:function(v){return '$'+v+'k'},font:{size:10}},grid:{color:'rgba(0,0,0,0.05)'},
-    title:{display:true,text:'Cumulative net benefit ($k)',font:{size:10}}}}}});
+function buildRoiChart() {
+  var ctx = document.getElementById('roiChart');
+  if (!ctx) { return; }
+  var p = getP();
+  roiChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: ['M0','M6','M12','M18','M24','M30','M36'],
+      datasets: MODELS_DEF.map(function(m, i) {
+        return {label: m.name, data: roiPts(p, i), borderColor: ROI_COLORS[i], backgroundColor: 'rgba(0,0,0,0)', tension: 0.4, pointRadius: 3, borderDash: i === 3 ? [5, 3] : []};
+      })
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, plugins: {legend: {display: false}},
+      scales: {
+        x: {ticks: {font: {size: 10}}, grid: {display: false}},
+        y: {ticks: {callback: function(v){ return '$' + v + 'k'; }, font: {size: 10}}, grid: {color: 'rgba(0,0,0,0.05)'}, title: {display: true, text: 'Cumulative net benefit ($k)', font: {size: 10}}}
+      }
+    }
+  });
 }
 
-function updatePhaseChart(p){
-  if(!phaseChart)return;
-  phaseChart.data.datasets[1].data=PHASES.map(function(ph){return Math.round(ph.aiR*p.adopt*(1-p.overhead)*MODELS_DEF[p.level].mult*100);});
+function updPhase(p) {
+  if (!phaseChart) { return; }
+  phaseChart.data.labels = PHASES.map(function(ph){ return ph.name; });
+  phaseChart.data.datasets[0].data = PHASES.map(function(ph){ return Math.round(ph.pct * 100); });
+  phaseChart.data.datasets[1].data = PHASES.map(function(ph){ return Math.round(ph.aiR * p.adopt * (1 - p.overhead) * MODELS_DEF[p.level].mult * 100); });
   phaseChart.update();
 }
 
-function updateRoiChart(p){
-  if(!roiChart)return;
-  roiChart.data.datasets.forEach(function(ds,i){ds.data=roiPoints(p,i);});
+function updRoi(p) {
+  if (!roiChart) { return; }
+  roiChart.data.datasets.forEach(function(ds, i){ ds.data = roiPts(p, i); });
   roiChart.update();
 }
 
-function showTab(id,btn){
-  document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active')});
-  document.querySelectorAll('.nav button').forEach(function(b){b.classList.remove('active')});
-  document.getElementById('tab-'+id).classList.add('active');
-  btn.classList.add('active');
-  if(id==='phases'&&!phaseChart) buildPhaseChart();
-  if(id==='costs'&&!roiChart) buildRoiChart();
-  if(phaseChart) updatePhaseChart(getParams());
-  if(roiChart)   updateRoiChart(getParams());
+function buildConfigUI() {
+  var tf = document.getElementById('cfg-team');
+  tf.innerHTML =
+    cfield('cfg-t-fte',   'Team size (FTE)',            'number', DEF_TEAM.fte,      '2-50') +
+    cfield('cfg-t-rate',  'Blended annual rate ($)',     'number', DEF_TEAM.rate,     'e.g. 120000') +
+    cfield('cfg-t-adopt', 'AI adoption rate (%)',        'number', DEF_TEAM.adopt,    '20-100') +
+    cfield('cfg-t-oh',    'Quality review overhead (%)', 'number', DEF_TEAM.overhead, '0-50') +
+    cfield('cfg-t-level', 'Default maturity level',     'select', DEF_TEAM.level,    '', ['Crawl','Walk','Run','Fly']);
+
+  var pr = '';
+  DEF_PHASES.forEach(function(ph, i) {
+    pr += '<tr><td><b>' + ph.name + '</b></td>' +
+      '<td><input class="ei cpct" data-i="' + i + '" type="number" min="0" max="100" value="' + ph.pct + '"></td>' +
+      '<td><input class="ei cair" data-i="' + i + '" type="number" min="0" max="100" value="' + ph.aiR + '"></td>' +
+      '<td><input class="ei ctim" data-i="' + i + '" type="number" min="0" max="100" value="' + ph.time + '"></td>' +
+      '<td><input class="ei eiw ctls" data-i="' + i + '" type="text" value="' + ph.tools + '" style="width:160px;text-align:left"></td></tr>';
+  });
+  document.getElementById('cfg-phase-tbody').innerHTML = pr;
+  attachChg('.cpct', 'input', true);
+  attachChg('.cair', 'input', false);
+  attachChg('.ctim', 'input', false);
+  attachChg('.ctls', 'input', false);
+
+  var mf = document.getElementById('cfg-models');
+  mf.innerHTML = '';
+  DEF_MODELS.forEach(function(m, i) { mf.innerHTML += cfield('cfg-m-' + i, m.name + ' multiplier', 'number', m.mult, 'e.g. 1.00'); });
+
+  var sr = '';
+  DEF_SAAS.forEach(function(s, i) {
+    var checks = '';
+    for (var l = 0; l < 4; l++) {
+      checks += '<td style="text-align:center"><input type="checkbox" class="csact" data-i="' + i + '" data-l="' + l + '"' + (s.active[l] ? ' checked' : '') + '></td>';
+    }
+    sr += '<tr><td><b>' + s.name + '</b></td>' +
+      '<td><input class="ei csrate" data-i="' + i + '" type="number" min="0" value="' + s.rate + '"></td>' +
+      '<td><input class="ei cseats" data-i="' + i + '" type="number" min="0" value="' + s.seats + '"></td>' + checks + '</tr>';
+  });
+  document.getElementById('cfg-saas-tbody').innerHTML = sr;
+  attachChg('.csrate', 'input', false);
+  attachChg('.cseats', 'input', false);
+  attachChg('.csact', 'change', false);
+
+  var sfr = '';
+  DEF_SF.forEach(function(a, i) {
+    sfr += '<tr><td><b>' + a.name + '</b><br><span class="src">' + a.model + '</span></td>' +
+      '<td><input class="ei csfunit" data-i="' + i + '" type="number" min="0" step="0.001" value="' + a.unit + '"></td>' +
+      '<td><input class="ei csfmo" data-i="' + i + '" type="number" min="0" value="' + a.monthly + '"></td></tr>';
+  });
+  document.getElementById('cfg-sf-tbody').innerHTML = sfr;
+  attachChg('.csfunit', 'input', false);
+  attachChg('.csfmo', 'input', false);
+
+  var tr = '';
+  DEF_TOKENS.forEach(function(tp, i) {
+    var opts = '';
+    ['primary','mid','cheap'].forEach(function(t){ opts += '<option' + (t === tp.tier ? ' selected' : '') + '>' + t + '</option>'; });
+    tr += '<tr><td><b>' + tp.phase + '</b><br><span class="src">' + tp.task + '</span></td>' +
+      '<td><input class="ei ctin" data-i="' + i + '" type="number" min="0" value="' + tp.tIn + '"></td>' +
+      '<td><input class="ei ctout" data-i="' + i + '" type="number" min="0" value="' + tp.tOut + '"></td>' +
+      '<td><input class="ei cttpd" data-i="' + i + '" type="number" min="0" step="0.5" value="' + tp.tpd + '"></td>' +
+      '<td><select class="cttier" data-i="' + i + '">' + opts + '</select></td></tr>';
+  });
+  document.getElementById('cfg-token-tbody').innerHTML = tr;
+  attachChg('.ctin', 'input', false);
+  attachChg('.ctout', 'input', false);
+  attachChg('.cttpd', 'input', false);
+  attachChg('.cttier', 'change', false);
+
+  attachChg('#cfg-team input', 'input', false);
+  attachChg('#cfg-team select', 'change', false);
+  attachChg('#cfg-models input', 'input', false);
 }
 
-recalc();
+function attachChg(sel, evt, withSum) {
+  var els = document.querySelectorAll(sel);
+  for (var i = 0; i < els.length; i++) {
+    (function(el) {
+      el.addEventListener(evt, function() {
+        markChg(el);
+        if (withSum) { chkSum(); }
+      });
+    })(els[i]);
+  }
+}
+
+function cfield(id, label, type, val, hint, opts) {
+  var inp = '';
+  if (type === 'select') {
+    var o = '';
+    for (var i = 0; i < opts.length; i++) {
+      o += '<option value="' + i + '"' + (i === val ? ' selected' : '') + '>' + opts[i] + '</option>';
+    }
+    inp = '<select id="' + id + '">' + o + '</select>';
+  } else {
+    inp = '<input id="' + id + '" type="number" value="' + val + '" step="any" style="width:100%">';
+  }
+  var hintHtml = hint ? '<div style="font-size:10px;color:#aaa;margin-top:4px">' + hint + '</div>' : '';
+  return '<div class="cfield"><label>' + label + '</label>' + inp + hintHtml + '</div>';
+}
+
+function markChg(el) { el.classList.add('chg'); }
+
+function chkSum() {
+  var s = 0;
+  var els = document.querySelectorAll('.cpct');
+  for (var i = 0; i < els.length; i++) { s += parseFloat(els[i].value) || 0; }
+  var w = document.getElementById('effort-warn');
+  if (Math.round(s) !== 100) {
+    w.style.display = 'block';
+    document.getElementById('effort-sum').textContent = Math.round(s);
+  } else {
+    w.style.display = 'none';
+  }
+}
+
+function applyConfig() {
+  document.getElementById('sl-fte').value      = parseInt(document.getElementById('cfg-t-fte').value, 10)   || 10;
+  document.getElementById('sl-rate').value     = parseInt(document.getElementById('cfg-t-rate').value, 10)  || 120000;
+  document.getElementById('sl-adopt').value    = parseInt(document.getElementById('cfg-t-adopt').value, 10) || 70;
+  document.getElementById('sl-overhead').value = parseInt(document.getElementById('cfg-t-oh').value, 10)    || 25;
+  document.getElementById('sl-level').value    = parseInt(document.getElementById('cfg-t-level').value, 10);
+
+  applyEach('.cpct', function(el){ PHASES[el.dataset.i].pct  = (parseFloat(el.value) / 100) || 0; });
+  applyEach('.cair', function(el){ PHASES[el.dataset.i].aiR  = (parseFloat(el.value) / 100) || 0; });
+  applyEach('.ctim', function(el){ PHASES[el.dataset.i].time = parseInt(el.value, 10) || 0; });
+  applyEach('.ctls', function(el){ PHASES[el.dataset.i].tools = el.value; });
+  DEF_MODELS.forEach(function(m, i) {
+    var el = document.getElementById('cfg-m-' + i);
+    if (el) { MODELS_DEF[i].mult = parseFloat(el.value) || m.mult; }
+  });
+  applyEach('.csrate', function(el){ SAAS[el.dataset.i].rate  = parseFloat(el.value) || 0; });
+  applyEach('.cseats', function(el){ SAAS[el.dataset.i].seats = parseInt(el.value, 10) || 0; });
+  applyEach('.csact', function(el){ SAAS[el.dataset.i].active[el.dataset.l] = el.checked ? 1 : 0; });
+  applyEach('.csfunit', function(el){ SF_ADDONS[el.dataset.i].unit    = parseFloat(el.value) || 0; });
+  applyEach('.csfmo', function(el){ SF_ADDONS[el.dataset.i].monthly  = parseFloat(el.value) || 0; });
+  applyEach('.ctin', function(el){ TOKEN_PHASES[el.dataset.i].tIn   = parseInt(el.value, 10) || 0; });
+  applyEach('.ctout', function(el){ TOKEN_PHASES[el.dataset.i].tOut  = parseInt(el.value, 10) || 0; });
+  applyEach('.cttpd', function(el){ TOKEN_PHASES[el.dataset.i].tpd   = parseFloat(el.value) || 0; });
+  applyEach('.cttier', function(el){ TOKEN_PHASES[el.dataset.i].tier  = el.value; });
+
+  applyEach('.chg', function(el){ el.classList.remove('chg'); });
+  phaseChart = null; roiChart = null;
+  recalc();
+  var msg = document.getElementById('apply-msg');
+  msg.style.display = 'inline';
+  setTimeout(function(){ msg.style.display = 'none'; }, 2500);
+}
+
+function applyEach(sel, fn) {
+  var els = document.querySelectorAll(sel);
+  for (var i = 0; i < els.length; i++) { fn(els[i]); }
+}
+
+function resetSection(sec) {
+  if (sec === 'team') {
+    document.getElementById('cfg-t-fte').value   = DEF_TEAM.fte;
+    document.getElementById('cfg-t-rate').value  = DEF_TEAM.rate;
+    document.getElementById('cfg-t-adopt').value = DEF_TEAM.adopt;
+    document.getElementById('cfg-t-oh').value    = DEF_TEAM.overhead;
+    document.getElementById('cfg-t-level').value = DEF_TEAM.level;
+  } else if (sec === 'phases') {
+    var cpct = document.querySelectorAll('.cpct');
+    var cair = document.querySelectorAll('.cair');
+    var ctim = document.querySelectorAll('.ctim');
+    var ctls = document.querySelectorAll('.ctls');
+    DEF_PHASES.forEach(function(ph, i) {
+      cpct[i].value = ph.pct; cair[i].value = ph.aiR; ctim[i].value = ph.time; ctls[i].value = ph.tools;
+    });
+  } else if (sec === 'models') {
+    DEF_MODELS.forEach(function(m, i) {
+      var el = document.getElementById('cfg-m-' + i);
+      if (el) { el.value = m.mult; }
+    });
+  } else if (sec === 'saas') {
+    var csrate = document.querySelectorAll('.csrate');
+    var cseats = document.querySelectorAll('.cseats');
+    var csact = document.querySelectorAll('.csact');
+    DEF_SAAS.forEach(function(s, i) { csrate[i].value = s.rate; cseats[i].value = s.seats; });
+    for (var k = 0; k < csact.length; k++) {
+      var el = csact[k];
+      el.checked = !!DEF_SAAS[el.dataset.i].active[el.dataset.l];
+    }
+  } else if (sec === 'sf') {
+    var csfunit = document.querySelectorAll('.csfunit');
+    var csfmo = document.querySelectorAll('.csfmo');
+    DEF_SF.forEach(function(a, i) { csfunit[i].value = a.unit; csfmo[i].value = a.monthly; });
+  } else if (sec === 'tokens') {
+    var ctin = document.querySelectorAll('.ctin');
+    var ctout = document.querySelectorAll('.ctout');
+    var cttpd = document.querySelectorAll('.cttpd');
+    var cttier = document.querySelectorAll('.cttier');
+    DEF_TOKENS.forEach(function(tp, i) { ctin[i].value = tp.tIn; ctout[i].value = tp.tOut; cttpd[i].value = tp.tpd; cttier[i].value = tp.tier; });
+  }
+  applyEach('.chg', function(el){ el.classList.remove('chg'); });
+  resetLiveData();
+  recalc();
+}
+
+function runEstimator() {
+  var usecase = document.getElementById('uc-input').value.trim();
+  if (!usecase) { alert('Please describe a use case first.'); return; }
+  var fte  = parseInt(document.getElementById('uc-fte').value, 10)  || 5;
+  var rate = parseInt(document.getElementById('uc-rate').value, 10) || 120000;
+  var plat = document.getElementById('uc-platform').value;
+  var btn  = document.getElementById('uc-btn');
+  btn.disabled = true;
+  btn.textContent = 'Analysing...';
+  document.getElementById('uc-status').style.display  = 'block';
+  document.getElementById('uc-results').style.display = 'none';
+  document.getElementById('uc-log').innerHTML = '';
+  document.getElementById('uc-spinner').style.display = 'inline-block';
+
+  var pctx;
+  if (plat === 'salesforce') { pctx = 'Salesforce (Apex, LWC, Flow, Agentforce, Einstein, Copado, MuleSoft)'; }
+  else if (plat === 'generic') { pctx = 'Generic IT cloud stack (AWS/Azure, React/Node, Python, GitHub Actions)'; }
+  else { pctx = 'Salesforce plus custom development (Apex, LWC, APIs, microservices)'; }
+
+  var schema = '{"title":"string","summary":"2 sentence summary","complexity":"Low|Medium|High|Very High","totalManualDays":0,"totalAiDays":0,"totalManualCost":0,"totalAiCost":0,"monthlyRunCost":0,"deployTimeWeeks":0,"aiTimeSavingPct":0,"banner":"one sentence ROI","tasks":[{"phase":"Requirements|Design|Development|Testing|Deployment|Monitoring|Documentation","task":"name","description":"short","aiTool":"tool name","aiToolCategory":"Code Gen|Test Automation|Requirements|Deployment|Monitoring|Docs|LLM/Agent","manualDays":0,"aiDays":0,"toolMonthlyCost":0,"confidence":"High|Medium|Low","rationale":"short"}],"toolchain":[{"layer":"name","tool":"name","purpose":"short","monthlyCost":0,"alternatives":"short"}],"risks":["r1","r2","r3"],"architectureNotes":["n1","n2","n3"]}';
+
+  var sysParts = [];
+  sysParts.push('You are an expert AI SDLC estimator specialising in ' + pctx + '.');
+  sysParts.push('Analyse the use case, break it into max 8 SDLC tasks, recommend the single best AI tool per task.');
+  sysParts.push('Respond with ONLY a valid JSON object matching this schema exactly. No markdown, no text outside JSON.');
+  sysParts.push('Schema: ' + schema);
+  sysParts.push('Keep every string value short (under 80 chars). Max 6 toolchain layers, 3 risks, 3 notes.');
+  sysParts.push('Estimates realistic for a ' + fte + ' person team at $' + rate + ' per year blended rate. Real tools only.');
+  var sys = sysParts.join(' ');
+
+  ucLog('Use case: ' + usecase.substring(0, 60) + '...');
+  ucLog('Platform: ' + pctx);
+  ucLog('Team: ' + fte + ' FTE at $' + rate.toLocaleString() + '/yr');
+  ucStatus('Step 1 of 3 - parsing use case...');
+
+  var payload = {
+    model: 'claude-sonnet-4-6',
+    max_tokens: 8000,
+    system: sys,
+    messages: [{role: 'user', content: 'Use case: ' + usecase + '. Team: ' + fte + ' FTE at $' + rate + '/yr. Platform: ' + pctx + '. Return JSON only.'}]
+  };
+
+  fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(payload)
+  })
+  .then(function(resp) {
+    ucStatus('Step 2 of 3 - evaluating AI tools...');
+    ucLog('Response received, processing...');
+    return resp.json();
+  })
+  .then(function(data) {
+    ucStatus('Step 3 of 3 - building deployment plan...');
+    if (data.error) { throw new Error(data.error.message); }
+    var raw = '';
+    if (data.content) {
+      for (var i = 0; i < data.content.length; i++) {
+        if (data.content[i].text) { raw += data.content[i].text; }
+      }
+    }
+    var clean = raw.replace(/```json/g, '').replace(/```/g, '').trim();
+    var result;
+    try {
+      result = JSON.parse(clean);
+    } catch (parseErr) {
+      var lastClose = Math.max(clean.lastIndexOf('}'), clean.lastIndexOf(']'));
+      if (lastClose > 0) { clean = clean.substring(0, lastClose + 1); }
+      result = JSON.parse(clean);
+    }
+    ucLog('Done - ' + result.tasks.length + ' tasks identified');
+    ucStatus('Complete');
+    document.getElementById('uc-spinner').style.display = 'none';
+    btn.disabled = false;
+    btn.textContent = 'Estimate with AI agent';
+    renderUC(result);
+  })
+  .catch(function(e) {
+    ucStatus('Error: ' + e.message);
+    ucLog('ERROR: ' + e.message);
+    document.getElementById('uc-spinner').style.display = 'none';
+    btn.disabled = false;
+    btn.textContent = 'Estimate with AI agent';
+  });
+}
+
+function ucLog(msg) {
+  var log = document.getElementById('uc-log');
+  log.innerHTML += '&gt; ' + msg + '<br>';
+  log.scrollTop = log.scrollHeight;
+}
+
+function ucStatus(msg) {
+  document.getElementById('uc-status-text').textContent = msg;
+}
+
+function renderUC(r) {
+  document.getElementById('uc-metrics').innerHTML =
+    '<div class="ok"><div class="lbl">Manual delivery</div><div class="val">' + r.totalManualDays + ' days</div><div class="sub">$' + Math.round(r.totalManualCost).toLocaleString() + ' total</div></div>' +
+    '<div class="ok"><div class="lbl">With AI</div><div class="val">' + r.totalAiDays + ' days</div><div class="sub">$' + Math.round(r.totalAiCost).toLocaleString() + ' total</div></div>' +
+    '<div class="ok"><div class="lbl">Time saved</div><div class="val">' + r.aiTimeSavingPct + '%</div><div class="sub">' + (r.totalManualDays - r.totalAiDays) + ' days faster</div></div>' +
+    '<div class="ok"><div class="lbl">Deploy to prod</div><div class="val">' + r.deployTimeWeeks + ' wks</div><div class="sub">AI-augmented team</div></div>' +
+    '<div class="warn"><div class="lbl">Monthly run cost</div><div class="val">$' + Math.round(r.monthlyRunCost).toLocaleString() + '</div><div class="sub">Licences + tokens + infra</div></div>' +
+    '<div class="metric"><div class="lbl">Complexity</div><div class="val" style="font-size:15px">' + r.complexity + '</div><div class="sub">' + r.title + '</div></div>';
+
+  document.getElementById('uc-banner').innerHTML =
+    '<div style="font-size:11px;color:#185FA5;font-weight:600;margin-bottom:4px">AI AGENT RECOMMENDATION</div>' +
+    '<p style="font-size:13px;color:#1a1a1a;line-height:1.6"><b>' + r.title + ':</b> ' + r.summary + '</p>' +
+    '<p style="font-size:13px;color:#185FA5;margin-top:8px;font-weight:500">' + r.banner + '</p>';
+
+  var trows = '';
+  r.tasks.forEach(function(t) {
+    var bg   = TC_BG[t.aiToolCategory] || '#f0ede8';
+    var fg   = TC_FG[t.aiToolCategory] || '#555';
+    var conf = t.confidence === 'High' ? 'bg' : t.confidence === 'Medium' ? 'ba' : 'bx';
+    var sp   = Math.round(((t.manualDays - t.aiDays) / Math.max(t.manualDays, 1)) * 100);
+    trows += '<tr>' +
+      '<td><span class="badge bx">' + t.phase + '</span></td>' +
+      '<td><b>' + t.task + '</b><br><span class="src">' + t.description + '</span></td>' +
+      '<td><span style="background:' + bg + ';color:' + fg + ';font-size:10px;padding:2px 7px;border-radius:6px;font-weight:600">' + t.aiTool + '</span><br><span class="src">' + t.rationale + '</span></td>' +
+      '<td>' + t.manualDays + 'd</td>' +
+      '<td style="color:#3B6D11;font-weight:600">' + t.aiDays + 'd</td>' +
+      '<td><span class="badge bg">-' + sp + '%</span></td>' +
+      '<td>' + (t.toolMonthlyCost > 0 ? '$' + t.toolMonthlyCost + '/mo' : 'Included') + '</td>' +
+      '<td><span class="badge ' + conf + '">' + t.confidence + '</span></td></tr>';
+  });
+  document.getElementById('uc-task-tbody').innerHTML = trows;
+
+  buildGantt(r);
+
+  var tcHtml = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px">';
+  r.toolchain.forEach(function(tl, i) {
+    var costLine = tl.monthlyCost > 0 ? '<div style="font-size:11px;color:#854F0B;margin-top:4px;font-weight:500">$' + tl.monthlyCost + '/mo</div>' : '<div style="font-size:11px;color:#3B6D11;margin-top:4px">Included / free tier</div>';
+    tcHtml += '<div style="background:#faf9f6;border:1px solid #e0ddd6;border-radius:8px;padding:10px">' +
+      '<div style="font-size:10px;color:#888;margin-bottom:4px;font-weight:600">LAYER ' + (i + 1) + ' - ' + tl.layer.toUpperCase() + '</div>' +
+      '<div style="font-size:13px;font-weight:600;color:#1a1a1a;margin-bottom:4px">' + tl.tool + '</div>' +
+      '<div style="font-size:11px;color:#555;margin-bottom:6px">' + tl.purpose + '</div>' +
+      '<div style="font-size:10px;color:#aaa">Alt: ' + tl.alternatives + '</div>' + costLine + '</div>';
+  });
+  tcHtml += '</div>';
+  document.getElementById('uc-toolchain').innerHTML = tcHtml;
+
+  var risksHtml = '';
+  r.risks.forEach(function(ri){ risksHtml += '<div style="margin-bottom:6px">&#9658; ' + ri + '</div>'; });
+  document.getElementById('uc-risks').innerHTML = risksHtml;
+
+  var archHtml = '';
+  r.architectureNotes.forEach(function(n){ archHtml += '<div style="margin-bottom:6px">&#9658; ' + n + '</div>'; });
+  document.getElementById('uc-arch').innerHTML = archHtml;
+
+  document.getElementById('uc-results').style.display = 'block';
+}
+
+function buildGantt(r) {
+  var WPD = 5;
+  var allPhases = ['Requirements','Design','Development','Testing','Deployment','Monitoring','Documentation'];
+  var pd = {};
+  allPhases.forEach(function(ph){ pd[ph] = {m: 0, a: 0, tools: []}; });
+  r.tasks.forEach(function(t) {
+    var ph = t.phase;
+    if (!pd[ph]) { pd[ph] = {m: 0, a: 0, tools: []}; }
+    pd[ph].m += t.manualDays;
+    pd[ph].a += t.aiDays;
+    if (t.aiTool && pd[ph].tools.indexOf(t.aiTool) === -1) { pd[ph].tools.push(t.aiTool); }
+  });
+
+  var active = allPhases.filter(function(ph){ return pd[ph].m > 0; });
+
+  function toW(d) { return d / WPD; }
+  function fmtW(d) {
+    var w = d / WPD;
+    if (w >= 1) { return (Math.round(w * 10) / 10) + 'w'; }
+    return d + 'd';
+  }
+
+  var mStarts = [], aStarts = [], mCur = 0, aCur = 0;
+  active.forEach(function(ph) {
+    mStarts.push(mCur); aStarts.push(aCur);
+    mCur += toW(pd[ph].m);
+    aCur += toW(pd[ph].a);
+  });
+
+  var totM = mCur, totA = aCur;
+  var maxW = Math.max(totM, totA, 1);
+
+  var html = '<div style="position:relative;padding-top:16px">';
+
+  for (var w = 0; w <= Math.ceil(maxW); w++) {
+    var pct = (w / maxW) * 100;
+    html += '<div style="position:absolute;top:0;left:calc(110px + ' + pct + '% );font-size:9px;color:#bbb;transform:translateX(-50%)">W' + w + '</div>';
+  }
+
+  active.forEach(function(ph, idx) {
+    var mD = pd[ph].m;
+    var aD = pd[ph].a;
+    var mW = toW(mD);
+    var aW = toW(aD);
+    var mL = (mStarts[idx] / maxW) * 100;
+    var aL = (aStarts[idx] / maxW) * 100;
+    var mW2 = (mW / maxW) * 100;
+    var aW2 = (aW / maxW) * 100;
+    var sp = Math.round(((mD - aD) / Math.max(mD, 0.1)) * 100);
+    var tools = pd[ph].tools.join(', ');
+    var spColor = sp > 0 ? '#3B6D11' : '#888';
+    html += '<div style="display:flex;align-items:center;margin-bottom:10px">';
+    html += '<div style="width:110px;min-width:110px;font-size:11px;font-weight:600;color:#555;text-align:right;padding-right:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + ph + '</div>';
+    html += '<div style="flex:1;position:relative;height:36px">';
+    html += '<div style="position:absolute;top:0;left:' + mL + '%;width:' + Math.max(mW2, 2) + '%;height:15px;background:#B4B2A9;border-radius:3px" title="Traditional: ' + mD + ' days (' + fmtW(mD) + ')"><span style="position:absolute;left:5px;top:1px;font-size:9px;color:#fff;font-weight:600;line-height:13px;white-space:nowrap">' + fmtW(mD) + '</span></div>';
+    html += '<div style="position:absolute;top:19px;left:' + aL + '%;width:' + Math.max(aW2, 2) + '%;height:15px;background:#1D9E75;border-radius:3px" title="AI: ' + aD + ' days (' + fmtW(aD) + '). ' + tools + '"><span style="position:absolute;left:5px;top:1px;font-size:9px;color:#fff;font-weight:600;line-height:13px;white-space:nowrap">' + fmtW(aD) + '</span></div>';
+    html += '</div>';
+    html += '<div style="width:48px;min-width:48px;font-size:10px;font-weight:600;color:' + spColor + ';text-align:right;padding-left:6px">-' + sp + '%</div>';
+    html += '</div>';
+  });
+
+  var totMr = Math.round(totM * 10) / 10;
+  var totAr = Math.round(totA * 10) / 10;
+  var totSp = Math.round(((totM - totA) / Math.max(totM, 0.1)) * 100);
+  html += '<div style="display:flex;align-items:center;margin-top:8px;padding-top:8px;border-top:1px solid #e0ddd6">';
+  html += '<div style="width:110px;min-width:110px;font-size:11px;font-weight:600;text-align:right;padding-right:8px">TOTAL</div>';
+  html += '<div style="flex:1;font-size:11px;color:#555"><b>' + totMr + ' weeks</b> traditional vs <b style="color:#1D9E75">' + totAr + ' weeks</b> AI-augmented</div>';
+  html += '<div style="width:48px;min-width:48px;font-size:10px;font-weight:600;color:#3B6D11;text-align:right;padding-left:6px">-' + totSp + '%</div>';
+  html += '</div>';
+  html += '</div>';
+
+  document.getElementById('uc-gantt').innerHTML = html;
+
+  var saved = Math.round((totM - totA) * 10) / 10;
+  document.getElementById('uc-gantt-summary').innerHTML =
+    '<div class="metric" style="flex:1;min-width:110px"><div class="lbl">Traditional total</div><div class="val" style="color:#5F5E5A">' + totMr + ' weeks</div><div class="sub">~' + Math.round(totM / 4.3) + ' months</div></div>' +
+    '<div class="ok" style="flex:1;min-width:110px"><div class="lbl">AI-augmented total</div><div class="val">' + totAr + ' weeks</div><div class="sub">~' + Math.round(totA / 4.3) + ' months</div></div>' +
+    '<div class="ok" style="flex:1;min-width:110px"><div class="lbl">Weeks saved</div><div class="val">' + saved + ' wks</div><div class="sub">Calendar time reclaimed</div></div>' +
+    '<div class="ok" style="flex:1;min-width:110px"><div class="lbl">Speed improvement</div><div class="val">' + totSp + '%</div><div class="sub">Faster to production</div></div>';
+}
+
+init();
 </script>
 </body>
 </html>
