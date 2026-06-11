@@ -581,6 +581,12 @@ function fk(n) {
   return sign + '$' + Math.round(a);
 }
 function fm(n) { return '$' + Math.round(n).toLocaleString(); }
+function pbFmt(m) {
+  if (m === null) { return 'No payback'; }
+  if (m > 36) { return '>36 mo'; }
+  if (m < 1) { return '<1 mo'; }
+  return '~' + Math.round(m) + ' mo';
+}
 
 function recalc() {
   var p = getP();
@@ -595,7 +601,7 @@ function recalc() {
   var cost  = Math.round(totalCost(p) / 1000);
   var net   = gross - cost;
   var tr2   = trainCosts(p);
-  var pb    = net > 0 ? Math.round((tr2.oo / Math.max(net, 1)) * 12) : 999;
+  var pb    = net > 0 ? (tr2.oo / Math.max(net * 1000, 1)) * 12 : null;
   var avgEff = 0;
   PHASES.forEach(function(ph){ avgEff += ph.pct * ph.aiR; });
 
@@ -604,7 +610,7 @@ function recalc() {
   document.getElementById('ex-save').textContent = fk(fte2 * p.rate);
   document.getElementById('ex-cost').textContent = fk(totalCost(p));
   document.getElementById('ex-net').textContent  = fk(net * 1000);
-  document.getElementById('ex-pay').textContent  = (pb > 36 ? '>36' : '~' + pb) + ' mo';
+  document.getElementById('ex-pay').textContent  = pbFmt(pb);
 
   var sorted = PHASES.slice().sort(function(a, b){ return b.aiR - a.aiR; });
   var wins = '';
@@ -748,16 +754,16 @@ function recalc() {
     var g3 = Math.round(calcSaving(pp, i) * p.rate / 1000 * 3);
     var c3 = Math.round(totalCost(pp) / 1000 * 3) + Math.round(trainCosts(pp).oo / 1000);
     var n3 = g3 - c3;
-    rmhtml += '<div class="metric"><div class="lbl">' + m.name + ' 3yr net</div><div class="val" style="color:' + m.color + '">' + (n3 < 0 ? '-$' + Math.abs(n3) + 'k' : '$' + n3 + 'k') + '</div></div>';
+    rmhtml += '<div class="metric"><div class="lbl">' + m.name + ' 3yr net</div><div class="val" style="color:' + m.color + '">' + fk(n3 * 1000) + '</div></div>';
   });
   document.getElementById('roi-metrics').innerHTML = rmhtml;
 
   document.getElementById('w-metrics').innerHTML =
     wm('FTE saved', fte2.toFixed(2) + ' FTE', 'At ' + LEVEL_NAMES[p.level], true) +
-    wm('Gross saving', '$' + gross + 'k', 'Annual effort value', true) +
-    wm('Total AI cost', '$' + cost + 'k', 'All-in annual', false, true) +
-    wm('Net benefit', '$' + net + 'k', 'After all AI costs', net > 0) +
-    wm('Break-even', (pb > 36 ? '>36 mo' : '~' + pb + ' mo'), 'One-off recovery', false, true);
+    wm('Gross saving', fk(gross * 1000), 'Annual effort value', true) +
+    wm('Total AI cost', fk(cost * 1000), 'All-in annual', false, true) +
+    wm('Net benefit', fk(net * 1000), 'After all AI costs', net > 0) +
+    wm('Break-even', pbFmt(pb), 'One-off recovery', false, true);
 
   var crows = '', ctot = 0, csav = 0;
   PHASES.forEach(function(ph) {
@@ -765,9 +771,9 @@ function recalc() {
     var nf = ftePh * ph.aiR * p.adopt * (1 - p.overhead) * MODELS_DEF[p.level].mult;
     var sv = Math.round(nf * p.rate / 1000);
     ctot += nf; csav += sv;
-    crows += '<tr><td><b>' + ph.name + '</b></td><td>' + Math.round(ph.pct * 100) + '%</td><td>' + ftePh.toFixed(1) + '</td><td>' + Math.round(ph.aiR * 100) + '%</td><td>' + Math.round(p.adopt * 100) + '%</td><td>' + Math.round(p.overhead * 100) + '%</td><td><b>' + nf.toFixed(2) + '</b></td><td><b>$' + sv + 'k</b></td></tr>';
+    crows += '<tr><td><b>' + ph.name + '</b></td><td>' + Math.round(ph.pct * 100) + '%</td><td>' + ftePh.toFixed(1) + '</td><td>' + Math.round(ph.aiR * 100) + '%</td><td>' + Math.round(p.adopt * 100) + '%</td><td>' + Math.round(p.overhead * 100) + '%</td><td><b>' + nf.toFixed(2) + '</b></td><td><b>' + fk(sv * 1000) + '</b></td></tr>';
   });
-  crows += '<tr style="background:#faf9f6"><td><b>Total</b></td><td></td><td><b>' + p.fte + '</b></td><td></td><td></td><td></td><td><b>' + ctot.toFixed(2) + '</b></td><td><b>$' + csav + 'k</b></td></tr>';
+  crows += '<tr style="background:#faf9f6"><td><b>Total</b></td><td></td><td><b>' + p.fte + '</b></td><td></td><td></td><td></td><td><b>' + ctot.toFixed(2) + '</b></td><td><b>' + fk(csav * 1000) + '</b></td></tr>';
   document.getElementById('calc-tbody').innerHTML = crows;
 
   if (phaseChart) { updPhase(p); }
@@ -1999,7 +2005,7 @@ Readiness.init();
 // Depends on: document, window.claude (environment detection)
 // Adds: a small fixed build + environment badge so you can tell which copy you are viewing
 var VersionStamp = (function() {
-  var APP_VERSION = 'v1.7';
+  var APP_VERSION = 'v1.8';
   var BUILD_DATE = '2026-06-11';
   function injectUI() {
     var inArtifact = (typeof window.claude !== 'undefined' && window.claude && typeof window.claude.complete === 'function');
