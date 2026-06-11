@@ -436,6 +436,21 @@ function init() {
     document.getElementById('uc-status').style.display  = 'none';
   });
 
+  var DEMO_UC = 'Build an AI-powered Apex code review and quality gate bot for Salesforce that automatically reviews pull requests, enforces coding standards, detects security vulnerabilities in Apex and LWC code, and blocks deployments that fail quality thresholds. The bot should integrate with GitHub Actions and Copado CI and CD pipelines.';
+  var DEMO_FTE = 3;
+  var DEMO_RATE = 120000;
+  var ucRan = false;
+  function runDemoOnFirstOpen() {
+    if (ucRan) { return; }
+    ucRan = true;
+    document.getElementById('uc-input').value = DEMO_UC;
+    document.getElementById('uc-fte').value = DEMO_FTE;
+    document.getElementById('uc-rate').value = DEMO_RATE;
+    document.getElementById('uc-platform').value = 'salesforce';
+    runEstimator();
+  }
+  window.runDemoOnFirstOpen = runDemoOnFirstOpen;
+
   var exDiv = document.getElementById('uc-examples');
   UC_EXAMPLES.forEach(function(ex) {
     var b = document.createElement('button');
@@ -469,6 +484,7 @@ function showTab(id) {
   if (id === 'costs'  && !roiChart)   { buildRoiChart(); }
   if (phaseChart) { updPhase(getP()); }
   if (roiChart)   { updRoi(getP()); }
+  if (id === 'usecase') { runDemoOnFirstOpen(); }
 }
 
 function getP() {
