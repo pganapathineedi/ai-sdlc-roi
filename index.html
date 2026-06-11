@@ -331,13 +331,13 @@ select{background:#fff;border:1px solid #d0cdc6;border-radius:6px;padding:4px 8p
 var PASSPHRASE = 'aiROI2026';
 
 var DEF_PHASES = [
-  {name:'Requirements', pct:10, aiR:25, time:20, tools:'Claude / GPT-4, Agentforce'},
-  {name:'Design',       pct:10, aiR:20, time:18, tools:'GitHub Copilot, Figma AI'},
-  {name:'Development',  pct:35, aiR:45, time:35, tools:'GitHub Copilot, Einstein Code, Cursor'},
-  {name:'Testing / QA', pct:20, aiR:40, time:30, tools:'Copado AI, SF Test AI'},
-  {name:'Deployment',   pct:10, aiR:20, time:15, tools:'Copado, GitLab Duo'},
-  {name:'Monitoring',   pct:10, aiR:25, time:20, tools:'Splunk AI, Einstein Analytics'},
-  {name:'Docs',         pct:5,  aiR:50, time:50, tools:'Notion AI, Claude'}
+  {name:'Requirements', pct:0.10, aiR:0.25, time:20, tools:'Claude / GPT-4, Agentforce'},
+  {name:'Design',       pct:0.10, aiR:0.20, time:18, tools:'GitHub Copilot, Figma AI'},
+  {name:'Development',  pct:0.35, aiR:0.45, time:35, tools:'GitHub Copilot, Einstein Code, Cursor'},
+  {name:'Testing / QA', pct:0.20, aiR:0.40, time:30, tools:'Copado AI, SF Test AI'},
+  {name:'Deployment',   pct:0.10, aiR:0.20, time:15, tools:'Copado, GitLab Duo'},
+  {name:'Monitoring',   pct:0.10, aiR:0.25, time:20, tools:'Splunk AI, Einstein Analytics'},
+  {name:'Docs',         pct:0.05, aiR:0.50, time:50, tools:'Notion AI, Claude'}
 ];
 var DEF_MODELS = [
   {name:'Crawl', label:'AI-assisted',  color:'#5F5E5A', bg:'#F1EFE8', mult:0.42, saasScale:0.3, sfScale:0.2, infraScale:0,   trainScale:0.5},
@@ -815,8 +815,8 @@ function buildConfigUI() {
   var pr = '';
   DEF_PHASES.forEach(function(ph, i) {
     pr += '<tr><td><b>' + ph.name + '</b></td>' +
-      '<td><input class="ei cpct" data-i="' + i + '" type="number" min="0" max="100" value="' + ph.pct + '"></td>' +
-      '<td><input class="ei cair" data-i="' + i + '" type="number" min="0" max="100" value="' + ph.aiR + '"></td>' +
+      '<td><input class="ei cpct" data-i="' + i + '" type="number" min="0" max="100" value="' + Math.round(ph.pct * 100) + '"></td>' +
+      '<td><input class="ei cair" data-i="' + i + '" type="number" min="0" max="100" value="' + Math.round(ph.aiR * 100) + '"></td>' +
       '<td><input class="ei ctim" data-i="' + i + '" type="number" min="0" max="100" value="' + ph.time + '"></td>' +
       '<td><input class="ei eiw ctls" data-i="' + i + '" type="text" value="' + ph.tools + '" style="width:160px;text-align:left"></td></tr>';
   });
@@ -969,7 +969,7 @@ function resetSection(sec) {
     var ctim = document.querySelectorAll('.ctim');
     var ctls = document.querySelectorAll('.ctls');
     DEF_PHASES.forEach(function(ph, i) {
-      cpct[i].value = ph.pct; cair[i].value = ph.aiR; ctim[i].value = ph.time; ctls[i].value = ph.tools;
+      cpct[i].value = Math.round(ph.pct * 100); cair[i].value = Math.round(ph.aiR * 100); ctim[i].value = ph.time; ctls[i].value = ph.tools;
     });
   } else if (sec === 'models') {
     DEF_MODELS.forEach(function(m, i) {
@@ -1258,10 +1258,9 @@ var ConfidenceBands = (function() {
     styleBtn(document.getElementById('cb-high'), which === 'high');
   }
   function applyBand(arr, which) {
-    var frac = !!(PHASES[0] && PHASES[0].aiR <= 1);
     var i;
     for (i = 0; i < PHASES.length && i < arr.length; i++) {
-      PHASES[i].aiR = frac ? (arr[i] / 100) : arr[i];
+      PHASES[i].aiR = arr[i] / 100;
     }
     var cair = document.querySelectorAll('.cair');
     for (i = 0; i < cair.length && i < arr.length; i++) {
