@@ -284,6 +284,11 @@ select{background:#fff;border:1px solid #d0cdc6;border-radius:6px;padding:4px 8p
       <div style="font-size:12px;color:#555">Platform:</div>
       <select id="uc-platform"><option value="salesforce">Salesforce</option><option value="generic">Generic IT</option><option value="both">Salesforce + Custom dev</option></select>
     </div>
+    <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+      <div style="font-size:12px;color:#555">Anthropic API key:</div>
+      <input type="password" id="uc-apikey" placeholder="sk-ant-..." autocomplete="off" style="flex:1;min-width:220px;border:1px solid #d0cdc6;border-radius:6px;padding:4px 8px;font-size:12px;font-family:monospace">
+    </div>
+    <div style="font-size:11px;color:#aaa;margin-top:5px">Your key stays in this browser only (never sent anywhere except Anthropic, never saved to the server). Get one at console.anthropic.com.</div>
     <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
       <button id="uc-btn" class="abtn">Estimate with AI agent</button>
       <button id="uc-clear" class="ebtn">Clear</button>
@@ -430,6 +435,10 @@ function init() {
   document.getElementById('apply-btn').addEventListener('click', applyConfig);
 
   document.getElementById('uc-btn').addEventListener('click', runEstimator);
+  try {
+    var savedKey = sessionStorage.getItem('uc_api_key');
+    if (savedKey) { document.getElementById('uc-apikey').value = savedKey; }
+  } catch (e) {}
   document.getElementById('uc-clear').addEventListener('click', function() {
     document.getElementById('uc-input').value = '';
     document.getElementById('uc-results').style.display = 'none';
@@ -1024,6 +1033,9 @@ function resetSection(sec) {
 function runEstimator() {
   var usecase = document.getElementById('uc-input').value.trim();
   if (!usecase) { alert('Please describe a use case first.'); return; }
+  var apiKey = document.getElementById('uc-apikey').value.trim();
+  if (!apiKey) { alert('Please enter your Anthropic API key (sk-ant-...). It stays in your browser.'); return; }
+  try { sessionStorage.setItem('uc_api_key', apiKey); } catch (e) {}
   var fte  = parseInt(document.getElementById('uc-fte').value, 10)  || 5;
   var rate = parseInt(document.getElementById('uc-rate').value, 10) || 120000;
   var plat = document.getElementById('uc-platform').value;
@@ -1065,7 +1077,12 @@ function runEstimator() {
 
   fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
-    headers: {'Content-Type': 'application/json'},
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
     body: JSON.stringify(payload)
   })
   .then(function(resp) {
