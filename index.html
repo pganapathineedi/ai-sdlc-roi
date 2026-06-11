@@ -1236,6 +1236,72 @@ function buildGantt(r) {
 }
 
 init();
+
+// MODULE: Confidence Bands
+// Depends on: PHASES, recalc, document
+// Adds: Conservative / Base case / Optimistic scenario toggle + range table at top of Workings tab
+var ConfidenceBands = (function() {
+  var LOW  = [15, 12, 30, 25, 12, 15, 35];
+  var MID  = [25, 20, 45, 40, 20, 25, 50];
+  var HIGH = [35, 28, 55, 50, 28, 35, 65];
+  var SRC  = ['McKinsey GenAI 2023', 'GitHub Copilot early data', 'GitHub study 2023 McKinsey', 'Gartner 2024 Copado', 'Copado AI GitLab Duo', 'Splunk AI Dynatrace', 'Notion AI Confluence AI'];
+
+  function styleBtn(b, on) {
+    if (!b) { return; }
+    b.style.background  = on ? '#1a1a1a' : '#fff';
+    b.style.color       = on ? '#fff' : '#555';
+    b.style.borderColor = on ? '#1a1a1a' : '#d0cdc6';
+  }
+  function setActive(which) {
+    styleBtn(document.getElementById('cb-low'),  which === 'low');
+    styleBtn(document.getElementById('cb-mid'),  which === 'mid');
+    styleBtn(document.getElementById('cb-high'), which === 'high');
+  }
+  function applyBand(arr, which) {
+    var frac = !!(PHASES[0] && PHASES[0].aiR <= 1);
+    var i;
+    for (i = 0; i < PHASES.length && i < arr.length; i++) {
+      PHASES[i].aiR = frac ? (arr[i] / 100) : arr[i];
+    }
+    var cair = document.querySelectorAll('.cair');
+    for (i = 0; i < cair.length && i < arr.length; i++) {
+      cair[i].value = arr[i];
+    }
+    setActive(which);
+    recalc();
+  }
+  function injectUI() {
+    var wk = document.getElementById('tab-workings');
+    if (!wk) { return; }
+    var card = document.createElement('div');
+    card.className = 'card';
+    var h = '';
+    h += '<h3 style="margin-bottom:4px">Confidence bands</h3>';
+    h += '<p class="note">Switch the AI effort-reduction assumptions between a conservative, base case, or optimistic scenario. Recalculates every tab.</p>';
+    h += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">';
+    h += '<button id="cb-low" class="xbtn">Conservative</button>';
+    h += '<button id="cb-mid" class="xbtn">Base case</button>';
+    h += '<button id="cb-high" class="xbtn">Optimistic</button>';
+    h += '</div>';
+    h += '<div style="overflow-x:auto"><table><thead><tr><th>Phase</th><th>Conservative</th><th>Base case</th><th>Optimistic</th><th>Source</th></tr></thead><tbody>';
+    var i;
+    for (i = 0; i < LOW.length; i++) {
+      var nm = (PHASES[i] && PHASES[i].name) ? PHASES[i].name : '';
+      h += '<tr><td><b>' + nm + '</b></td><td>' + LOW[i] + '%</td><td><b>' + MID[i] + '%</b></td><td>' + HIGH[i] + '%</td><td class="src">' + SRC[i] + '</td></tr>';
+    }
+    h += '</tbody></table></div>';
+    card.innerHTML = h;
+    wk.insertBefore(card, wk.firstChild);
+
+    document.getElementById('cb-low').addEventListener('click',  function(){ applyBand(LOW,  'low'); });
+    document.getElementById('cb-mid').addEventListener('click',  function(){ applyBand(MID,  'mid'); });
+    document.getElementById('cb-high').addEventListener('click', function(){ applyBand(HIGH, 'high'); });
+
+    setActive('mid');
+  }
+  return { init: function() { injectUI(); } };
+})();
+ConfidenceBands.init();
 </script>
 </body>
 </html>
