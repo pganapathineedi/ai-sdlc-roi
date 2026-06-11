@@ -1587,6 +1587,100 @@ var SourceFootnotes = (function() {
   return { init: function() { injectUI(); } };
 })();
 SourceFootnotes.init();
+
+// MODULE: Scale Presets + Adoption Ramp
+// Depends on: sl-fte, sl-rate, sl-adopt, sl-overhead, sl-level, recalc, document
+// Adds: Small/Medium/Enterprise preset buttons + year-1 adoption ramp at top of Workings tab
+var ScalePresets = (function() {
+  var PRESETS = {
+    small:  { label:'Small - Pilot',         fte:5,  rate:120000, level:1, overhead:30, adopt:60, ramp:[20,40,55,60], note:'A focused pilot team proving value on a few use cases before any wider rollout.' },
+    medium: { label:'Medium - Program',      fte:20, rate:130000, level:2, overhead:25, adopt:75, ramp:[25,50,65,75], note:'A funded program rolling AI across several squads with shared tooling and standards.' },
+    large:  { label:'Enterprise - At scale', fte:50, rate:140000, level:3, overhead:20, adopt:90, ramp:[20,45,70,90], note:'Org-wide transformation with a platform team, governance and change management.' }
+  };
+  var current = null;
+  var useRamp = false;
+
+  function setSlider(id, val) { var el = document.getElementById(id); if (el) { el.value = val; } }
+  function clampAdopt(v) { v = Math.round(v / 5) * 5; if (v < 20) { v = 20; } if (v > 100) { v = 100; } return v; }
+  function rampAvg(p) { var s = 0; for (var i = 0; i < p.ramp.length; i++) { s += p.ramp[i]; } return clampAdopt(s / p.ramp.length); }
+
+  function styleBtn(b, on) {
+    if (!b) { return; }
+    b.style.background  = on ? '#1a1a1a' : '#fff';
+    b.style.color       = on ? '#fff' : '#555';
+    b.style.borderColor = on ? '#1a1a1a' : '#d0cdc6';
+  }
+
+  function apply(key) {
+    var p = PRESETS[key];
+    if (!p) { return; }
+    current = key;
+    setSlider('sl-fte', p.fte);
+    setSlider('sl-rate', p.rate);
+    setSlider('sl-overhead', p.overhead);
+    setSlider('sl-level', p.level);
+    setSlider('sl-adopt', useRamp ? rampAvg(p) : p.adopt);
+    recalc();
+    render();
+  }
+
+  function render() {
+    var keys = ['small','medium','large'];
+    keys.forEach(function(k) { styleBtn(document.getElementById('sp-' + k), k === current); });
+    var box = document.getElementById('sp-ramp');
+    if (!box) { return; }
+    if (!current) { box.style.display = 'none'; return; }
+    var p = PRESETS[current];
+    var avg = rampAvg(p);
+    var bars = '';
+    for (var q = 0; q < p.ramp.length; q++) {
+      var hpx = Math.round(p.ramp[q] * 0.5);
+      bars += '<div style="display:flex;flex-direction:column;align-items:center;gap:3px;flex:1">' +
+        '<div style="font-size:10px;color:#555;font-weight:600">' + p.ramp[q] + '%</div>' +
+        '<div style="width:60%;height:' + hpx + 'px;background:#1D9E75;border-radius:3px 3px 0 0"></div>' +
+        '<div style="font-size:10px;color:#888">Q' + (q + 1) + '</div></div>';
+    }
+    var html = '';
+    html += '<div style="font-size:12px;color:#555;margin-bottom:8px">' + p.note + '</div>';
+    html += '<div style="font-size:11px;color:#888;margin-bottom:6px;font-weight:600">YEAR-1 ADOPTION RAMP</div>';
+    html += '<div style="display:flex;align-items:flex-end;gap:6px;height:64px;max-width:300px">' + bars + '</div>';
+    html += '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px">';
+    html += '<span style="font-size:12px;color:#555">Drive the model with:</span>';
+    html += '<button id="sp-steady" class="xbtn">Steady-state ' + p.adopt + '%</button>';
+    html += '<button id="sp-yr1" class="xbtn">Year-1 effective ' + avg + '%</button></div>';
+    html += '<div style="font-size:11px;color:#aaa;margin-top:6px">Steady-state is adoption once fully embedded. Year-1 effective is the average across the ramp - the realistic first-year figure for a business case.</div>';
+    box.innerHTML = html;
+    box.style.display = 'block';
+    styleBtn(document.getElementById('sp-steady'), !useRamp);
+    styleBtn(document.getElementById('sp-yr1'), useRamp);
+    document.getElementById('sp-steady').addEventListener('click', function() { useRamp = false; apply(current); });
+    document.getElementById('sp-yr1').addEventListener('click', function() { useRamp = true; apply(current); });
+  }
+
+  function injectUI() {
+    var anchor = document.getElementById('sl-fte');
+    if (!anchor) { return; }
+    var tab = document.getElementById('tab-workings');
+    if (!tab) { return; }
+    var card = document.createElement('div');
+    card.className = 'card';
+    var h = '';
+    h += '<h3 style="margin-bottom:4px">Program scale</h3>';
+    h += '<p class="note">Pick the scale of your AI program to load realistic defaults for team size, maturity, governance overhead and adoption - then fine-tune the sliders below.</p>';
+    h += '<div style="display:flex;gap:8px;flex-wrap:wrap">';
+    h += '<button id="sp-small" class="xbtn">' + PRESETS.small.label + '</button>';
+    h += '<button id="sp-medium" class="xbtn">' + PRESETS.medium.label + '</button>';
+    h += '<button id="sp-large" class="xbtn">' + PRESETS.large.label + '</button></div>';
+    h += '<div id="sp-ramp" style="display:none;margin-top:12px;border-top:1px solid #e0ddd6;padding-top:12px"></div>';
+    card.innerHTML = h;
+    tab.insertBefore(card, tab.firstChild);
+    document.getElementById('sp-small').addEventListener('click', function() { apply('small'); });
+    document.getElementById('sp-medium').addEventListener('click', function() { apply('medium'); });
+    document.getElementById('sp-large').addEventListener('click', function() { apply('large'); });
+  }
+  return { init: function() { injectUI(); } };
+})();
+ScalePresets.init();
 </script>
 </body>
 </html>
