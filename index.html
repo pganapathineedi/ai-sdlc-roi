@@ -284,11 +284,11 @@ select{background:#fff;border:1px solid #d0cdc6;border-radius:6px;padding:4px 8p
       <div style="font-size:12px;color:#555">Platform:</div>
       <select id="uc-platform"><option value="salesforce">Salesforce</option><option value="generic">Generic IT</option><option value="both">Salesforce + Custom dev</option></select>
     </div>
-    <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+    <div id="uc-apikey-row" style="margin-top:10px;display:flex;flex-wrap:wrap;gap:10px;align-items:center">
       <div style="font-size:12px;color:#555">Anthropic API key:</div>
       <input type="password" id="uc-apikey" placeholder="sk-ant-..." autocomplete="off" style="flex:1;min-width:220px;border:1px solid #d0cdc6;border-radius:6px;padding:4px 8px;font-size:12px;font-family:monospace">
     </div>
-    <div style="font-size:11px;color:#aaa;margin-top:5px">Your key stays in this browser only (never sent anywhere except Anthropic, never saved to the server). Get one at console.anthropic.com.</div>
+    <div id="uc-apikey-note" style="font-size:11px;color:#aaa;margin-top:5px">Your key stays in this browser only (never sent anywhere except Anthropic, never saved to the server). Get one at console.anthropic.com.</div>
     <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
       <button id="uc-btn" class="abtn">Estimate with AI agent</button>
       <button id="uc-clear" class="ebtn">Clear</button>
@@ -435,10 +435,18 @@ function init() {
   document.getElementById('apply-btn').addEventListener('click', applyConfig);
 
   document.getElementById('uc-btn').addEventListener('click', runEstimator);
-  try {
-    var savedKey = sessionStorage.getItem('uc_api_key');
-    if (savedKey) { document.getElementById('uc-apikey').value = savedKey; }
-  } catch (e) {}
+  if (typeof window.claude !== 'undefined' && window.claude && typeof window.claude.complete === 'function') {
+    // Inside the Claude.ai chat: free live AI, no key needed - hide the key field
+    document.getElementById('uc-apikey-row').style.display = 'none';
+    var note = document.getElementById('uc-apikey-note');
+    note.style.color = '#3B6D11';
+    note.textContent = 'Running inside Claude.ai - live AI is free here, no API key needed.';
+  } else {
+    try {
+      var savedKey = sessionStorage.getItem('uc_api_key');
+      if (savedKey) { document.getElementById('uc-apikey').value = savedKey; }
+    } catch (e) {}
+  }
   document.getElementById('uc-clear').addEventListener('click', function() {
     document.getElementById('uc-input').value = '';
     document.getElementById('uc-results').style.display = 'none';
@@ -1034,8 +1042,12 @@ function runEstimator() {
   var usecase = document.getElementById('uc-input').value.trim();
   if (!usecase) { alert('Please describe a use case first.'); return; }
   var apiKey = document.getElementById('uc-apikey').value.trim();
-  if (!apiKey) { alert('Please enter your Anthropic API key (sk-ant-...). It stays in your browser.'); return; }
-  try { sessionStorage.setItem('uc_api_key', apiKey); } catch (e) {}
+  var inArtifact = (typeof window.claude !== 'undefined' && window.claude && typeof window.claude.complete === 'function');
+  if (!inArtifact && !apiKey) {
+    alert('Enter your Anthropic API key (sk-ant-...) to run a live estimate.\n\nTip: open this tool inside the Claude.ai chat and it runs free, with no key needed.');
+    return;
+  }
+  if (apiKey) { try { sessionStorage.setItem('uc_api_key', apiKey); } catch (e) {} }
   var fte  = parseInt(document.getElementById('uc-fte').value, 10)  || 5;
   var rate = parseInt(document.getElementById('uc-rate').value, 10) || 120000;
   var plat = document.getElementById('uc-platform').value;
@@ -1068,11 +1080,24 @@ function runEstimator() {
   ucLog('Team: ' + fte + ' FTE at $' + rate.toLocaleString() + '/yr');
   ucStatus('Step 1 of 3 - parsing use case...');
 
+  var userMsg = 'Use case: ' + usecase + '. Team: ' + fte + ' FTE at $' + rate + '/yr. Platform: ' + pctx + '. Return JSON only.';
+
+  // PATH 1: inside the Claude.ai chat - use the artifact runtime (free, no key)
+  if (inArtifact) {
+    ucLog('Running via Claude.ai chat - no API key needed.');
+    ucStatus('Step 2 of 3 - evaluating AI tools...');
+    window.claude.complete(sys + '\n\n' + userMsg)
+      .then(function(raw) { finishEstimate(raw, btn); })
+      .catch(function(e) { failEstimate((e && e.message) ? e.message : String(e), btn); });
+    return;
+  }
+
+  // PATH 2: deployed website - call the Anthropic API with the user's key
   var payload = {
     model: 'claude-sonnet-4-6',
     max_tokens: 8000,
     system: sys,
-    messages: [{role: 'user', content: 'Use case: ' + usecase + '. Team: ' + fte + ' FTE at $' + rate + '/yr. Platform: ' + pctx + '. Return JSON only.'}]
+    messages: [{role: 'user', content: userMsg}]
   };
 
   fetch('https://api.anthropic.com/v1/messages', {
@@ -1091,7 +1116,6 @@ function runEstimator() {
     return resp.json();
   })
   .then(function(data) {
-    ucStatus('Step 3 of 3 - building deployment plan...');
     if (data.error) { throw new Error(data.error.message); }
     var raw = '';
     if (data.content) {
@@ -1099,29 +1123,36 @@ function runEstimator() {
         if (data.content[i].text) { raw += data.content[i].text; }
       }
     }
-    var clean = raw.replace(/```json/g, '').replace(/```/g, '').trim();
-    var result;
-    try {
-      result = JSON.parse(clean);
-    } catch (parseErr) {
-      var lastClose = Math.max(clean.lastIndexOf('}'), clean.lastIndexOf(']'));
-      if (lastClose > 0) { clean = clean.substring(0, lastClose + 1); }
-      result = JSON.parse(clean);
-    }
-    ucLog('Done - ' + result.tasks.length + ' tasks identified');
-    ucStatus('Complete');
-    document.getElementById('uc-spinner').style.display = 'none';
-    btn.disabled = false;
-    btn.textContent = 'Estimate with AI agent';
-    renderUC(result);
+    finishEstimate(raw, btn);
   })
-  .catch(function(e) {
-    ucStatus('Error: ' + e.message);
-    ucLog('ERROR: ' + e.message);
-    document.getElementById('uc-spinner').style.display = 'none';
-    btn.disabled = false;
-    btn.textContent = 'Estimate with AI agent';
-  });
+  .catch(function(e) { failEstimate(e.message, btn); });
+}
+
+function finishEstimate(raw, btn) {
+  ucStatus('Step 3 of 3 - building deployment plan...');
+  var clean = ('' + raw).replace(/```json/g, '').replace(/```/g, '').trim();
+  var result;
+  try {
+    result = JSON.parse(clean);
+  } catch (parseErr) {
+    var lastClose = Math.max(clean.lastIndexOf('}'), clean.lastIndexOf(']'));
+    if (lastClose > 0) { clean = clean.substring(0, lastClose + 1); }
+    result = JSON.parse(clean);
+  }
+  ucLog('Done - ' + result.tasks.length + ' tasks identified');
+  ucStatus('Complete');
+  document.getElementById('uc-spinner').style.display = 'none';
+  btn.disabled = false;
+  btn.textContent = 'Estimate with AI agent';
+  renderUC(result);
+}
+
+function failEstimate(msg, btn) {
+  ucStatus('Error: ' + msg);
+  ucLog('ERROR: ' + msg);
+  document.getElementById('uc-spinner').style.display = 'none';
+  btn.disabled = false;
+  btn.textContent = 'Estimate with AI agent';
 }
 
 function ucLog(msg) {
