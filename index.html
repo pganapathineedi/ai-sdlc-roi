@@ -447,7 +447,11 @@ function init() {
     document.getElementById('uc-fte').value = DEMO_FTE;
     document.getElementById('uc-rate').value = DEMO_RATE;
     document.getElementById('uc-platform').value = 'salesforce';
-    runEstimator();
+    var btn = document.getElementById('uc-btn');
+    if (btn) {
+      btn.textContent = 'Run demo estimate';
+      btn.style.background = '#1D9E75';
+    }
   }
   window.runDemoOnFirstOpen = runDemoOnFirstOpen;
 
