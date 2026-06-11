@@ -1302,6 +1302,160 @@ var ConfidenceBands = (function() {
   return { init: function() { injectUI(); } };
 })();
 ConfidenceBands.init();
+
+// MODULE: Role-based FTE breakdown
+// Depends on: sl-fte, sl-rate, sl-adopt sliders, recalc, document
+// Adds: toggle between blended-rate mode and a per-role headcount model in the Workings tab
+var RoleBased = (function() {
+  var DEF_ROLES = [
+    {name:'Solution Architect', cat:'Traditional', head:1, rate:180000, adopt:65, phases:'Requirements, Design'},
+    {name:'Senior Developer',   cat:'Traditional', head:3, rate:150000, adopt:80, phases:'Development, Testing'},
+    {name:'Junior Developer',   cat:'Traditional', head:2, rate:90000,  adopt:85, phases:'Development'},
+    {name:'Business Analyst',   cat:'Traditional', head:1, rate:110000, adopt:60, phases:'Requirements'},
+    {name:'QA Engineer',        cat:'Traditional', head:2, rate:100000, adopt:75, phases:'Testing'},
+    {name:'DevOps Engineer',    cat:'Traditional', head:1, rate:140000, adopt:70, phases:'Deployment, Monitoring'},
+    {name:'Project Manager',    cat:'Traditional', head:1, rate:130000, adopt:50, phases:'Requirements, Deployment'},
+    {name:'AI Prompt Engineer', cat:'AI-specific', head:1, rate:145000, adopt:95, phases:'Development, Docs'},
+    {name:'AI QA Specialist',   cat:'AI-specific', head:1, rate:120000, adopt:90, phases:'Testing'},
+    {name:'MLOps Engineer',     cat:'AI-specific', head:1, rate:160000, adopt:85, phases:'Deployment, Monitoring'}
+  ];
+  var ROLES = [];
+  var enabled = false;
+
+  function copyDefaults() {
+    ROLES = DEF_ROLES.map(function(r){ return {name:r.name, cat:r.cat, head:r.head, rate:r.rate, adopt:r.adopt, phases:r.phases}; });
+  }
+  function num(v, d) { var n = parseInt(v, 10); return isNaN(n) ? d : n; }
+
+  function compute() {
+    var totHead = 0, sumRate = 0, sumAdopt = 0, i;
+    for (i = 0; i < ROLES.length; i++) {
+      totHead  += ROLES[i].head;
+      sumRate  += ROLES[i].head * ROLES[i].rate;
+      sumAdopt += ROLES[i].head * ROLES[i].adopt;
+    }
+    var bRate  = totHead > 0 ? Math.round(sumRate / totHead)  : 0;
+    var bAdopt = totHead > 0 ? Math.round(sumAdopt / totHead) : 0;
+    return {head: totHead, rate: bRate, adopt: bAdopt};
+  }
+
+  function applyToSliders() {
+    var c = compute();
+    if (c.head <= 0) { return; }
+    var fte = document.getElementById('sl-fte');
+    var rate = document.getElementById('sl-rate');
+    var adopt = document.getElementById('sl-adopt');
+    if (c.head > num(fte.max, 50))  { fte.max = c.head; }
+    if (c.rate > num(rate.max, 250000)) { rate.max = c.rate; }
+    fte.value   = c.head;
+    rate.value  = c.rate;
+    adopt.value = Math.max(num(adopt.min, 20), Math.min(c.adopt, num(adopt.max, 100)));
+    recalc();
+    renderSummary(c);
+  }
+
+  function renderSummary(c) {
+    var s = document.getElementById('rb-summary');
+    if (!s) { return; }
+    if (enabled) {
+      s.style.display = 'block';
+      s.innerHTML = 'Role model applied to sliders: <b>' + c.head + ' FTE</b> &middot; blended rate <b>$' + Math.round(c.rate / 1000) + 'k</b> &middot; blended adoption <b>' + c.adopt + '%</b>. Team size, rate and adoption sliders are now driven by the table above.';
+    } else {
+      s.style.display = 'none';
+    }
+  }
+
+  function setSlidersDisabled(on) {
+    ['sl-fte','sl-rate','sl-adopt'].forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) { el.disabled = on; el.style.opacity = on ? '0.5' : '1'; }
+    });
+  }
+
+  function rowHtml(r, i) {
+    var catCls = r.cat === 'AI-specific' ? 'bb' : (r.cat === 'Custom' ? 'bx' : 'bg');
+    var h = '<tr>';
+    h += '<td><input class="ei eiw rl-name" data-i="' + i + '" type="text" value="' + r.name + '" style="width:150px;text-align:left"></td>';
+    h += '<td><span class="badge ' + catCls + '">' + r.cat + '</span></td>';
+    h += '<td><input class="ei rl-head" data-i="' + i + '" type="number" min="0" value="' + r.head + '"></td>';
+    h += '<td><input class="ei rl-rate" data-i="' + i + '" type="number" min="0" step="5000" value="' + r.rate + '"></td>';
+    h += '<td><input class="ei rl-adopt" data-i="' + i + '" type="number" min="0" max="100" value="' + r.adopt + '"></td>';
+    h += '<td><input class="ei eiw rl-ph" data-i="' + i + '" type="text" value="' + r.phases + '" style="width:160px;text-align:left"></td>';
+    h += '</tr>';
+    return h;
+  }
+
+  function bind(sel, evt, field, isNum) {
+    var els = document.querySelectorAll(sel);
+    var k;
+    for (k = 0; k < els.length; k++) {
+      (function(el) {
+        el.addEventListener(evt, function() {
+          var i = parseInt(el.dataset.i, 10);
+          if (isNum) { ROLES[i][field] = parseFloat(el.value) || 0; }
+          else { ROLES[i][field] = el.value; }
+          if (enabled) { applyToSliders(); }
+        });
+      })(els[k]);
+    }
+  }
+
+  function renderTable() {
+    var tb = document.getElementById('rb-tbody');
+    if (!tb) { return; }
+    var h = '', i;
+    for (i = 0; i < ROLES.length; i++) { h += rowHtml(ROLES[i], i); }
+    tb.innerHTML = h;
+    bind('.rl-name',  'input', 'name',   false);
+    bind('.rl-head',  'input', 'head',   true);
+    bind('.rl-rate',  'input', 'rate',   true);
+    bind('.rl-adopt', 'input', 'adopt',  true);
+    bind('.rl-ph',    'input', 'phases', false);
+    if (enabled) { applyToSliders(); }
+  }
+
+  function injectUI() {
+    var anchor = document.getElementById('sl-fte');
+    if (!anchor) { return; }
+    var sliderCard = anchor.closest('.card');
+    if (!sliderCard) { return; }
+    var card = document.createElement('div');
+    card.className = 'card';
+    var h = '';
+    h += '<h3 style="margin-bottom:4px">Role-based FTE model</h3>';
+    h += '<p class="note">Build the team from individual roles instead of a single blended rate. When enabled, the per-role headcount, rate and adoption drive the Team size, Blended rate and AI adoption sliders.</p>';
+    h += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap">';
+    h += '<label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#555;min-width:0"><input type="checkbox" id="rb-toggle"> Use role-based model</label>';
+    h += '<button id="rb-add" class="xbtn">Add role</button>';
+    h += '<button id="rb-reset" class="xbtn">Reset to defaults</button>';
+    h += '</div>';
+    h += '<div style="overflow-x:auto"><table><thead><tr><th>Role</th><th>Type</th><th>Headcount</th><th>Annual rate ($)</th><th>AI adoption (%)</th><th>Active phases</th></tr></thead><tbody id="rb-tbody"></tbody></table></div>';
+    h += '<div id="rb-summary" style="display:none;font-size:12px;color:#185FA5;background:#f0f7ff;border:1px solid #cfe3fb;border-radius:8px;padding:10px;margin-top:10px;line-height:1.6"></div>';
+    card.innerHTML = h;
+    if (sliderCard.nextSibling) { sliderCard.parentNode.insertBefore(card, sliderCard.nextSibling); }
+    else { sliderCard.parentNode.appendChild(card); }
+
+    copyDefaults();
+    renderTable();
+
+    document.getElementById('rb-toggle').addEventListener('change', function() {
+      enabled = this.checked;
+      setSlidersDisabled(enabled);
+      if (enabled) { applyToSliders(); }
+      else { renderSummary(compute()); recalc(); }
+    });
+    document.getElementById('rb-add').addEventListener('click', function() {
+      ROLES.push({name:'Custom role', cat:'Custom', head:1, rate:120000, adopt:70, phases:''});
+      renderTable();
+    });
+    document.getElementById('rb-reset').addEventListener('click', function() {
+      copyDefaults();
+      renderTable();
+    });
+  }
+  return { init: function() { injectUI(); } };
+})();
+RoleBased.init();
 </script>
 </body>
 </html>
