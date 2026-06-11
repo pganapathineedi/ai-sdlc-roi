@@ -1058,6 +1058,33 @@ function selectedToolList() {
   if (typeof SF_ADDONS !== 'undefined' && SF_ADDONS) { SF_ADDONS.forEach(function(a){ if (names.indexOf(a.name) === -1) { names.push(a.name); } }); }
   return names.join(', ');
 }
+function ucOptionIssues(opts) {
+  if (!opts || opts.length < 2) { return []; }
+  function findBy(kw) {
+    for (var i = 0; i < opts.length; i++) {
+      if (('' + (opts[i].optionLabel || '')).toLowerCase().indexOf(kw) !== -1) { return opts[i]; }
+    }
+    return null;
+  }
+  var costs = [], times = [], i;
+  for (i = 0; i < opts.length; i++) {
+    costs.push(parseFloat(opts[i].totalAiCost) || 0);
+    times.push(parseFloat(opts[i].deployTimeWeeks) || 0);
+  }
+  var minCost = Math.min.apply(null, costs);
+  var minTime = Math.min.apply(null, times);
+  var lc = findBy('cost');
+  var ft = findBy('fast');
+  var issues = [];
+  if (lc && (parseFloat(lc.totalAiCost) || 0) > minCost) {
+    issues.push('The "' + lc.optionLabel + '" option is not actually the cheapest — its AI cost is higher than another option.');
+  }
+  if (ft && (parseFloat(ft.deployTimeWeeks) || 0) > minTime) {
+    issues.push('The "' + ft.optionLabel + '" option is not actually the fastest — its deploy time is longer than another option.');
+  }
+  return issues;
+}
+
 function renderOptionsView(idx) {
   if (!UC_OPTS || !UC_OPTS.length) { return; }
   if (idx < 0 || idx >= UC_OPTS.length) { idx = 0; }
@@ -1067,6 +1094,14 @@ function renderOptionsView(idx) {
   if (!box) { box = document.createElement('div'); box.id = 'uc-options'; box.className = 'card'; }
   box.style.display = 'block';
   var h = '<h3 style="margin-bottom:4px">Three delivery options</h3><p class="note">Same use case, three approaches based on your selected tool stack. Click an option to load its full plan below; the table compares them at a glance.</p>';
+  var issues = ucOptionIssues(UC_OPTS);
+  if (issues.length) {
+    h += '<div style="background:#fdf3e7;border:1px solid #e8c89a;border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#854F0B">' +
+      '<b>Inconsistent estimate</b> &mdash; the AI returned option numbers that contradict their labels. Re-run the estimate for a clean comparison.' +
+      '<ul style="margin:6px 0 0 16px;padding:0">';
+    for (var ix = 0; ix < issues.length; ix++) { h += '<li>' + issues[ix] + '</li>'; }
+    h += '</ul></div>';
+  }
   h += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">';
   var i, o;
   for (i = 0; i < UC_OPTS.length; i++) {
@@ -1127,6 +1162,7 @@ function runEstimator() {
   var sysParts = [];
   sysParts.push('You are an expert AI SDLC estimator specialising in ' + pctx + '.');
   sysParts.push('Produce EXACTLY 3 delivery options for the SAME use case: option 1 optimised for LOWEST COST, option 2 for FASTEST TIME-TO-MARKET, option 3 BALANCED (best overall value). Set each optionLabel to "Lowest cost", "Fastest time-to-market", "Balanced" respectively, and give a one-line tradeoff and a short optimizedFor for each.');
+  sysParts.push('CRITICAL numeric ordering across the 3 options (scope is identical, so the numbers MUST be internally consistent): the "Lowest cost" option MUST have the LOWEST totalAiCost and monthlyRunCost of the three. The "Fastest time-to-market" option MUST have the LOWEST deployTimeWeeks and totalAiDays, and normally the HIGHEST totalAiCost (speed is bought with more tooling, licences and parallelism). The "Balanced" option MUST have a totalAiCost AND a deployTimeWeeks that both fall strictly BETWEEN the other two. Never let "Lowest cost" cost more than another option, and never let "Fastest time-to-market" be slower than another option. Re-check these inequalities before responding.');
   if (toolList) {
     sysParts.push('The client has selected this AI tool stack: ' + toolList + '. Strongly prefer recommending tools from this list for each task and toolchain layer. Only recommend a tool outside this list if there is a genuine capability gap, and in that case begin its rationale with "Outside selected stack:".');
   }
@@ -2228,7 +2264,7 @@ HelpText.init();
 // Depends on: document, window.claude (environment detection)
 // Adds: a small fixed build + environment badge so you can tell which copy you are viewing
 var VersionStamp = (function() {
-  var APP_VERSION = 'v2.1';
+  var APP_VERSION = 'v2.2';
   var BUILD_DATE = '2026-06-11';
   function injectUI() {
     var inArtifact = (typeof window.claude !== 'undefined' && window.claude && typeof window.claude.complete === 'function');
