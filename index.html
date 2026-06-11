@@ -1051,6 +1051,49 @@ function resetSection(sec) {
   recalc();
 }
 
+var UC_OPTS = null;
+function selectedToolList() {
+  var names = [];
+  if (typeof SAAS !== 'undefined' && SAAS) { SAAS.forEach(function(s){ if (s.seats > 0 && names.indexOf(s.name) === -1) { names.push(s.name); } }); }
+  if (typeof SF_ADDONS !== 'undefined' && SF_ADDONS) { SF_ADDONS.forEach(function(a){ if (names.indexOf(a.name) === -1) { names.push(a.name); } }); }
+  return names.join(', ');
+}
+function renderOptionsView(idx) {
+  if (!UC_OPTS || !UC_OPTS.length) { return; }
+  if (idx < 0 || idx >= UC_OPTS.length) { idx = 0; }
+  renderUC(UC_OPTS[idx]);
+  var res = document.getElementById('uc-results');
+  var box = document.getElementById('uc-options');
+  if (!box) { box = document.createElement('div'); box.id = 'uc-options'; box.className = 'card'; }
+  box.style.display = 'block';
+  var h = '<h3 style="margin-bottom:4px">Three delivery options</h3><p class="note">Same use case, three approaches based on your selected tool stack. Click an option to load its full plan below; the table compares them at a glance.</p>';
+  h += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">';
+  var i, o;
+  for (i = 0; i < UC_OPTS.length; i++) {
+    o = UC_OPTS[i];
+    h += '<button class="uc-opt-btn" data-i="' + i + '" style="cursor:pointer;text-align:left;min-width:160px;border:1px solid #d0cdc6;border-radius:8px;padding:8px 10px;background:#fff">' +
+      '<div style="font-weight:700;font-size:12px;color:#1a1a1a">' + (o.optionLabel || ('Option ' + (i + 1))) + '</div>' +
+      '<div style="font-size:10px;color:#888;margin-top:2px">' + fk(o.totalAiCost || 0) + ' all-in - ' + (o.deployTimeWeeks || 0) + ' wks - ' + (o.aiTimeSavingPct || 0) + '% saved</div></button>';
+  }
+  h += '</div>';
+  h += '<div style="overflow-x:auto"><table><thead><tr><th>Option</th><th>Optimised for</th><th>AI cost</th><th>Deploy</th><th>Time saved</th><th>Trade-off</th></tr></thead><tbody>';
+  for (i = 0; i < UC_OPTS.length; i++) {
+    o = UC_OPTS[i];
+    h += '<tr' + (i === idx ? ' style="background:#f0f7ff"' : '') + '><td><b>' + (o.optionLabel || ('Option ' + (i + 1))) + '</b></td><td>' + (o.optimizedFor || '') + '</td><td>' + fk(o.totalAiCost || 0) + '</td><td>' + (o.deployTimeWeeks || 0) + ' wks</td><td>' + (o.aiTimeSavingPct || 0) + '%</td><td class="src">' + (o.tradeoff || '') + '</td></tr>';
+  }
+  h += '</tbody></table></div>';
+  box.innerHTML = h;
+  res.insertBefore(box, res.firstChild);
+  var btns = document.querySelectorAll('.uc-opt-btn');
+  for (i = 0; i < btns.length; i++) {
+    (function(el) {
+      var bi = parseInt(el.getAttribute('data-i'), 10);
+      if (bi === idx) { el.style.background = '#eef2ff'; el.style.borderColor = '#185FA5'; }
+      el.addEventListener('click', function() { renderOptionsView(bi); });
+    })(btns[i]);
+  }
+}
+
 function runEstimator() {
   var usecase = document.getElementById('uc-input').value.trim();
   if (!usecase) { alert('Please describe a use case first.'); return; }
@@ -1077,14 +1120,20 @@ function runEstimator() {
   else if (plat === 'generic') { pctx = 'Generic IT cloud stack (AWS/Azure, React/Node, Python, GitHub Actions)'; }
   else { pctx = 'Salesforce plus custom development (Apex, LWC, APIs, microservices)'; }
 
-  var schema = '{"title":"string","summary":"2 sentence summary","complexity":"Low|Medium|High|Very High","totalManualDays":0,"totalAiDays":0,"totalManualCost":0,"totalAiCost":0,"monthlyRunCost":0,"deployTimeWeeks":0,"aiTimeSavingPct":0,"banner":"one sentence ROI","tasks":[{"phase":"Requirements|Design|Development|Testing|Deployment|Monitoring|Documentation","task":"name","description":"short","aiTool":"tool name","aiToolCategory":"Code Gen|Test Automation|Requirements|Deployment|Monitoring|Docs|LLM/Agent","manualDays":0,"aiDays":0,"toolMonthlyCost":0,"confidence":"High|Medium|Low","rationale":"short"}],"toolchain":[{"layer":"name","tool":"name","purpose":"short","monthlyCost":0,"alternatives":"short"}],"risks":["r1","r2","r3"],"architectureNotes":["n1","n2","n3"]}';
+  var toolList = selectedToolList();
+  var optSchema = '{"optionLabel":"Lowest cost|Fastest time-to-market|Balanced","optimizedFor":"short","tradeoff":"one line trade-off","title":"string","summary":"2 sentence summary","complexity":"Low|Medium|High|Very High","totalManualDays":0,"totalAiDays":0,"totalManualCost":0,"totalAiCost":0,"monthlyRunCost":0,"deployTimeWeeks":0,"aiTimeSavingPct":0,"banner":"one sentence ROI","tasks":[{"phase":"Requirements|Design|Development|Testing|Deployment|Monitoring|Documentation","task":"name","description":"short","aiTool":"tool name","aiToolCategory":"Code Gen|Test Automation|Requirements|Deployment|Monitoring|Docs|LLM/Agent","manualDays":0,"aiDays":0,"toolMonthlyCost":0,"confidence":"High|Medium|Low","rationale":"short"}],"toolchain":[{"layer":"name","tool":"name","purpose":"short","monthlyCost":0,"alternatives":"short"}],"risks":["r1","r2"],"architectureNotes":["n1","n2"]}';
+  var schema = '{"options":[OPTION, OPTION, OPTION]} where each OPTION matches: ' + optSchema;
 
   var sysParts = [];
   sysParts.push('You are an expert AI SDLC estimator specialising in ' + pctx + '.');
-  sysParts.push('Analyse the use case, break it into max 8 SDLC tasks, recommend the single best AI tool per task.');
+  sysParts.push('Produce EXACTLY 3 delivery options for the SAME use case: option 1 optimised for LOWEST COST, option 2 for FASTEST TIME-TO-MARKET, option 3 BALANCED (best overall value). Set each optionLabel to "Lowest cost", "Fastest time-to-market", "Balanced" respectively, and give a one-line tradeoff and a short optimizedFor for each.');
+  if (toolList) {
+    sysParts.push('The client has selected this AI tool stack: ' + toolList + '. Strongly prefer recommending tools from this list for each task and toolchain layer. Only recommend a tool outside this list if there is a genuine capability gap, and in that case begin its rationale with "Outside selected stack:".');
+  }
+  sysParts.push('For each option, break the work into max 6 SDLC tasks and recommend the single best AI tool per task.');
   sysParts.push('Respond with ONLY a valid JSON object matching this schema exactly. No markdown, no text outside JSON.');
   sysParts.push('Schema: ' + schema);
-  sysParts.push('Keep every string value short (under 80 chars). Max 6 toolchain layers, 3 risks, 3 notes.');
+  sysParts.push('Keep every string value short (under 80 chars). Per option: max 4 toolchain layers, 2 risks, 2 notes.');
   sysParts.push('Estimates realistic for a ' + fte + ' person team at $' + rate + ' per year blended rate. Real tools only.');
   var sys = sysParts.join(' ');
 
@@ -1108,7 +1157,7 @@ function runEstimator() {
   // PATH 2: deployed website - call the Anthropic API with the user's key
   var payload = {
     model: 'claude-sonnet-4-6',
-    max_tokens: 8000,
+    max_tokens: 16000,
     system: sys,
     messages: [{role: 'user', content: userMsg}]
   };
@@ -1152,12 +1201,21 @@ function finishEstimate(raw, btn) {
     if (lastClose > 0) { clean = clean.substring(0, lastClose + 1); }
     result = JSON.parse(clean);
   }
-  ucLog('Done - ' + result.tasks.length + ' tasks identified');
-  ucStatus('Complete');
   document.getElementById('uc-spinner').style.display = 'none';
   btn.disabled = false;
   btn.textContent = 'Estimate with AI agent';
-  renderUC(result);
+  ucStatus('Complete');
+  if (result.options && result.options.length) {
+    UC_OPTS = result.options;
+    ucLog('Done - ' + UC_OPTS.length + ' delivery options generated');
+    renderOptionsView(UC_OPTS.length >= 3 ? 2 : 0);
+  } else {
+    UC_OPTS = null;
+    var ob = document.getElementById('uc-options');
+    if (ob) { ob.style.display = 'none'; }
+    ucLog('Done - ' + (result.tasks ? result.tasks.length : 0) + ' tasks identified');
+    renderUC(result);
+  }
 }
 
 function failEstimate(msg, btn) {
@@ -2101,7 +2159,7 @@ ToolCatalog.init();
 // Depends on: document, window.claude (environment detection)
 // Adds: a small fixed build + environment badge so you can tell which copy you are viewing
 var VersionStamp = (function() {
-  var APP_VERSION = 'v1.9';
+  var APP_VERSION = 'v2.0';
   var BUILD_DATE = '2026-06-11';
   function injectUI() {
     var inArtifact = (typeof window.claude !== 'undefined' && window.claude && typeof window.claude.complete === 'function');
