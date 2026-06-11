@@ -1767,11 +1767,232 @@ var ValidateData = (function() {
 })();
 ValidateData.init();
 
+// MODULE: Multi-year TCO + payback
+// Depends on: getP, calcSaving, totalCost, trainCosts, document
+// Adds: N-year projection, cumulative net curve and payback period at the bottom of the Costs tab
+var MultiYearTCO = (function() {
+  var years = 3;
+  function money(n) { return '$' + Math.round(n).toLocaleString(); }
+  function styleBtn(b, on) { if (!b) { return; } b.style.background = on ? '#1a1a1a' : '#fff'; b.style.color = on ? '#fff' : '#555'; b.style.borderColor = on ? '#1a1a1a' : '#d0cdc6'; }
+
+  function compute() {
+    var p = getP();
+    var gross = calcSaving(p, p.level) * p.rate;
+    var cost = totalCost(p);
+    var oneOff = trainCosts(p).oo;
+    var net = gross - cost;
+    var rows = [];
+    for (var y = 1; y <= years; y++) {
+      rows.push({ y: y, gross: gross, cost: cost, oneOff: (y === 1 ? oneOff : 0), flow: (y === 1 ? net - oneOff : net), cum: net * y - oneOff });
+    }
+    var cumN = net * years - oneOff;
+    var invest = oneOff + cost * years;
+    return { rows: rows, oneOff: oneOff, net: net, cumN: cumN, roi: invest > 0 ? Math.round((cumN / invest) * 100) : 0, payback: net > 0 ? (oneOff / net) * 12 : null };
+  }
+
+  function render() {
+    var box = document.getElementById('tco-body');
+    if (!box) { return; }
+    var d = compute();
+    var pbTxt = d.payback === null ? 'No payback' : (d.payback > years * 12 ? '>' + (years * 12) + ' mo' : (d.payback < 1 ? '<1 mo' : '~' + Math.round(d.payback) + ' mo'));
+    var h = '';
+    h += '<div class="metrics" style="margin-bottom:12px">';
+    h += '<div class="' + (d.payback !== null && d.payback <= 18 ? 'ok' : 'warn') + '"><div class="lbl">Payback period</div><div class="val">' + pbTxt + '</div><div class="sub">to recover one-off cost</div></div>';
+    h += '<div class="' + (d.cumN >= 0 ? 'ok' : 'warn') + '"><div class="lbl">' + years + '-year net benefit</div><div class="val">' + money(d.cumN) + '</div><div class="sub">cumulative, after costs</div></div>';
+    h += '<div class="ok"><div class="lbl">' + years + '-year ROI</div><div class="val">' + d.roi + '%</div><div class="sub">return on AI investment</div></div>';
+    h += '<div class="metric"><div class="lbl">Year-1 one-off</div><div class="val" style="font-size:16px">' + money(d.oneOff) + '</div><div class="sub">setup + training</div></div></div>';
+    var maxAbs = 1, i;
+    for (i = 0; i < d.rows.length; i++) { maxAbs = Math.max(maxAbs, Math.abs(d.rows[i].cum)); }
+    var bars = '';
+    for (i = 0; i < d.rows.length; i++) {
+      var r = d.rows[i];
+      var col = r.cum >= 0 ? '#1D9E75' : '#B4564B';
+      bars += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">' +
+        '<div style="width:48px;font-size:11px;color:#555;font-weight:600">Year ' + r.y + '</div>' +
+        '<div style="flex:1;background:#f0ede8;border-radius:4px;height:18px"><div style="width:' + Math.round((Math.abs(r.cum) / maxAbs) * 100) + '%;height:18px;background:' + col + ';border-radius:4px"></div></div>' +
+        '<div style="width:96px;text-align:right;font-size:11px;font-weight:600;color:' + col + '">' + money(r.cum) + '</div></div>';
+    }
+    h += '<div style="font-size:11px;color:#888;margin-bottom:6px;font-weight:600">CUMULATIVE NET BENEFIT</div>' + bars;
+    h += '<div style="overflow-x:auto;margin-top:12px"><table><thead><tr><th>Year</th><th>Gross saving</th><th>AI run cost</th><th>One-off</th><th>Net cash flow</th><th>Cumulative</th></tr></thead><tbody>';
+    for (i = 0; i < d.rows.length; i++) {
+      var rr = d.rows[i];
+      h += '<tr><td><b>' + rr.y + '</b></td><td>' + money(rr.gross) + '</td><td>' + money(rr.cost) + '</td><td>' + (rr.oneOff ? money(rr.oneOff) : '-') + '</td><td style="color:' + (rr.flow >= 0 ? '#3B6D11' : '#B4564B') + ';font-weight:600">' + money(rr.flow) + '</td><td style="font-weight:600">' + money(rr.cum) + '</td></tr>';
+    }
+    h += '</tbody></table></div>';
+    box.innerHTML = h;
+  }
+  function setYears(n) { years = n; styleBtn(document.getElementById('tco-3'), n === 3); styleBtn(document.getElementById('tco-5'), n === 5); render(); }
+
+  function injectUI() {
+    var host = document.getElementById('tab-costs');
+    if (!host || typeof calcSaving === 'undefined') { return; }
+    var card = document.createElement('div');
+    card.className = 'card';
+    var h = '';
+    h += '<h3 style="margin-bottom:4px">Multi-year TCO and payback</h3>';
+    h += '<p class="note">Projects the business case over multiple years - cumulative net benefit, total cost of ownership and the payback period. Reflects the current model; click Recompute after changing inputs.</p>';
+    h += '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px"><span style="font-size:12px;color:#555">Horizon:</span>';
+    h += '<button id="tco-3" class="xbtn">3 years</button><button id="tco-5" class="xbtn">5 years</button><button id="tco-recompute" class="xbtn">Recompute</button></div>';
+    h += '<div id="tco-body"></div>';
+    card.innerHTML = h;
+    host.appendChild(card);
+    document.getElementById('tco-3').addEventListener('click', function(){ setYears(3); });
+    document.getElementById('tco-5').addEventListener('click', function(){ setYears(5); });
+    document.getElementById('tco-recompute').addEventListener('click', render);
+    setYears(3);
+  }
+  return { init: function() { injectUI(); } };
+})();
+MultiYearTCO.init();
+
+// MODULE: Use-case prioritization matrix
+// Depends on: document
+// Adds: an impact-vs-effort quadrant for sequencing candidate use cases (Exec tab)
+var Portfolio = (function() {
+  var items = [
+    {name:'Lead qualification AI', impact:8, effort:4},
+    {name:'Apex code review bot', impact:7, effort:5},
+    {name:'Regression test automation', impact:6, effort:3},
+    {name:'Doc generation', impact:5, effort:2},
+    {name:'Support ticket triage', impact:7, effort:6}
+  ];
+  function clamp10(v) { v = parseInt(v, 10); if (isNaN(v)) { v = 1; } if (v < 1) { v = 1; } if (v > 10) { v = 10; } return v; }
+
+  function renderPlot() {
+    var plot = document.getElementById('pm-plot');
+    if (!plot) { return; }
+    var dots = '';
+    for (var i = 0; i < items.length; i++) {
+      var it = items[i];
+      var quick = (it.impact >= 6 && it.effort <= 5);
+      dots += '<div title="' + it.name + ' (impact ' + it.impact + ', effort ' + it.effort + ')" style="position:absolute;left:' + (((it.effort - 1) / 9) * 100) + '%;bottom:' + (((it.impact - 1) / 9) * 100) + '%;transform:translate(-50%,50%);background:' + (quick ? '#1D9E75' : '#185FA5') + ';color:#fff;font-size:9px;font-weight:700;width:18px;height:18px;line-height:18px;text-align:center;border-radius:50%;box-shadow:0 1px 3px rgba(0,0,0,0.25)">' + (i + 1) + '</div>';
+    }
+    plot.innerHTML = dots;
+  }
+  function bindRow() {
+    var n = document.querySelectorAll('.pm-name'), i;
+    for (i = 0; i < n.length; i++) { n[i].addEventListener('input', function() { items[parseInt(this.getAttribute('data-i'), 10)].name = this.value; renderPlot(); }); }
+    var im = document.querySelectorAll('.pm-impact');
+    for (i = 0; i < im.length; i++) { im[i].addEventListener('input', function() { items[parseInt(this.getAttribute('data-i'), 10)].impact = clamp10(this.value); renderPlot(); }); }
+    var ef = document.querySelectorAll('.pm-effort');
+    for (i = 0; i < ef.length; i++) { ef[i].addEventListener('input', function() { items[parseInt(this.getAttribute('data-i'), 10)].effort = clamp10(this.value); renderPlot(); }); }
+    var dl = document.querySelectorAll('.pm-del');
+    for (i = 0; i < dl.length; i++) { dl[i].addEventListener('click', function() { items.splice(parseInt(this.getAttribute('data-i'), 10), 1); renderTable(); }); }
+  }
+  function renderTable() {
+    var tb = document.getElementById('pm-tbody');
+    if (!tb) { return; }
+    var h = '';
+    for (var i = 0; i < items.length; i++) {
+      var it = items[i];
+      h += '<tr><td style="font-weight:600;color:#555">' + (i + 1) + '</td>' +
+        '<td><input type="text" class="pm-name" data-i="' + i + '" value="' + it.name.replace(/"/g, '&quot;') + '" style="width:100%;min-width:130px;border:1px solid #d0cdc6;border-radius:6px;padding:3px 6px;font-size:12px"></td>' +
+        '<td><input type="number" class="pm-impact" data-i="' + i + '" min="1" max="10" value="' + it.impact + '" style="width:52px;border:1px solid #d0cdc6;border-radius:6px;padding:3px 6px;font-size:12px"></td>' +
+        '<td><input type="number" class="pm-effort" data-i="' + i + '" min="1" max="10" value="' + it.effort + '" style="width:52px;border:1px solid #d0cdc6;border-radius:6px;padding:3px 6px;font-size:12px"></td>' +
+        '<td><button class="pm-del xbtn" data-i="' + i + '">Remove</button></td></tr>';
+    }
+    tb.innerHTML = h;
+    bindRow();
+    renderPlot();
+  }
+  function injectUI() {
+    var host = document.getElementById('tab-exec');
+    if (!host) { return; }
+    var card = document.createElement('div');
+    card.className = 'card';
+    var h = '';
+    h += '<h3 style="margin-bottom:4px">Use-case prioritization matrix</h3>';
+    h += '<p class="note">Plot candidate AI use cases by business impact and delivery effort to decide what to do first. Top-left (high impact, low effort) are the quick wins. Numbers map to the table.</p>';
+    h += '<div style="display:flex;gap:16px;flex-wrap:wrap"><div style="flex:1;min-width:280px">';
+    h += '<div style="position:relative;height:300px;border-left:2px solid #d0cdc6;border-bottom:2px solid #d0cdc6;margin:8px 0 24px 70px">';
+    h += '<div style="position:absolute;left:4px;top:4px;font-size:9px;color:#3B6D11;font-weight:700">QUICK WINS</div>';
+    h += '<div style="position:absolute;right:4px;top:4px;font-size:9px;color:#185FA5;font-weight:700">MAJOR BETS</div>';
+    h += '<div style="position:absolute;left:4px;bottom:4px;font-size:9px;color:#aaa;font-weight:700">FILL-INS</div>';
+    h += '<div style="position:absolute;right:4px;bottom:4px;font-size:9px;color:#B4564B;font-weight:700">DEFER</div>';
+    h += '<div style="position:absolute;left:50%;top:0;bottom:0;border-left:1px dashed #e0ddd6"></div>';
+    h += '<div style="position:absolute;top:50%;left:0;right:0;border-top:1px dashed #e0ddd6"></div>';
+    h += '<div id="pm-plot" style="position:absolute;left:0;right:0;top:0;bottom:0"></div>';
+    h += '<div style="position:absolute;left:-64px;top:50%;transform:rotate(-90deg);font-size:10px;color:#888;font-weight:600">IMPACT &#9658;</div>';
+    h += '<div style="position:absolute;bottom:-20px;left:50%;transform:translateX(-50%);font-size:10px;color:#888;font-weight:600">EFFORT &#9658;</div>';
+    h += '</div></div>';
+    h += '<div style="flex:1;min-width:280px"><div style="overflow-x:auto"><table><thead><tr><th>#</th><th>Use case</th><th>Impact</th><th>Effort</th><th></th></tr></thead><tbody id="pm-tbody"></tbody></table></div>';
+    h += '<button id="pm-add" class="xbtn" style="margin-top:8px">Add use case</button></div></div>';
+    card.innerHTML = h;
+    host.appendChild(card);
+    renderTable();
+    document.getElementById('pm-add').addEventListener('click', function() { if (items.length < 12) { items.push({name:'New use case', impact:5, effort:5}); renderTable(); } });
+  }
+  return { init: function() { injectUI(); } };
+})();
+Portfolio.init();
+
+// MODULE: Readiness to maturity quiz
+// Depends on: sl-level, recalc, LEVEL_NAMES, document
+// Adds: a short org-readiness questionnaire that recommends a Crawl/Walk/Run/Fly tier (Models tab)
+var Readiness = (function() {
+  var QS = [
+    {q:'Data & platform foundation', opts:['Fragmented, manual data', 'Some central data, basic tooling', 'Solid platform, good data access', 'Modern, well-governed data platform']},
+    {q:'Team AI skills & experience', opts:['Little to no AI experience', 'A few enthusiasts experimenting', 'Several skilled practitioners', 'Deep in-house AI capability']},
+    {q:'Leadership sponsorship & funding', opts:['No clear sponsor or budget', 'Interested but unfunded', 'Funded program with a sponsor', 'Board-level mandate and budget']},
+    {q:'Governance, security & compliance', opts:['Not addressed yet', 'Ad-hoc, case by case', 'Defined policies in place', 'Mature, automated controls']},
+    {q:'Delivery process maturity', opts:['Manual, little CI/CD or testing', 'Basic CI/CD and testing', 'Strong CI/CD, automated testing', 'Elite DevOps, continuous delivery']}
+  ];
+  var TIER_NOTE = [
+    'Start with Crawl: a contained pilot with heavy enablement - prove value before scaling.',
+    'Start with Walk: integrate AI into a few squads with shared tooling and guardrails.',
+    'Start with Run: scale AI across teams with a platform and governance in place.',
+    'You are ready for Fly: AI-native delivery, org-wide, with mature controls.'
+  ];
+  function tierFor(t) { if (t <= 3) { return 0; } if (t <= 7) { return 1; } if (t <= 11) { return 2; } return 3; }
+
+  function evaluate() {
+    var total = 0, i;
+    for (i = 0; i < QS.length; i++) { var s = document.getElementById('rq-' + i); total += s ? parseInt(s.value, 10) : 0; }
+    var lvl = tierFor(total);
+    var out = document.getElementById('rq-out');
+    out.style.display = 'block';
+    out.innerHTML = '<div style="font-size:13px;color:#1a1a1a"><b>Recommended starting point: ' + LEVEL_NAMES[lvl] + '</b> (readiness score ' + total + ' / 15)</div>' +
+      '<div style="font-size:12px;color:#555;margin-top:6px">' + TIER_NOTE[lvl] + '</div>' +
+      '<button id="rq-apply" class="xbtn" data-lvl="' + lvl + '" style="margin-top:10px">Apply ' + LEVEL_NAMES[lvl] + ' to the model</button>';
+    document.getElementById('rq-apply').addEventListener('click', function() {
+      var lv = parseInt(this.getAttribute('data-lvl'), 10);
+      var el = document.getElementById('sl-level');
+      if (el) { el.value = lv; recalc(); }
+      var note = document.getElementById('rq-applied');
+      note.style.display = 'block';
+      note.textContent = 'Maturity level set to ' + LEVEL_NAMES[lv] + ' and all tabs recalculated.';
+    });
+  }
+  function injectUI() {
+    var host = document.getElementById('tab-models');
+    if (!host) { return; }
+    var card = document.createElement('div');
+    card.className = 'card';
+    var h = '';
+    h += '<h3 style="margin-bottom:4px">Readiness check</h3>';
+    h += '<p class="note">Answer five quick questions about your organisation to get a recommended starting maturity tier - then apply it to the model in one click.</p>';
+    for (var i = 0; i < QS.length; i++) {
+      h += '<div style="margin-bottom:10px"><div style="font-size:12px;color:#555;font-weight:600;margin-bottom:4px">' + (i + 1) + '. ' + QS[i].q + '</div>';
+      h += '<select id="rq-' + i + '" style="width:100%;max-width:440px;border:1px solid #d0cdc6;border-radius:6px;padding:5px 8px;font-size:12px;background:#fff">';
+      for (var j = 0; j < QS[i].opts.length; j++) { h += '<option value="' + j + '">' + QS[i].opts[j] + '</option>'; }
+      h += '</select></div>';
+    }
+    h += '<button id="rq-eval" class="abtn" style="margin-top:4px">See my recommendation</button>';
+    h += '<div id="rq-out" style="display:none;background:#faf9f6;border:1px solid #e0ddd6;border-radius:8px;padding:12px;margin-top:12px"></div>';
+    h += '<div id="rq-applied" style="display:none;font-size:12px;color:#185FA5;margin-top:8px"></div>';
+    card.innerHTML = h;
+    host.appendChild(card);
+    document.getElementById('rq-eval').addEventListener('click', evaluate);
+  }
+  return { init: function() { injectUI(); } };
+})();
+Readiness.init();
+
 // MODULE: Version stamp
 // Depends on: document, window.claude (environment detection)
 // Adds: a small fixed build + environment badge so you can tell which copy you are viewing
 var VersionStamp = (function() {
-  var APP_VERSION = 'v1.5';
+  var APP_VERSION = 'v1.6';
   var BUILD_DATE = '2026-06-11';
   function injectUI() {
     var inArtifact = (typeof window.claude !== 'undefined' && window.claude && typeof window.claude.complete === 'function');
