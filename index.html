@@ -1456,6 +1456,70 @@ var RoleBased = (function() {
   return { init: function() { injectUI(); } };
 })();
 RoleBased.init();
+
+// MODULE: Source Footnotes
+// Depends on: phase-tbody (SDLC phases table), tab-workings, document, MutationObserver
+// Adds: superscript citation numbers on each AI reduction % + a References panel in the Workings tab
+var SourceFootnotes = (function() {
+  var SRC = [
+    'McKinsey, The economic potential of generative AI, 2023',
+    'GitHub, Copilot early productivity research, 2023',
+    'GitHub and McKinsey, developer productivity study, 2023',
+    'Gartner and Copado, QA automation benchmarks, 2024',
+    'Copado AI and GitLab Duo, deployment automation data, 2024',
+    'Splunk AI and Dynatrace, AIOps monitoring reports, 2024',
+    'Notion AI and Confluence AI, documentation generation data, 2024'
+  ];
+
+  function addFootnotes() {
+    var tb = document.getElementById('phase-tbody');
+    if (!tb) { return; }
+    var rows = tb.querySelectorAll('tr');
+    var n = Math.min(rows.length, SRC.length);
+    var i;
+    for (i = 0; i < n; i++) {
+      var cells = rows[i].querySelectorAll('td');
+      if (cells.length >= 3 && !cells[2].querySelector('sup')) {
+        var sup = document.createElement('sup');
+        sup.textContent = '[' + (i + 1) + ']';
+        sup.title = SRC[i];
+        sup.style.color = '#185FA5';
+        sup.style.fontSize = '9px';
+        sup.style.marginLeft = '2px';
+        sup.style.fontWeight = '600';
+        cells[2].appendChild(sup);
+      }
+    }
+  }
+
+  function injectReferences() {
+    var wk = document.getElementById('tab-workings');
+    if (!wk) { return; }
+    var card = document.createElement('div');
+    card.className = 'card';
+    var h = '';
+    h += '<h3 style="margin-bottom:6px">References and sources</h3>';
+    h += '<p class="note">Benchmark AI effort-reduction figures draw on the sources below. Superscript numbers in the SDLC phases table map to this list.</p>';
+    h += '<ol style="font-size:12px;color:#555;line-height:2;padding-left:22px">';
+    var i;
+    for (i = 0; i < SRC.length; i++) { h += '<li>' + SRC[i] + '</li>'; }
+    h += '</ol>';
+    card.innerHTML = h;
+    wk.appendChild(card);
+  }
+
+  function injectUI() {
+    injectReferences();
+    var tb = document.getElementById('phase-tbody');
+    if (tb && window.MutationObserver) {
+      var obs = new MutationObserver(function(){ addFootnotes(); });
+      obs.observe(tb, {childList: true});
+    }
+    addFootnotes();
+  }
+  return { init: function() { injectUI(); } };
+})();
+SourceFootnotes.init();
 </script>
 </body>
 </html>
