@@ -2001,11 +2001,107 @@ var Readiness = (function() {
 })();
 Readiness.init();
 
+// MODULE: AI tool catalog
+// Depends on: SAAS, recalc, document
+// Adds: a curated picker of current AI tools at the top of the Configure tab; selections feed the cost model
+var ToolCatalog = (function() {
+  var CATALOG = [
+    {name:'Cursor', cat:'Code gen / IDE agents', rate:40},
+    {name:'Claude Code', cat:'Code gen / IDE agents', rate:20},
+    {name:'Windsurf', cat:'Code gen / IDE agents', rate:20},
+    {name:'OpenAI Codex', cat:'Code gen / IDE agents', rate:20},
+    {name:'Amazon Q Developer', cat:'Code gen / IDE agents', rate:19},
+    {name:'Gemini Code Assist', cat:'Code gen / IDE agents', rate:19},
+    {name:'JetBrains AI', cat:'Code gen / IDE agents', rate:20},
+    {name:'Tabnine', cat:'Code gen / IDE agents', rate:12},
+    {name:'Devin', cat:'Autonomous agents', rate:20, note:'usage scales'},
+    {name:'Replit Agent', cat:'Autonomous agents', rate:20},
+    {name:'Einstein for Developers', cat:'Salesforce', rate:25},
+    {name:'Agentforce Vibes', cat:'Salesforce', rate:42, note:'credit-based; indicative monthly'},
+    {name:'Confluence AI', cat:'Docs / knowledge', rate:10}
+  ];
+  var DEFAULT_SEATS = 5;
+  var BASE = 'GitHub Copilot, Copado Robotic Testing, Mabl / Testim AI, GitLab Duo, Notion AI, Splunk AI';
+
+  function findSaas(name) { for (var i = 0; i < SAAS.length; i++) { if (SAAS[i].name === name) { return i; } } return -1; }
+
+  function syncSummary() {
+    var mo = 0, n = 0;
+    for (var i = 0; i < CATALOG.length; i++) {
+      var cb = document.getElementById('tc-cb-' + i);
+      if (cb && cb.checked) {
+        n++;
+        mo += (parseFloat(document.getElementById('tc-rate-' + i).value) || 0) * (parseInt(document.getElementById('tc-seats-' + i).value, 10) || 0);
+      }
+    }
+    document.getElementById('tc-sum').textContent = n + ' tool(s) selected - $' + Math.round(mo).toLocaleString() + '/mo - $' + Math.round(mo * 12).toLocaleString() + '/yr added to the cost model';
+  }
+
+  function apply(i) {
+    var t = CATALOG[i];
+    var cb = document.getElementById('tc-cb-' + i);
+    var rate = parseFloat(document.getElementById('tc-rate-' + i).value) || 0;
+    var seats = parseInt(document.getElementById('tc-seats-' + i).value, 10) || 0;
+    var idx = findSaas(t.name);
+    if (cb.checked) {
+      if (idx === -1) { SAAS.push({name: t.name, rate: rate, seats: seats, active: [1, 1, 1, 1]}); }
+      else { SAAS[idx].rate = rate; SAAS[idx].seats = seats; SAAS[idx].active = [1, 1, 1, 1]; }
+    } else if (idx !== -1) {
+      SAAS.splice(idx, 1);
+    }
+    syncSummary();
+    recalc();
+  }
+
+  function injectUI() {
+    var host = document.getElementById('tab-config');
+    if (!host || typeof SAAS === 'undefined') { return; }
+    var card = document.createElement('div');
+    card.className = 'card';
+    var h = '';
+    h += '<h3 style="margin-bottom:4px">AI tool catalog</h3>';
+    h += '<p class="note">Pick the AI tools your program will adopt. Selected tools are added to the cost model (SaaS licences) and flow into the Costs, Exec and multi-year TCO tabs - and guide the use case estimator. Prices are indicative list prices; edit seats and $/seat to match your contract.</p>';
+    var cats = [], i, j;
+    for (i = 0; i < CATALOG.length; i++) { if (cats.indexOf(CATALOG[i].cat) === -1) { cats.push(CATALOG[i].cat); } }
+    for (var c = 0; c < cats.length; c++) {
+      h += '<div style="font-size:11px;color:#888;font-weight:700;margin:12px 0 6px">' + cats[c].toUpperCase() + '</div><div style="display:flex;flex-direction:column;gap:6px">';
+      for (j = 0; j < CATALOG.length; j++) {
+        if (CATALOG[j].cat === cats[c]) {
+          var t = CATALOG[j];
+          var noteTxt = t.note ? ' <span style="color:#aaa;font-size:11px">(' + t.note + ')</span>' : '';
+          h += '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">' +
+            '<label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#555;min-width:210px"><input type="checkbox" id="tc-cb-' + j + '"> ' + t.name + noteTxt + '</label>' +
+            '<span style="font-size:11px;color:#888">$</span><input type="number" id="tc-rate-' + j + '" value="' + t.rate + '" min="0" style="width:58px;border:1px solid #d0cdc6;border-radius:6px;padding:3px 6px;font-size:12px"><span style="font-size:11px;color:#888">/seat/mo x</span>' +
+            '<input type="number" id="tc-seats-' + j + '" value="' + DEFAULT_SEATS + '" min="0" style="width:52px;border:1px solid #d0cdc6;border-radius:6px;padding:3px 6px;font-size:12px"><span style="font-size:11px;color:#888">seats</span></div>';
+        }
+      }
+      h += '</div>';
+    }
+    h += '<div id="tc-sum" style="font-size:12px;color:#185FA5;font-weight:600;margin-top:14px"></div>';
+    h += '<div style="font-size:11px;color:#aaa;margin-top:6px">Base model already includes: ' + BASE + ' (edit these in the SaaS licences section below).</div>';
+    card.innerHTML = h;
+    host.insertBefore(card, host.firstChild);
+
+    for (var k = 0; k < CATALOG.length; k++) {
+      (function(idx) {
+        var cb = document.getElementById('tc-cb-' + idx);
+        if (findSaas(CATALOG[idx].name) !== -1) { cb.checked = true; }
+        cb.addEventListener('change', function() { apply(idx); });
+        document.getElementById('tc-rate-' + idx).addEventListener('input', function() { apply(idx); });
+        document.getElementById('tc-seats-' + idx).addEventListener('input', function() { apply(idx); });
+      })(k);
+    }
+    syncSummary();
+  }
+  return { init: function() { injectUI(); } };
+})();
+ToolCatalog.init();
+
 // MODULE: Version stamp
 // Depends on: document, window.claude (environment detection)
 // Adds: a small fixed build + environment badge so you can tell which copy you are viewing
 var VersionStamp = (function() {
-  var APP_VERSION = 'v1.8';
+  var APP_VERSION = 'v1.9';
   var BUILD_DATE = '2026-06-11';
   function injectUI() {
     var inArtifact = (typeof window.claude !== 'undefined' && window.claude && typeof window.claude.complete === 'function');
