@@ -2104,10 +2104,24 @@ var Readiness = (function() {
     var h = '';
     h += '<h3 style="margin-bottom:4px">Readiness check</h3>';
     h += '<p class="note">Answer five quick questions about your organisation to get a recommended starting maturity tier - then apply it to the model in one click.</p>';
+    h += '<details style="margin:4px 0 14px">';
+    h += '<summary style="font-size:12px;color:#7500C0;cursor:pointer;font-weight:600">How this is scored</summary>';
+    h += '<div style="font-size:12px;color:#555;background:#faf9f6;border:1px solid #e0ddd6;border-radius:8px;padding:12px;margin-top:8px">';
+    h += '<p style="margin:0 0 8px">Each question is scored on a <b>0-3 scale</b> by how mature your answer is (0 = least mature, 3 = most mature). With five questions, the maximum total is <b>5 &times; 3 = 15 points</b>.</p>';
+    h += '<p style="margin:0 0 6px">Your total maps to a recommended starting tier:</p>';
+    h += '<table style="border-collapse:collapse;font-size:12px;width:100%;max-width:360px">';
+    h += '<tr style="border-bottom:1px solid #e0ddd6"><th style="text-align:left;padding:4px 8px;color:#555">Score</th><th style="text-align:left;padding:4px 8px;color:#555">Recommended tier</th></tr>';
+    h += '<tr><td style="padding:4px 8px">0 - 3</td><td style="padding:4px 8px">' + LEVEL_NAMES[0] + '</td></tr>';
+    h += '<tr><td style="padding:4px 8px">4 - 7</td><td style="padding:4px 8px">' + LEVEL_NAMES[1] + '</td></tr>';
+    h += '<tr><td style="padding:4px 8px">8 - 11</td><td style="padding:4px 8px">' + LEVEL_NAMES[2] + '</td></tr>';
+    h += '<tr><td style="padding:4px 8px">12 - 15</td><td style="padding:4px 8px">' + LEVEL_NAMES[3] + '</td></tr>';
+    h += '</table>';
+    h += '<p style="margin:8px 0 0;color:#888">All five questions carry equal weight - one point per maturity step.</p>';
+    h += '</div></details>';
     for (var i = 0; i < QS.length; i++) {
       h += '<div style="margin-bottom:10px"><div style="font-size:12px;color:#555;font-weight:600;margin-bottom:4px">' + (i + 1) + '. ' + QS[i].q + '</div>';
       h += '<select id="rq-' + i + '" style="width:100%;max-width:440px;border:1px solid #d0cdc6;border-radius:6px;padding:5px 8px;font-size:12px;background:#fff">';
-      for (var j = 0; j < QS[i].opts.length; j++) { h += '<option value="' + j + '">' + QS[i].opts[j] + '</option>'; }
+      for (var j = 0; j < QS[i].opts.length; j++) { h += '<option value="' + j + '">' + QS[i].opts[j] + ' (' + j + ' pts)</option>'; }
       h += '</select></div>';
     }
     h += '<button id="rq-eval" class="abtn" style="margin-top:4px">See my recommendation</button>';
@@ -2290,7 +2304,7 @@ HelpText.init();
 // Depends on: document, window.claude (environment detection)
 // Adds: a small fixed build + environment badge so you can tell which copy you are viewing
 var VersionStamp = (function() {
-  var APP_VERSION = 'v2.3';
+  var APP_VERSION = 'v2.4';
   var BUILD_DATE = '2026-06-11';
   function injectUI() {
     var inArtifact = (typeof window.claude !== 'undefined' && window.claude && typeof window.claude.complete === 'function');
