@@ -2155,11 +2155,80 @@ var ToolCatalog = (function() {
 })();
 ToolCatalog.init();
 
+// MODULE: Help text & glossary
+// Depends on: tab-exec, tab-models, tab-costmodel, sl-fte, MODELS_DEF, document
+// Adds: indicative-cost note, maturity-level explainer (incl. multiplier), cost-section and slider descriptions
+var HelpText = (function() {
+  function note(html, margin) {
+    var d = document.createElement('div');
+    d.style.cssText = 'font-size:11px;color:#888;margin:' + (margin || '6px 0 10px') + ';line-height:1.55';
+    d.innerHTML = html;
+    return d;
+  }
+  function injectUI() {
+    var exec = document.getElementById('tab-exec');
+    if (exec) {
+      var metrics = exec.querySelector('.metrics');
+      var n = note('<b>Note:</b> cost and saving figures use indicative benchmark assumptions. Tailor tool prices, rates and token usage in the <b>Configure</b> tab, and replace the effort-reduction benchmarks with your pilot numbers via <b>Validate with your data</b> (Workings tab).');
+      if (metrics) { metrics.parentNode.insertBefore(n, metrics.nextSibling); }
+    }
+
+    var models = document.getElementById('tab-models');
+    if (models && typeof MODELS_DEF !== 'undefined') {
+      var card = document.createElement('div');
+      card.className = 'card';
+      var h = '<h3 style="margin-bottom:4px">What the maturity levels mean</h3>';
+      h += '<p class="note">How far along the AI-adoption journey the team is. The <b>multiplier</b> scales how much of the full benefit and cost each level captures, relative to Run (1.00 = the baseline for every figure in this tool).</p>';
+      var desc = [
+        'First pilots - a few tools, limited adoption. Lower cost and risk; captures a fraction of the full benefit.',
+        'AI built into several workflows, with shared tooling and standards.',
+        'Recommended steady state - AI across the whole SDLC. This is the 1.00 baseline.',
+        'AI-first delivery org-wide - the highest benefit, and the highest investment.'
+      ];
+      h += '<div style="display:flex;flex-direction:column;gap:6px">';
+      for (var i = 0; i < MODELS_DEF.length; i++) {
+        var m = MODELS_DEF[i];
+        h += '<div style="font-size:12px;color:#555"><b>' + m.name + '</b> (' + m.label + ', multiplier x' + m.mult.toFixed(2) + ') - ' + (desc[i] || '') + '</div>';
+      }
+      h += '</div>';
+      card.innerHTML = h;
+      models.insertBefore(card, models.firstChild);
+    }
+
+    var cm = document.getElementById('tab-costmodel');
+    if (cm) {
+      var secDesc = {
+        '1': 'What you pay LLM providers per token. Driven by tokens per task x model price x tasks/day x adopters - pick your primary model above.',
+        '2': 'Per-seat subscriptions for AI dev tools. Add or remove tools in the AI tool catalog on the Configure tab.',
+        '3': 'Usage-based Salesforce AI add-ons (Agentforce, Einstein, Data Cloud).',
+        '4': 'Only relevant if you self-host models. Leave as "Not needed" for a SaaS-only stack.',
+        '5': 'One-off and recurring cost to upskill the team - the one-off here drives the payback period.',
+        '6': 'All-in annual AI cost at each maturity level, side by side.'
+      };
+      var sdivs = cm.querySelectorAll('.sdiv');
+      for (var s = 0; s < sdivs.length; s++) {
+        var key = ((sdivs[s].textContent || '').trim()).charAt(0);
+        if (secDesc[key]) { sdivs[s].parentNode.insertBefore(note(secDesc[key], '2px 0 8px'), sdivs[s].nextSibling); }
+      }
+    }
+
+    var fte = document.getElementById('sl-fte');
+    if (fte) {
+      var pcard = fte.closest('.card');
+      if (pcard) {
+        pcard.appendChild(note('<b>Team size (FTE)</b> - delivery people in scope.<br><b>Blended annual rate</b> - fully-loaded average cost per person; turns time saved into money.<br><b>AI adoption rate</b> - share of the team actively using AI; scales the benefit.<br><b>Quality review overhead</b> - portion of saved time spent reviewing and validating AI output.<br><b>Maturity level</b> - Crawl / Walk / Run / Fly (see the Crawl / Walk / Run / Fly tab for what each means).', '12px 0 0'));
+      }
+    }
+  }
+  return { init: function() { injectUI(); } };
+})();
+HelpText.init();
+
 // MODULE: Version stamp
 // Depends on: document, window.claude (environment detection)
 // Adds: a small fixed build + environment badge so you can tell which copy you are viewing
 var VersionStamp = (function() {
-  var APP_VERSION = 'v2.0';
+  var APP_VERSION = 'v2.1';
   var BUILD_DATE = '2026-06-11';
   function injectUI() {
     var inArtifact = (typeof window.claude !== 'undefined' && window.claude && typeof window.claude.complete === 'function');
