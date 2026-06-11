@@ -1681,6 +1681,108 @@ var ScalePresets = (function() {
   return { init: function() { injectUI(); } };
 })();
 ScalePresets.init();
+
+// MODULE: Validate with your data
+// Depends on: PHASES, DEF_PHASES, recalc, document
+// Adds: per-phase observed AI-reduction overrides from pilot data, at bottom of Workings tab
+var ValidateData = (function() {
+  function clampPct(v) { if (isNaN(v)) { v = 0; } if (v < 0) { v = 0; } if (v > 95) { v = 95; } return v; }
+  function modelPct(i) { return Math.round(DEF_PHASES[i].aiR * 100); }
+  function curPct(i) { return Math.round((PHASES[i] && PHASES[i].aiR ? PHASES[i].aiR : 0) * 100); }
+
+  function updateDeltas() {
+    var cells = document.querySelectorAll('.vd-delta');
+    for (var k = 0; k < cells.length; k++) {
+      var i = parseInt(cells[k].getAttribute('data-i'), 10);
+      var inp = document.querySelector('.vd-air[data-i="' + i + '"]');
+      if (!inp) { continue; }
+      var d = clampPct(parseInt(inp.value, 10)) - modelPct(i);
+      var col = d > 0 ? '#3B6D11' : (d < 0 ? '#9A3B2F' : '#888');
+      var sign = d > 0 ? '+' : '';
+      cells[k].innerHTML = '<span style="color:' + col + ';font-weight:600">' + sign + d + ' pts</span>';
+    }
+  }
+
+  function renderRows() {
+    var tb = document.getElementById('vd-tbody');
+    if (!tb) { return; }
+    var html = '';
+    for (var i = 0; i < PHASES.length; i++) {
+      html += '<tr>' +
+        '<td><b>' + PHASES[i].name + '</b></td>' +
+        '<td>' + modelPct(i) + '%</td>' +
+        '<td><input type="number" class="vd-air" data-i="' + i + '" min="0" max="95" value="' + curPct(i) + '" style="width:62px;border:1px solid #d0cdc6;border-radius:6px;padding:3px 6px;font-size:12px"> %</td>' +
+        '<td class="vd-delta" data-i="' + i + '"></td></tr>';
+    }
+    tb.innerHTML = html;
+    updateDeltas();
+    var inputs = document.querySelectorAll('.vd-air');
+    for (var j = 0; j < inputs.length; j++) { inputs[j].addEventListener('input', updateDeltas); }
+  }
+
+  function apply() {
+    var inputs = document.querySelectorAll('.vd-air');
+    for (var j = 0; j < inputs.length; j++) {
+      var i = parseInt(inputs[j].getAttribute('data-i'), 10);
+      var v = clampPct(parseInt(inputs[j].value, 10));
+      inputs[j].value = v;
+      if (PHASES[i]) { PHASES[i].aiR = v / 100; }
+    }
+    var basis = document.getElementById('vd-basis').value.trim();
+    var sm = document.getElementById('vd-summary');
+    sm.style.display = 'block';
+    sm.textContent = 'The business case now runs on your observed data' + (basis ? ' (' + basis + ')' : '') + '. Every tab has been recalculated. Use Reset to return to benchmark assumptions.';
+    recalc();
+    updateDeltas();
+  }
+
+  function resetModel() {
+    for (var i = 0; i < PHASES.length && i < DEF_PHASES.length; i++) { PHASES[i].aiR = DEF_PHASES[i].aiR; }
+    recalc();
+    renderRows();
+    document.getElementById('vd-summary').style.display = 'none';
+  }
+
+  function injectUI() {
+    var wk = document.getElementById('tab-workings');
+    if (!wk || typeof PHASES === 'undefined' || !PHASES) { return; }
+    var card = document.createElement('div');
+    card.className = 'card';
+    var h = '';
+    h += '<h3 style="margin-bottom:4px">Validate with your data</h3>';
+    h += '<p class="note">Replace the benchmark AI effort-reduction assumptions with what you actually measured in a pilot. The whole business case then runs on your numbers instead of generic benchmarks - the strongest version to put in front of sponsors.</p>';
+    h += '<div style="margin-bottom:10px"><input type="text" id="vd-basis" placeholder="Pilot basis (optional) - e.g. 8-week pilot, 12 developers, 3 Salesforce orgs" style="width:100%;max-width:520px;border:1px solid #d0cdc6;border-radius:6px;padding:5px 8px;font-size:12px"></div>';
+    h += '<div style="overflow-x:auto"><table><thead><tr><th>Phase</th><th>Model benchmark</th><th>Your observed reduction</th><th>vs model</th></tr></thead><tbody id="vd-tbody"></tbody></table></div>';
+    h += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">';
+    h += '<button id="vd-apply" class="abtn">Apply my data</button>';
+    h += '<button id="vd-reset" class="ebtn">Reset to model defaults</button></div>';
+    h += '<div id="vd-summary" style="display:none;font-size:12px;color:#185FA5;background:#f0f7ff;border:1px solid #cfe3fb;border-radius:8px;padding:10px;margin-top:12px;line-height:1.5"></div>';
+    card.innerHTML = h;
+    wk.appendChild(card);
+    renderRows();
+    document.getElementById('vd-apply').addEventListener('click', apply);
+    document.getElementById('vd-reset').addEventListener('click', resetModel);
+  }
+  return { init: function() { injectUI(); } };
+})();
+ValidateData.init();
+
+// MODULE: Version stamp
+// Depends on: document, window.claude (environment detection)
+// Adds: a small fixed build + environment badge so you can tell which copy you are viewing
+var VersionStamp = (function() {
+  var APP_VERSION = 'v1.5';
+  var BUILD_DATE = '2026-06-11';
+  function injectUI() {
+    var inArtifact = (typeof window.claude !== 'undefined' && window.claude && typeof window.claude.complete === 'function');
+    var b = document.createElement('div');
+    b.textContent = 'AI SDLC ROI ' + APP_VERSION + ' - ' + BUILD_DATE + ' - ' + (inArtifact ? 'Claude.ai' : 'Web');
+    b.style.cssText = 'position:fixed;bottom:8px;right:10px;z-index:9999;font-size:10px;color:#b0ada6;background:rgba(255,255,255,0.85);border:1px solid #e0ddd6;border-radius:6px;padding:2px 7px;font-family:inherit;pointer-events:none';
+    document.body.appendChild(b);
+  }
+  return { init: function() { injectUI(); } };
+})();
+VersionStamp.init();
 </script>
 </body>
 </html>
