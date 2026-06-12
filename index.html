@@ -57,6 +57,7 @@ tr:hover td{background:#faf5ff}
 .mcard{background:#fff;border:1px solid #ebe7f0;border-radius:12px;padding:14px;font-size:12px;box-shadow:0 1px 3px rgba(26,19,32,.05);transition:transform .15s ease,box-shadow .15s ease}
 .mcard:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(26,19,32,.1)}
 .mcard.rec{border:2px solid #A100FF;box-shadow:0 4px 14px rgba(161,0,255,.18)}
+.mcard.current{border:2px solid #1D9E75;box-shadow:0 4px 14px rgba(29,158,117,.22)}
 .mcard .mtag{font-size:11px;font-weight:600;padding:2px 7px;border-radius:6px;display:inline-block;margin-bottom:6px}
 .bar{background:#efeaf4;border-radius:4px;height:5px;margin:4px 0 6px}
 .fill{height:100%;border-radius:4px}
@@ -335,6 +336,12 @@ select{background:#fff;border:1px solid #ddd6e6;border-radius:6px;padding:5px 9p
     <div class="card">
       <h3 style="margin-bottom:10px">SDLC task breakdown - AI vs manual</h3>
       <div style="overflow-x:auto"><table><thead><tr><th>Phase</th><th>Task</th><th>Recommended AI tool</th><th>Manual</th><th>With AI</th><th>Saved</th><th>Tool cost/mo</th><th>Confidence</th></tr></thead><tbody id="uc-task-tbody"></tbody></table></div>
+    </div>
+    <div class="card" id="uc-phase-cost-card">
+      <h3 style="margin-bottom:4px">Cost to deliver by phase - your configured prices</h3>
+      <p class="note" id="uc-phase-cost-note">Licence cost per SDLC phase, priced from the tools you configured (same prices that drive the Cost-model tab), not the AI's general estimate. Licences are shared across phases, so the delivery total counts each tool once.</p>
+      <div style="overflow-x:auto"><table><thead><tr><th>Phase</th><th>Tools used (matched to your stack)</th><th>Licences active /mo</th></tr></thead><tbody id="uc-phase-cost-tbody"></tbody></table></div>
+      <div id="uc-phase-cost-summary" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px"></div>
     </div>
     <div class="card">
       <h3 style="margin-bottom:4px">Delivery timeline - Traditional vs AI-augmented SDLC</h3>
@@ -768,8 +775,11 @@ function recalc() {
     var mCost = Math.round(totalCost(pp) / 1000);
     var mNet  = mSave - mCost;
     var mPct  = Math.round(mFTE / p.fte * 100);
-    var recBadge = m.rec ? '<div style="font-size:10px;font-weight:600;background:#F2E6FF;color:#7500C0;padding:2px 8px;border-radius:6px;display:inline-block;margin-bottom:4px">Recommended</div>' : '';
-    cards += '<div class="mcard' + (m.rec ? ' rec' : '') + '">' + recBadge +
+    var isCur = (i === p.level);
+    var recBadge = m.rec ? '<span style="font-size:10px;font-weight:600;background:#F2E6FF;color:#7500C0;padding:2px 8px;border-radius:6px;display:inline-block">Recommended</span>' : '';
+    var curBadge = isCur ? '<span style="font-size:10px;font-weight:600;background:#EAF3DE;color:#3B6D11;padding:2px 8px;border-radius:6px;display:inline-block">Your selection</span>' : '';
+    var badges = (recBadge || curBadge) ? '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px">' + recBadge + curBadge + '</div>' : '';
+    cards += '<div class="mcard' + (m.rec ? ' rec' : '') + (isCur ? ' current' : '') + '">' + badges +
       '<div class="mtag" style="background:' + m.bg + ';color:' + m.color + '">' + m.name + '</div>' +
       '<h3>' + m.label + '</h3>' +
       '<div style="color:#888;font-size:11px;margin:4px 0 2px">Effort saving</div>' +
@@ -1100,6 +1110,60 @@ function selectedToolList() {
   if (typeof SF_ADDONS !== 'undefined' && SF_ADDONS) { SF_ADDONS.forEach(function(a){ if (names.indexOf(a.name) === -1) { names.push(a.name); } }); }
   return names.join(', ');
 }
+
+// Configured tool catalogue with the tool's OWN prices (the same prices that drive the Cost-model tab).
+// SAAS monthly = rate * seats; SF add-on monthly = unit * monthly.
+function pricedCatalog() {
+  var cat = [];
+  if (typeof SAAS !== 'undefined' && SAAS) {
+    SAAS.forEach(function(s){ if (s.seats > 0) { cat.push({name:s.name, monthly:Math.round(s.rate * s.seats), detail:'US$' + s.rate + '/seat/mo x ' + s.seats + ' seats', kind:'saas'}); } });
+  }
+  if (typeof SF_ADDONS !== 'undefined' && SF_ADDONS) {
+    SF_ADDONS.forEach(function(a){ cat.push({name:a.name, monthly:Math.round(a.unit * a.monthly), detail:(a.note || a.model || ''), kind:'sf'}); });
+  }
+  return cat;
+}
+
+// Tokenise a tool name into significant words, dropping generic/marketing tokens so that
+// e.g. 'GitHub Copilot' matches the configured 'GitHub Copilot Business'.
+var TOOL_STOP = {ai:1,the:1,for:1,and:1,pro:1,plus:1,seat:1,seats:1,credit:1,credits:1,business:1,enterprise:1,robotic:1,testing:1,suite:1,cloud:0};
+function toolTokens(name) {
+  var raw = ('' + name).toLowerCase().replace(/[^a-z0-9 ]/g, ' ').split(/\s+/);
+  var out = [];
+  raw.forEach(function(w){ if (w.length >= 3 && TOOL_STOP[w] !== 1 && out.indexOf(w) === -1) { out.push(w); } });
+  return out;
+}
+
+// Match an AI-recommended tool name to a configured catalogue entry by shared significant tokens.
+function matchConfiguredTool(aiTool, cat) {
+  var want = toolTokens(aiTool);
+  if (!want.length) { return null; }
+  var best = null, bestScore = 0;
+  cat.forEach(function(c){
+    var have = toolTokens(c.name);
+    var score = 0;
+    want.forEach(function(w){ if (have.indexOf(w) !== -1) { score++; } });
+    if (score > bestScore) { bestScore = score; best = c; }
+  });
+  return bestScore > 0 ? best : null;
+}
+
+// Build the priced-stack context block that is sent to the AI so its cost figures use YOUR prices.
+function pricingContext() {
+  var lines = [];
+  var cat = pricedCatalog();
+  if (cat.length) {
+    lines.push('The client has configured this AI tool stack WITH THESE EXACT MONTHLY PRICES (USD). Use these prices verbatim for licence/run costs - do NOT substitute your own pricing. When you recommend one of these tools for a task, set that task toolMonthlyCost to the matching price below:');
+    cat.forEach(function(c){ lines.push('- ' + c.name + ': US$' + c.monthly + '/mo (' + c.detail + ')'); });
+  }
+  if (typeof LLM_PRICES !== 'undefined' && LLM_PRICES) {
+    var sel = document.getElementById('llm-model');
+    var k = sel ? sel.value : 'sonnet';
+    var pr = LLM_PRICES[k];
+    if (pr) { lines.push('Primary LLM token price (USD per 1M tokens): $' + pr.pIn + ' input / $' + pr.pOut + ' output. Use this for any token-based run-cost math.'); }
+  }
+  return lines.join('\n');
+}
 function ucOptionIssues(opts) {
   if (!opts || opts.length < 2) { return []; }
   function findBy(kw) {
@@ -1198,6 +1262,7 @@ function runEstimator() {
   else { pctx = 'Salesforce plus custom development (Apex, LWC, APIs, microservices)'; }
 
   var toolList = selectedToolList();
+  var priceCtx = pricingContext();
   var optSchema = '{"optionLabel":"Lowest cost|Fastest time-to-market|Balanced","optimizedFor":"short","tradeoff":"one line trade-off","title":"string","summary":"2 sentence summary","complexity":"Low|Medium|High|Very High","totalManualDays":0,"totalAiDays":0,"totalManualCost":0,"totalAiCost":0,"monthlyRunCost":0,"deployTimeWeeks":0,"aiTimeSavingPct":0,"banner":"one sentence ROI","tasks":[{"phase":"Requirements|Design|Development|Testing|Deployment|Monitoring|Documentation","task":"name","description":"short","aiTool":"tool name","aiToolCategory":"Code Gen|Test Automation|Requirements|Deployment|Monitoring|Docs|LLM/Agent","manualDays":0,"aiDays":0,"toolMonthlyCost":0,"confidence":"High|Medium|Low","rationale":"short"}],"toolchain":[{"layer":"name","tool":"name","purpose":"short","monthlyCost":0,"alternatives":"short"}],"risks":["r1","r2"],"architectureNotes":["n1","n2"]}';
   var schema = '{"options":[OPTION, OPTION, OPTION]} where each OPTION matches: ' + optSchema;
 
@@ -1207,6 +1272,10 @@ function runEstimator() {
   sysParts.push('CRITICAL numeric ordering across the 3 options (scope is identical, so the numbers MUST be internally consistent): the "Lowest cost" option MUST have the LOWEST totalAiCost and monthlyRunCost of the three. The "Fastest time-to-market" option MUST have the LOWEST deployTimeWeeks and totalAiDays, and normally the HIGHEST totalAiCost (speed is bought with more tooling, licences and parallelism). The "Balanced" option MUST have a totalAiCost AND a deployTimeWeeks that both fall strictly BETWEEN the other two. Never let "Lowest cost" cost more than another option, and never let "Fastest time-to-market" be slower than another option. Re-check these inequalities before responding.');
   if (toolList) {
     sysParts.push('The client has selected this AI tool stack: ' + toolList + '. Strongly prefer recommending tools from this list for each task and toolchain layer. Only recommend a tool outside this list if there is a genuine capability gap, and in that case begin its rationale with "Outside selected stack:".');
+  }
+  if (priceCtx) {
+    sysParts.push(priceCtx);
+    sysParts.push('All toolMonthlyCost, monthlyCost (toolchain) and monthlyRunCost figures MUST be grounded in the configured prices above. For tools in the stack use the exact price given; for any out-of-stack tool give a realistic market price and flag it. monthlyRunCost should be the sum of the distinct tools actually used to deliver this use case (count each licence once), plus token run cost.');
   }
   sysParts.push('For each option, break the work into max 6 SDLC tasks and recommend the single best AI tool per task.');
   sysParts.push('Respond with ONLY a valid JSON object matching this schema exactly. No markdown, no text outside JSON.');
@@ -1346,6 +1415,7 @@ function renderUC(r) {
   });
   document.getElementById('uc-task-tbody').innerHTML = trows;
 
+  renderPhaseCost(r);
   buildGantt(r);
 
   var tcHtml = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px">';
@@ -1369,6 +1439,68 @@ function renderUC(r) {
   document.getElementById('uc-arch').innerHTML = archHtml;
 
   document.getElementById('uc-results').style.display = 'block';
+}
+
+// Per-phase licence cost computed from the configured tool prices (not the AI's own numbers).
+// Each task's recommended AI tool is matched to a configured tool; its monthly price is shown
+// against every phase that uses it. The delivery total counts each distinct tool once.
+function renderPhaseCost(r) {
+  var tbody = document.getElementById('uc-phase-cost-tbody');
+  var summary = document.getElementById('uc-phase-cost-summary');
+  if (!tbody || !r || !r.tasks) { return; }
+  var cat = pricedCatalog();
+  var phaseOrder = [], byPhase = {};
+  r.tasks.forEach(function(t) {
+    var ph = t.phase || 'Other';
+    if (!byPhase[ph]) { byPhase[ph] = []; phaseOrder.push(ph); }
+    byPhase[ph].push(t);
+  });
+
+  var uniqueIn = {};   // configured tool name -> monthly (counted once for the delivery total)
+  var uniqueOut = {};  // out-of-stack tool name -> AI-estimated monthly
+  var rows = '';
+
+  phaseOrder.forEach(function(ph) {
+    var seen = {}, chips = [], phaseSum = 0;
+    byPhase[ph].forEach(function(t) {
+      var m = matchConfiguredTool(t.aiTool, cat);
+      if (m) {
+        if (!seen[m.name]) {
+          seen[m.name] = true;
+          phaseSum += m.monthly;
+          uniqueIn[m.name] = m.monthly;
+          chips.push('<span style="background:#EAF3DE;color:#3B6D11;font-size:10px;padding:2px 7px;border-radius:6px;font-weight:600;display:inline-block;margin:2px 2px 0 0">' + m.name + ' &middot; $' + m.monthly.toLocaleString() + '/mo</span>');
+        }
+      } else {
+        var label = t.aiTool || 'tool';
+        if (!seen['~' + label]) {
+          seen['~' + label] = true;
+          var est = Math.round(parseFloat(t.toolMonthlyCost) || 0);
+          uniqueOut[label] = est;
+          chips.push('<span style="background:#FAEEDA;color:#854F0B;font-size:10px;padding:2px 7px;border-radius:6px;font-weight:600;display:inline-block;margin:2px 2px 0 0" title="Not in your configured stack - AI estimate">' + label + ' &middot; ~$' + est.toLocaleString() + '/mo (AI est)</span>');
+        }
+      }
+    });
+    rows += '<tr><td><b>' + ph + '</b></td><td>' + (chips.length ? chips.join(' ') : '<span class="src">No tool matched</span>') + '</td><td><b>$' + Math.round(phaseSum).toLocaleString() + '</b></td></tr>';
+  });
+  tbody.innerHTML = rows;
+
+  var totalIn = 0, k;
+  for (k in uniqueIn) { if (uniqueIn.hasOwnProperty(k)) { totalIn += uniqueIn[k]; } }
+  var totalOut = 0;
+  for (k in uniqueOut) { if (uniqueOut.hasOwnProperty(k)) { totalOut += uniqueOut[k]; } }
+  var grand = totalIn + totalOut;
+  var aiEst = Math.round(parseFloat(r.monthlyRunCost) || 0);
+  var delta = aiEst - grand;
+
+  var cards = '';
+  cards += '<div class="ok" style="flex:1;min-width:130px"><div class="lbl">Your stack licences</div><div class="val">$' + Math.round(totalIn).toLocaleString() + '/mo</div><div class="sub">Configured tools, each counted once</div></div>';
+  if (totalOut > 0) {
+    cards += '<div class="warn" style="flex:1;min-width:130px"><div class="lbl">Out-of-stack tools</div><div class="val">$' + Math.round(totalOut).toLocaleString() + '/mo</div><div class="sub">AI estimate - not in your config</div></div>';
+  }
+  cards += '<div class="metric" style="flex:1;min-width:130px"><div class="lbl">Delivery total /mo</div><div class="val" style="color:#7500C0">$' + Math.round(grand).toLocaleString() + '/mo</div><div class="sub">$' + Math.round(grand * 12).toLocaleString() + '/yr at your prices</div></div>';
+  cards += '<div class="metric" style="flex:1;min-width:130px"><div class="lbl">AI run-cost estimate</div><div class="val" style="font-size:15px">$' + aiEst.toLocaleString() + '/mo</div><div class="sub">' + (delta === 0 ? 'Matches your prices' : (delta > 0 ? '$' + Math.abs(delta).toLocaleString() + '/mo higher than your config' : '$' + Math.abs(delta).toLocaleString() + '/mo lower than your config')) + '</div></div>';
+  if (summary) { summary.innerHTML = cards; }
 }
 
 function buildGantt(r) {
@@ -2319,7 +2451,7 @@ HelpText.init();
 // Depends on: document, window.claude (environment detection)
 // Adds: a small fixed build + environment badge so you can tell which copy you are viewing
 var VersionStamp = (function() {
-  var APP_VERSION = 'v2.9';
+  var APP_VERSION = 'v3.0';
   var BUILD_DATE = '2026-06-12';
   function injectUI() {
     var inArtifact = (typeof window.claude !== 'undefined' && window.claude && typeof window.claude.complete === 'function');
