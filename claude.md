@@ -25,10 +25,6 @@ git push
 ```
 Render auto-deploys within 60 seconds. Live URL: https://ai-sdlc-roi.onrender.com
 
-## Passphrase
-The document is protected by a client-side passphrase: `aiROI2026`
-To change it, find `var PASSPHRASE = 'aiROI2026';` in index.html and update.
-
 ## Architecture — module pattern
 New features are added as self-contained IIFE modules at the bottom of the script block, AFTER the `init()` call. Each module follows this pattern:
 
@@ -46,6 +42,7 @@ ModuleName.init();
 ## Existing modules
 - **Core app** — tabs, sliders, recalc engine, cost model, config UI
 - **ConfidenceBands** — low/mid/high scenario toggle in Workings tab (injected above slider section)
+- **AgentforceVibes** — 'Agentforce Vibes' tab: story volume + per-story effort calculator (editable benchmarks), Flex credit cost model (defaults to 180 credits/story), live Salesforce Flex credit pricing fetch via Anthropic API web search (`web_search_20260209`), and a manual contracted-rate override. Costs in AUD.
 
 ## Modules planned (build in this order)
 1. ~~Confidence Bands~~ DONE
