@@ -173,7 +173,7 @@ select{background:#fff;border:1px solid #ddd6e6;border-radius:6px;padding:5px 9p
   <div class="card">
     <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap">
       <div style="font-size:12px;color:#555">Primary LLM:</div>
-      <select id="llm-model"><option value="sonnet">Claude Sonnet ($3/$15 per 1M)</option><option value="gpt4o">GPT-4o ($5/$15 per 1M)</option><option value="haiku">Claude Haiku ($0.80/$4 per 1M)</option><option value="gpt4mini">GPT-4o mini ($0.15/$0.60 per 1M)</option><option value="opus">Claude Opus ($15/$75 per 1M)</option></select>
+      <select id="llm-model"><option value="sonnet">Claude Sonnet ($3/$15 per 1M)</option><option value="gpt4o">GPT-4o ($2.50/$10 per 1M)</option><option value="haiku">Claude Haiku ($1/$5 per 1M)</option><option value="gpt4mini">GPT-4o mini ($0.15/$0.60 per 1M)</option><option value="opus">Claude Opus ($5/$25 per 1M)</option></select>
     </div>
     <div style="overflow-x:auto"><table><thead><tr><th>Phase</th><th>Task</th><th>Model tier</th><th>Tokens in/out</th><th>Tasks/dev/day</th><th>Cost/dev/day</th><th>Monthly</th><th>Annual</th></tr></thead><tbody id="token-tbody"></tbody></table></div>
     <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap">
@@ -413,11 +413,11 @@ var DEF_SAAS = [
   {name:'Copado Robotic Testing',   rate:150, seats:2,  active:[0,1,1,1]},
   {name:'Mabl / Testim AI',         rate:200, seats:0,  active:[0,0,1,1]},
   {name:'GitLab Duo Pro',           rate:19,  seats:0,  active:[0,0,1,1]},
-  {name:'Notion AI',                rate:10,  seats:5,  active:[1,1,1,1]},
+  {name:'Notion AI',                rate:20,  seats:5,  active:[1,1,1,1]},
   {name:'Splunk AI',                rate:300, seats:0,  active:[0,0,1,1]}
 ];
 var DEF_SF = [
-  {name:'Agentforce', model:'per conversation', unit:0.10,  monthly:500,  note:'~500 AI interactions/mo'},
+  {name:'Agentforce', model:'per action (Flex)', unit:0.10,  monthly:500,  note:'20 Flex credits/action at US$500/100k'},
   {name:'Einstein Copilot seats', model:'per seat/mo', unit:50, monthly:5, note:'5 power-user seats'},
   {name:'Einstein Code', model:'per seat/mo', unit:25, monthly:10, note:'All developers'},
   {name:'Data Cloud credits', model:'per credit', unit:0.012, monthly:5000, note:'~5k credits/mo'}
@@ -438,11 +438,11 @@ var DEF_TRAINING = [
   {name:'Ongoing micro-learning',        type:'Recurring',unitCost:100, perPerson:true,  annual:100}
 ];
 var LLM_PRICES = {
-  sonnet:  {pIn:3,    pOut:15,   mIn:0.80, mOut:4,    cIn:0.15, cOut:0.60},
-  gpt4o:   {pIn:5,    pOut:15,   mIn:0.15, mOut:0.60, cIn:0.15, cOut:0.60},
-  haiku:   {pIn:0.80, pOut:4,    mIn:0.80, mOut:4,    cIn:0.15, cOut:0.60},
+  sonnet:  {pIn:3,    pOut:15,   mIn:1,    mOut:5,    cIn:0.15, cOut:0.60},
+  gpt4o:   {pIn:2.50, pOut:10,   mIn:0.15, mOut:0.60, cIn:0.15, cOut:0.60},
+  haiku:   {pIn:1,    pOut:5,    mIn:1,    mOut:5,    cIn:0.15, cOut:0.60},
   gpt4mini:{pIn:0.15, pOut:0.60, mIn:0.15, mOut:0.60, cIn:0.15, cOut:0.60},
-  opus:    {pIn:15,   pOut:75,   mIn:3,    mOut:15,   cIn:0.80, cOut:4}
+  opus:    {pIn:5,    pOut:25,   mIn:3,    mOut:15,   cIn:1,    cOut:5}
 };
 var DEF_TEAM = {fte:10, rate:120000, adopt:70, overhead:25, level:2};
 var LEVEL_NAMES = ['Crawl','Walk','Run','Fly'];
@@ -2319,7 +2319,7 @@ HelpText.init();
 // Depends on: document, window.claude (environment detection)
 // Adds: a small fixed build + environment badge so you can tell which copy you are viewing
 var VersionStamp = (function() {
-  var APP_VERSION = 'v2.7';
+  var APP_VERSION = 'v2.8';
   var BUILD_DATE = '2026-06-12';
   function injectUI() {
     var inArtifact = (typeof window.claude !== 'undefined' && window.claude && typeof window.claude.complete === 'function');
@@ -2357,8 +2357,8 @@ var AgentforceVibes = (function() {
   ];
   // Blended AUD per hour, derived from benchmark sample (Offshore A$1,800 / 22h; Onshore A$4,950 / 22h).
   var MODEL_RATES = {offshore: 82, onshore: 225};
-  // Default AUD per Flex Credit (indicative ~USD 0.01 at USD 1,000 / 100,000 credits, ~1.5 FX).
-  var DEFAULT_CREDIT_RATE = 0.015;
+  // Default AUD per Flex Credit (~USD 0.005 at USD 500 / 100,000 credits list price, ~1.5 FX).
+  var DEFAULT_CREDIT_RATE = 0.0075;
 
   function aud(n) { return 'A$' + Math.round(n).toLocaleString(); }
   function audBig(n) {
@@ -2525,7 +2525,7 @@ var AgentforceVibes = (function() {
     document.getElementById('vib-price-result').style.display = 'none';
     fetchStatus(inArtifact ? 'Checking pricing...' : 'Searching the web...');
 
-    var sys = 'You are a Salesforce pricing analyst. Find the current published Salesforce Agentforce Flex Credits pricing - the consumption-based model where Flex Credits are purchased in blocks (commonly cited as around USD 1,000 per 100,000 credits). Respond with ONLY a valid JSON object, no markdown and no text outside JSON, matching: {"usdPerCredit": number, "audPerCredit": number, "packDescription": "short string", "summary": "2 sentence plain-English summary", "source": "publisher or URL", "asOf": "approx date"}. If pricing is quoted per pack, compute usdPerCredit from it. Use an approximate USD to AUD rate of 1.5 to derive audPerCredit. Keep strings short.';
+    var sys = 'You are a Salesforce pricing analyst. Find the current published Salesforce Agentforce Flex Credits pricing - the consumption-based model where Flex Credits are purchased in blocks (commonly cited as around USD 500 per 100,000 credits). Respond with ONLY a valid JSON object, no markdown and no text outside JSON, matching: {"usdPerCredit": number, "audPerCredit": number, "packDescription": "short string", "summary": "2 sentence plain-English summary", "source": "publisher or URL", "asOf": "approx date"}. If pricing is quoted per pack, compute usdPerCredit from it. Use an approximate USD to AUD rate of 1.5 to derive audPerCredit. Keep strings short.';
     var userMsg = 'What is the latest Salesforce Agentforce Flex Credit price per credit? Return JSON only.';
 
     if (inArtifact) {
@@ -2916,25 +2916,25 @@ var Provenance = (function() {
   // fid + apply: only on 'live' rows that can be refreshed and written back into the model.
   var P = [
     // --- LLM / token pricing ---
-    {cat:'LLM token pricing', label:'Claude Sonnet ($/1M in / out)', val:'$3 / $15', tier:'live', fid:'claude_sonnet', apply:{type:'llm',key:'sonnet'}, src:'Anthropic', url:'https://www.anthropic.com/pricing', asOf:'baseline', why:'Primary model option for code/requirements tasks.'},
-    {cat:'LLM token pricing', label:'Claude Haiku ($/1M in / out)', val:'$0.80 / $4', tier:'live', fid:'claude_haiku', apply:{type:'llm',key:'haiku'}, src:'Anthropic', url:'https://www.anthropic.com/pricing', asOf:'baseline', why:'Low-cost tier for high-volume tasks.'},
-    {cat:'LLM token pricing', label:'Claude Opus ($/1M in / out)', val:'$15 / $75', tier:'live', fid:'claude_opus', apply:{type:'llm',key:'opus'}, src:'Anthropic', url:'https://www.anthropic.com/pricing', asOf:'baseline', why:'Premium tier for hardest reasoning.'},
-    {cat:'LLM token pricing', label:'GPT-4o ($/1M in / out)', val:'$5 / $15', tier:'live', fid:'gpt4o', apply:{type:'llm',key:'gpt4o'}, src:'OpenAI', url:'https://openai.com/api/pricing/', asOf:'baseline', why:'Alternative primary model option.'},
-    {cat:'LLM token pricing', label:'GPT-4o mini ($/1M in / out)', val:'$0.15 / $0.60', tier:'live', fid:'gpt4mini', apply:{type:'llm',key:'gpt4mini'}, src:'OpenAI', url:'https://openai.com/api/pricing/', asOf:'baseline', why:'Low-cost alternative tier.'},
+    {cat:'LLM token pricing', label:'Claude Sonnet 4.6 ($/1M in / out)', val:'$3 / $15', tier:'live', fid:'claude_sonnet', apply:{type:'llm',key:'sonnet'}, src:'Anthropic (platform.claude.com pricing)', url:'https://platform.claude.com/docs/en/about-claude/pricing', asOf:'Jun 2026', why:'Primary model option for code/requirements tasks.'},
+    {cat:'LLM token pricing', label:'Claude Haiku 4.5 ($/1M in / out)', val:'$1 / $5', tier:'live', fid:'claude_haiku', apply:{type:'llm',key:'haiku'}, src:'Anthropic (platform.claude.com pricing)', url:'https://platform.claude.com/docs/en/about-claude/pricing', asOf:'Jun 2026', why:'Low-cost tier for high-volume tasks. Repriced from $0.80/$4 in 2026.'},
+    {cat:'LLM token pricing', label:'Claude Opus 4.8 ($/1M in / out)', val:'$5 / $25', tier:'live', fid:'claude_opus', apply:{type:'llm',key:'opus'}, src:'Anthropic (platform.claude.com pricing)', url:'https://platform.claude.com/docs/en/about-claude/pricing', asOf:'Jun 2026', why:'Premium tier. Opus 4.8 list price is $5/$25 - far below the old $15/$75.'},
+    {cat:'LLM token pricing', label:'GPT-4o ($/1M in / out)', val:'$2.50 / $10', tier:'live', fid:'gpt4o', apply:{type:'llm',key:'gpt4o'}, src:'OpenAI', url:'https://openai.com/api/pricing/', asOf:'Jun 2026', why:'Legacy pricing; OpenAI now steers new builds to GPT-4.1. Repriced from $5/$15.'},
+    {cat:'LLM token pricing', label:'GPT-4o mini ($/1M in / out)', val:'$0.15 / $0.60', tier:'live', fid:'gpt4mini', apply:{type:'llm',key:'gpt4mini'}, src:'OpenAI', url:'https://openai.com/api/pricing/', asOf:'Jun 2026', why:'Low-cost alternative tier.'},
     // --- SaaS dev-tool licences ---
-    {cat:'SaaS dev-tool licences', label:'GitHub Copilot Business ($/seat/mo)', val:'$19', tier:'live', fid:'copilot_business', apply:{type:'saas',name:'GitHub Copilot Business',field:'rate'}, src:'GitHub', url:'https://github.com/features/copilot/plans', asOf:'baseline', why:'Per-seat AI pair-programming.'},
-    {cat:'SaaS dev-tool licences', label:'GitHub Copilot Enterprise ($/seat/mo)', val:'$39', tier:'live', fid:'copilot_enterprise', apply:{type:'saas',name:'GitHub Copilot Enterprise',field:'rate'}, src:'GitHub', url:'https://github.com/features/copilot/plans', asOf:'baseline', why:'Enterprise tier with org context.'},
-    {cat:'SaaS dev-tool licences', label:'GitLab Duo Pro ($/seat/mo)', val:'$19', tier:'live', fid:'gitlab_duo', apply:{type:'saas',name:'GitLab Duo Pro',field:'rate'}, src:'GitLab', url:'https://about.gitlab.com/pricing/', asOf:'baseline', why:'AI add-on for GitLab.'},
-    {cat:'SaaS dev-tool licences', label:'Notion AI ($/seat/mo)', val:'$10', tier:'live', fid:'notion_ai', apply:{type:'saas',name:'Notion AI',field:'rate'}, src:'Notion', url:'https://www.notion.com/pricing', asOf:'baseline', why:'AI docs/knowledge add-on.'},
+    {cat:'SaaS dev-tool licences', label:'GitHub Copilot Business ($/seat/mo)', val:'$19', tier:'live', fid:'copilot_business', apply:{type:'saas',name:'GitHub Copilot Business',field:'rate'}, src:'GitHub', url:'https://github.com/features/copilot/plans', asOf:'Jun 2026', why:'Per-seat AI pair-programming. Seat fee unchanged; now includes $19/mo AI credits (usage-based billing from Jun 2026).'},
+    {cat:'SaaS dev-tool licences', label:'GitHub Copilot Enterprise ($/seat/mo)', val:'$39', tier:'live', fid:'copilot_enterprise', apply:{type:'saas',name:'GitHub Copilot Enterprise',field:'rate'}, src:'GitHub', url:'https://github.com/features/copilot/plans', asOf:'Jun 2026', why:'Enterprise tier with org context; includes 3,900 AI credits/user.'},
+    {cat:'SaaS dev-tool licences', label:'GitLab Duo Pro ($/seat/mo)', val:'$19', tier:'live', fid:'gitlab_duo', apply:{type:'saas',name:'GitLab Duo Pro',field:'rate'}, src:'GitLab', url:'https://about.gitlab.com/pricing/', asOf:'Jun 2026', why:'AI add-on for Premium/Ultimate.'},
+    {cat:'SaaS dev-tool licences', label:'Notion AI ($/seat/mo)', val:'$20', tier:'live', fid:'notion_ai', apply:{type:'saas',name:'Notion AI',field:'rate'}, src:'Notion', url:'https://www.notion.com/pricing', asOf:'Jun 2026', why:'Standalone $10 add-on retired; full Notion AI now bundled into the Business plan at $20/user/mo.'},
     {cat:'SaaS dev-tool licences', label:'Copado Robotic Testing ($/seat/mo)', val:'$150', tier:'live', fid:'copado', apply:{type:'saas',name:'Copado Robotic Testing',field:'rate'}, src:'Copado', url:'https://www.copado.com/pricing', asOf:'indicative', why:'Salesforce test automation. Vendor pricing is quote-based - figure is indicative.'},
     {cat:'SaaS dev-tool licences', label:'Mabl / Testim AI ($/seat/mo)', val:'$200', tier:'live', fid:'mabl', apply:{type:'saas',name:'Mabl / Testim AI',field:'rate'}, src:'mabl', url:'https://www.mabl.com/pricing', asOf:'indicative', why:'AI test automation. Quote-based - indicative.'},
     {cat:'SaaS dev-tool licences', label:'Splunk AI ($/seat/mo)', val:'$300', tier:'live', fid:'splunk', apply:{type:'saas',name:'Splunk AI',field:'rate'}, src:'Splunk', url:'https://www.splunk.com/en_us/products/pricing.html', asOf:'indicative', why:'AIOps / monitoring. Quote-based - indicative.'},
     // --- Salesforce add-on pricing ---
-    {cat:'Salesforce add-on pricing', label:'Agentforce ($/conversation)', val:'$0.10', tier:'live', fid:'sf_agentforce', apply:{type:'sf',name:'Agentforce',field:'unit'}, src:'Salesforce', url:'https://www.salesforce.com/agentforce/pricing/', asOf:'baseline', why:'Consumption pricing per AI conversation.'},
-    {cat:'Salesforce add-on pricing', label:'Einstein Copilot ($/seat/mo)', val:'$50', tier:'live', fid:'sf_einstein_copilot', apply:{type:'sf',name:'Einstein Copilot seats',field:'unit'}, src:'Salesforce', url:'https://www.salesforce.com/products/einstein-ai-solutions/pricing/', asOf:'baseline', why:'Power-user AI assistant seats.'},
-    {cat:'Salesforce add-on pricing', label:'Einstein for Developers ($/seat/mo)', val:'$25', tier:'live', fid:'sf_einstein_code', apply:{type:'sf',name:'Einstein Code',field:'unit'}, src:'Salesforce', url:'https://www.salesforce.com/products/platform/einstein-for-developers/', asOf:'indicative', why:'Apex/code generation. List price indicative.'},
-    {cat:'Salesforce add-on pricing', label:'Data Cloud credits ($/credit)', val:'$0.012', tier:'live', fid:'sf_datacloud', apply:{type:'sf',name:'Data Cloud credits',field:'unit'}, src:'Salesforce', url:'https://www.salesforce.com/data/pricing/', asOf:'indicative', why:'Consumption pricing per Data Cloud credit. See the Salesforce tab for the detailed consumption model.'},
-    {cat:'Salesforce add-on pricing', label:'Agentforce Flex credits', val:'~A$0.015 / credit', tier:'live', fid:'sf_flex', src:'Salesforce', url:'https://www.salesforce.com/agentforce/pricing/', asOf:'indicative', why:'Used in the Agentforce Vibes model. Refresh on the Salesforce > Agentforce Vibes tab.'},
+    {cat:'Salesforce add-on pricing', label:'Agentforce ($/standard action)', val:'$0.10 / action ($2 / conversation)', tier:'live', fid:'sf_agentforce', apply:{type:'sf',name:'Agentforce',field:'unit'}, src:'Salesforce', url:'https://www.salesforce.com/agentforce/pricing/', asOf:'Jun 2026', why:'Flex Credits model: 20 credits/standard action at US$500/100k credits = $0.10. Conversations model is a separate $2/conversation for customer-facing agents.'},
+    {cat:'Salesforce add-on pricing', label:'Einstein Copilot ($/seat/mo)', val:'$50', tier:'live', fid:'sf_einstein_copilot', apply:{type:'sf',name:'Einstein Copilot seats',field:'unit'}, src:'Salesforce', url:'https://www.salesforce.com/products/einstein-ai-solutions/pricing/', asOf:'Jun 2026', why:'Power-user AI assistant seats; commonly cited in the $25-50/user/mo range.'},
+    {cat:'Salesforce add-on pricing', label:'Einstein for Developers ($/seat/mo)', val:'$25', tier:'live', fid:'sf_einstein_code', apply:{type:'sf',name:'Einstein Code',field:'unit'}, src:'Salesforce', url:'https://www.salesforce.com/products/platform/einstein-for-developers/', asOf:'indicative', why:'Apex/code generation. List price indicative - bundled in several editions.'},
+    {cat:'Salesforce add-on pricing', label:'Data Cloud credits ($/credit)', val:'$0.012', tier:'live', fid:'sf_datacloud', apply:{type:'sf',name:'Data Cloud credits',field:'unit'}, src:'Salesforce', url:'https://www.salesforce.com/data/pricing/', asOf:'indicative', why:'Consumption pricing per Data Cloud credit; per-credit list price is not cleanly published - indicative. See the Salesforce tab for the detailed consumption model.'},
+    {cat:'Salesforce add-on pricing', label:'Agentforce Flex credits', val:'US$500 / 100k credits (~US$0.005 ea, ~A$0.0075)', tier:'live', fid:'sf_flex', src:'Salesforce', url:'https://www.salesforce.com/agentforce/pricing/', asOf:'Jun 2026', why:'Used in the Agentforce Vibes model (default updated to A$0.0075/credit). Refresh on the Salesforce > Agentforce Vibes tab.'},
     // --- Productivity benchmarks ---
     {cat:'Productivity benchmarks', label:'AI reduction by SDLC phase (20-50%)', val:'Req 25% / Design 20% / Dev 45% / Test 40% / Deploy 20% / Monitor 25% / Docs 50%', tier:'bench', src:'GitHub Copilot study; McKinsey', url:'https://github.blog/news-insights/research/research-quantifying-github-copilots-impact-on-developer-productivity-and-happiness/', asOf:'2022-2023', why:'GitHub measured ~55% faster on a coding task; phase-level reductions are scaled from that and McKinsey gen-AI estimates - conservative vs the headline.'},
     {cat:'Productivity benchmarks', label:'Economic potential / uplift context', val:'qualitative', tier:'bench', src:'McKinsey - Economic potential of generative AI', url:'https://www.mckinsey.com/capabilities/mckinsey-digital/our-insights/the-economic-potential-of-generative-ai-the-next-productivity-frontier', asOf:'2023', why:'Supports the magnitude of SDLC productivity gains.'},
