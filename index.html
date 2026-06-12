@@ -170,6 +170,10 @@ select{background:#fff;border:1px solid #ddd6e6;border-radius:6px;padding:5px 9p
 
 <div id="tab-costmodel" class="tab">
   <p class="note">True all-in AI cost. Edit values in Configure tab. Every figure's source is listed in the <b>Sources &amp; assumptions</b> tab &mdash; refresh live vendor prices there.</p>
+  <div id="costmodel-results" style="position:sticky;top:0;z-index:20;background:#fff;padding:10px 0 12px;margin-bottom:4px;border-bottom:2px solid #ece8f5">
+    <div class="sdiv" style="margin-top:0">Live results - all-in cost roll-up</div>
+    <div class="metrics" id="cost-summary-metrics"></div>
+  </div>
   <div class="sdiv">1 - API / token costs by phase</div>
   <div class="card">
     <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap">
@@ -211,7 +215,6 @@ select{background:#fff;border:1px solid #ddd6e6;border-radius:6px;padding:5px 9p
   <div class="sdiv">5 - Total cost roll-up by model</div>
   <p class="note" style="margin:2px 0 8px">Salesforce add-on licence costs (Agentforce, Einstein, Data Cloud) are managed in the <b>Salesforce</b> tab and are included in the roll-up below.</p>
   <div class="card" style="overflow-x:auto"><table><thead><tr><th>Cost category</th><th>Crawl</th><th>Walk</th><th>Run</th><th>Fly</th></tr></thead><tbody id="rollup-tbody"></tbody></table></div>
-  <div class="metrics" id="cost-summary-metrics"></div>
 </div>
 
 <div id="tab-costs" class="tab">
@@ -239,6 +242,10 @@ select{background:#fff;border:1px solid #ddd6e6;border-radius:6px;padding:5px 9p
 </div>
 
 <div id="tab-workings" class="tab">
+  <div id="workings-results" style="position:sticky;top:0;z-index:20;background:#fff;padding:10px 0 12px;margin-bottom:8px;border-bottom:2px solid #ece8f5">
+    <div class="sdiv" style="margin-top:0">Live results</div>
+    <div class="metrics" id="w-metrics"></div>
+  </div>
   <div class="card">
     <h3 style="margin-bottom:14px">Adjust parameters</h3>
     <div class="srow"><label>Team size (FTE)</label><input type="range" min="2" max="50" step="1" id="sl-fte" value="10"><span class="rout" id="rd-fte">10</span></div>
@@ -254,7 +261,6 @@ select{background:#fff;border:1px solid #ddd6e6;border-radius:6px;padding:5px 9p
     <code>Total AI cost = tokens + SaaS + SF_addons + infra + training</code><br>
     <code>Net benefit = Gross saving - Total AI cost</code>
   </div>
-  <div class="metrics" id="w-metrics"></div>
   <div class="card" style="overflow-x:auto;margin-top:12px">
     <h3 style="margin-bottom:10px">Phase-by-phase calculation</h3>
     <table><thead><tr><th>Phase</th><th>Effort %</th><th>FTE on phase</th><th>AI reduction</th><th>Adoption</th><th>Overhead</th><th>FTE saved</th><th>Annual $</th></tr></thead><tbody id="calc-tbody"></tbody></table>
@@ -331,7 +337,9 @@ select{background:#fff;border:1px solid #ddd6e6;border-radius:6px;padding:5px 9p
     <div id="uc-log" style="margin-top:10px;font-size:11px;color:#aaa;font-family:monospace;line-height:1.8;max-height:80px;overflow:hidden"></div>
   </div>
   <div id="uc-results" style="display:none">
-    <div class="metrics" id="uc-metrics"></div>
+    <div style="position:sticky;top:0;z-index:20;background:#fff;padding:10px 0 12px;margin-bottom:4px;border-bottom:2px solid #ece8f5">
+      <div class="metrics" id="uc-metrics"></div>
+    </div>
     <div id="uc-banner" class="card" style="border-left:4px solid #A100FF;border-radius:0 12px 12px 0"></div>
     <div class="card">
       <h3 style="margin-bottom:10px">SDLC task breakdown - AI vs manual</h3>
@@ -2451,7 +2459,7 @@ HelpText.init();
 // Depends on: document, window.claude (environment detection)
 // Adds: a small fixed build + environment badge so you can tell which copy you are viewing
 var VersionStamp = (function() {
-  var APP_VERSION = 'v3.0';
+  var APP_VERSION = 'v3.1';
   var BUILD_DATE = '2026-06-12';
   function injectUI() {
     var inArtifact = (typeof window.claude !== 'undefined' && window.claude && typeof window.claude.complete === 'function');
@@ -2508,6 +2516,13 @@ var AgentforceVibes = (function() {
 
     var h = '';
 
+    // Live results - pinned to top so the numbers stay visible while editing inputs below
+    h += '<div id="vib-results" style="position:sticky;top:0;z-index:20;background:#fff;padding:10px 0 12px;margin-bottom:4px;border-bottom:2px solid #ece8f5">';
+    h += '<div class="sdiv" style="margin-top:0">Live results - annual impact</div>';
+    h += '<div class="metrics" id="vib-metrics"></div>';
+    h += '<div class="metrics" id="vib-story-metrics"></div>';
+    h += '</div>';
+
     // 1 - Story volume + effort calculator
     h += '<div class="sdiv">1 - Story volume &amp; effort</div>';
     h += '<div class="card">';
@@ -2558,11 +2573,6 @@ var AgentforceVibes = (function() {
     h += '<span id="vib-fetch-status" style="font-size:12px;color:#8a8493"></span></div>';
     h += '<div id="vib-price-result" style="display:none;margin-top:12px"></div>';
     h += '</div>';
-
-    // 4 - Outcome metrics
-    h += '<div class="sdiv">4 - Annual impact</div>';
-    h += '<div class="metrics" id="vib-metrics"></div>';
-    h += '<div class="metrics" id="vib-story-metrics"></div>';
 
     root.innerHTML = h;
 
@@ -2821,6 +2831,12 @@ var DataCloud = (function() {
 
     var h = '';
 
+    // Live results - pinned to top so the numbers stay visible while editing inputs below
+    h += '<div id="dc-results" style="position:sticky;top:0;z-index:20;background:#fff;padding:10px 0 12px;margin-bottom:4px;border-bottom:2px solid #ece8f5">';
+    h += '<div class="sdiv" style="margin-top:0">Live results - annual cost</div>';
+    h += '<div class="metrics" id="dc-metrics"></div>';
+    h += '</div>';
+
     // 1 - Monthly consumption
     h += '<div class="sdiv">1 - Monthly credit consumption</div>';
     h += '<div class="card">';
@@ -2858,10 +2874,6 @@ var DataCloud = (function() {
     h += '<span id="dc-fetch-status" style="font-size:12px;color:#8a8493"></span></div>';
     h += '<div id="dc-price-result" style="display:none;margin-top:12px"></div>';
     h += '</div>';
-
-    // 4 - Annual impact
-    h += '<div class="sdiv">4 - Annual cost</div>';
-    h += '<div class="metrics" id="dc-metrics"></div>';
 
     root.innerHTML = h;
 
