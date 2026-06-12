@@ -92,17 +92,6 @@ select{background:#fff;border:1px solid #ddd6e6;border-radius:6px;padding:5px 9p
 </head>
 <body>
 
-<div id="gate" style="position:fixed;inset:0;background:linear-gradient(140deg,#2a0840,#4a0d6e 55%,#7500C0);display:flex;align-items:center;justify-content:center;z-index:9999">
-  <div style="background:#fff;border-radius:16px;padding:34px;width:330px;text-align:center;box-shadow:0 24px 60px rgba(20,4,40,.45)">
-    <div style="width:52px;height:52px;margin:0 auto 14px;border-radius:13px;background:linear-gradient(120deg,#7500C0,#A100FF);color:#fff;font-size:26px;font-weight:800;display:flex;align-items:center;justify-content:center">&gt;</div>
-    <h3 style="margin-bottom:6px">Access required</h3>
-    <p style="font-size:12px;color:#8a8493;margin-bottom:20px">Enter the passphrase to view this document</p>
-    <input id="pw-input" type="password" placeholder="Enter passphrase" style="width:100%;padding:11px 12px;border:1px solid #ddd6e6;border-radius:9px;font-size:14px;margin-bottom:10px;outline:none">
-    <div id="pw-err" style="font-size:12px;color:#a32d2d;margin-bottom:8px;display:none">Incorrect passphrase. Try again.</div>
-    <button id="pw-btn" style="width:100%;padding:11px;background:linear-gradient(120deg,#7500C0,#A100FF);color:#fff;border:none;border-radius:9px;font-size:14px;font-weight:600;cursor:pointer">Unlock</button>
-  </div>
-</div>
-
 <div class="hero">
   <div class="hero-inner">
     <div class="hero-mark">&gt;</div>
@@ -123,6 +112,7 @@ select{background:#fff;border:1px solid #ddd6e6;border-radius:6px;padding:5px 9p
   <button id="nav-workings">Workings</button>
   <button id="nav-config">Configure</button>
   <button id="nav-usecase">Use case estimator</button>
+  <button id="nav-vibes">Agentforce Vibes</button>
 </div>
 
 <div id="tab-exec" class="tab active">
@@ -357,10 +347,14 @@ select{background:#fff;border:1px solid #ddd6e6;border-radius:6px;padding:5px 9p
   </div>
 </div>
 
+<div id="tab-vibes" class="tab">
+  <p class="note">Quantify Agentforce Vibes ROI per user story. Effort and Flex-credit benchmarks are pre-filled from observed delivery data &mdash; edit any cell. Costs shown in AUD.</p>
+  <div id="vibes-root"></div>
+  <div style="text-align:center;margin-top:8px"><span style="font-size:11px;color:#aaa">Indicative figures. Flex credit consumption is illustrative &mdash; validate against your Salesforce licence agreement.</span></div>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
-var PASSPHRASE = 'aiROI2026';
-
 var DEF_PHASES = [
   {name:'Requirements', pct:0.10, aiR:0.25, time:20, tools:'Claude / GPT-4, Agentforce'},
   {name:'Design',       pct:0.10, aiR:0.20, time:18, tools:'GitHub Copilot, Figma AI'},
@@ -434,11 +428,8 @@ resetLiveData();
 var phaseChart, roiChart;
 
 function init() {
-  document.getElementById('pw-btn').addEventListener('click', checkPw);
-  document.getElementById('pw-input').addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') { checkPw(); }
-  });
-  document.getElementById('pw-input').focus();
+  buildConfigUI();
+  recalc();
 
   var navIds = ['exec','phases','models','costmodel','costs','csm','workings','config','usecase'];
   navIds.forEach(function(id) {
@@ -506,18 +497,6 @@ function init() {
     b.addEventListener('click', function() { document.getElementById('uc-input').value = ex; });
     exDiv.appendChild(b);
   });
-}
-
-function checkPw() {
-  if (document.getElementById('pw-input').value === PASSPHRASE) {
-    document.getElementById('gate').style.display = 'none';
-    buildConfigUI();
-    recalc();
-  } else {
-    document.getElementById('pw-err').style.display = 'block';
-    document.getElementById('pw-input').value = '';
-    document.getElementById('pw-input').focus();
-  }
 }
 
 function showTab(id) {
@@ -2304,8 +2283,8 @@ HelpText.init();
 // Depends on: document, window.claude (environment detection)
 // Adds: a small fixed build + environment badge so you can tell which copy you are viewing
 var VersionStamp = (function() {
-  var APP_VERSION = 'v2.4';
-  var BUILD_DATE = '2026-06-11';
+  var APP_VERSION = 'v2.5';
+  var BUILD_DATE = '2026-06-12';
   function injectUI() {
     var inArtifact = (typeof window.claude !== 'undefined' && window.claude && typeof window.claude.complete === 'function');
     var b = document.createElement('div');
@@ -2316,6 +2295,300 @@ var VersionStamp = (function() {
   return { init: function() { injectUI(); } };
 })();
 VersionStamp.init();
+
+// MODULE: Agentforce Vibes
+// Depends on: showTab, document, sessionStorage, fetch / window.claude.complete
+// Adds: 'Agentforce Vibes' tab - story volume + effort calculator, Flex credit cost model,
+//        live Salesforce Flex Credit pricing fetch (Anthropic API + web search) with manual contracted-rate override
+var AgentforceVibes = (function() {
+  // Per-story effort benchmark (hours). Totals: 22h traditional vs 15.5h with Vibes (~30% faster).
+  var EFFORT = [
+    {act:'Requirements & Impact Analysis', trad:4,  vibe:3},
+    {act:'Development Effort',              trad:12, vibe:9},
+    {act:'Test Class Development',          trad:4,  vibe:2.5},
+    {act:'Documentation & Commit Notes',   trad:2,  vibe:1}
+  ];
+  // Flex credit consumption per story (illustrative) - totals ~180 credits/story.
+  var CREDITS = [
+    {act:'Acceptance Criteria Generation',          c:10},
+    {act:'Requirements Refinement (multi-prompt)',  c:20},
+    {act:'Impact Analysis',                         c:20},
+    {act:'Apex / LWC Generation',                   c:40},
+    {act:'Test Class Generation',                   c:40},
+    {act:'Code Review / Explanation',               c:20},
+    {act:'Commit Summary & Documentation',          c:10},
+    {act:'Deployment Validation',                   c:20}
+  ];
+  // Blended AUD per hour, derived from benchmark sample (Offshore A$1,800 / 22h; Onshore A$4,950 / 22h).
+  var MODEL_RATES = {offshore: 82, onshore: 225};
+  // Default AUD per Flex Credit (indicative ~USD 0.01 at USD 1,000 / 100,000 credits, ~1.5 FX).
+  var DEFAULT_CREDIT_RATE = 0.015;
+
+  function aud(n) { return 'A$' + Math.round(n).toLocaleString(); }
+  function audBig(n) {
+    var a = Math.abs(n);
+    if (a >= 1000000) { return 'A$' + (Math.round(n / 100000) / 10) + 'M'; }
+    if (a >= 1000)    { return 'A$' + Math.round(n / 1000) + 'k'; }
+    return 'A$' + Math.round(n);
+  }
+  function num(id) { var v = parseFloat(document.getElementById(id).value); return isNaN(v) ? 0 : v; }
+
+  function injectUI() {
+    var root = document.getElementById('vibes-root');
+    if (!root) { return; }
+    var inArtifact = (typeof window.claude !== 'undefined' && window.claude && typeof window.claude.complete === 'function');
+
+    var h = '';
+
+    // 1 - Story volume + effort calculator
+    h += '<div class="sdiv">1 - Story volume &amp; effort</div>';
+    h += '<div class="card">';
+    h += '<div style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin-bottom:12px">';
+    h += '<div><div style="font-size:11px;color:#8a8493;margin-bottom:4px">Stories per year</div><input type="number" id="vib-stories" value="500" min="1" step="10" class="ei" style="width:90px"></div>';
+    h += '<div><div style="font-size:11px;color:#8a8493;margin-bottom:4px">Delivery model</div><select id="vib-model"><option value="offshore">Offshore</option><option value="onshore">Onshore</option></select></div>';
+    h += '<div><div style="font-size:11px;color:#8a8493;margin-bottom:4px">Blended rate (A$/hr)</div><input type="number" id="vib-rate" value="82" min="0" step="1" class="ei" style="width:90px"></div>';
+    h += '</div>';
+    h += '<div style="overflow-x:auto"><table><thead><tr><th>Activity</th><th>Traditional (hrs)</th><th>With Vibes (hrs)</th><th>Faster</th></tr></thead><tbody>';
+    EFFORT.forEach(function(e, i) {
+      h += '<tr>' +
+        '<td><b>' + e.act + '</b></td>' +
+        '<td><input type="number" class="ei vib-trad" data-i="' + i + '" value="' + e.trad + '" min="0" step="0.5"></td>' +
+        '<td><input type="number" class="ei vib-vibe" data-i="' + i + '" value="' + e.vibe + '" min="0" step="0.5"></td>' +
+        '<td><span class="badge bg" id="vib-fast-' + i + '">-</span></td></tr>';
+    });
+    h += '</tbody></table></div>';
+    h += '<p class="note" style="margin-top:8px">Vibes also cuts defect-fix loops (typically 3-5 down to 2-4), reducing rework not captured in the hours above.</p>';
+    h += '</div>';
+
+    // 2 - Flex credit cost model
+    h += '<div class="sdiv">2 - Flex credit cost model</div>';
+    h += '<div class="card">';
+    h += '<div style="overflow-x:auto"><table><thead><tr><th>Agentforce Vibes activity</th><th>Flex credits</th></tr></thead><tbody>';
+    CREDITS.forEach(function(c, i) {
+      h += '<tr><td>' + c.act + '</td>' +
+        '<td><input type="number" class="ei vib-cred" data-i="' + i + '" value="' + c.c + '" min="0" step="1"></td></tr>';
+    });
+    h += '<tr><td><b>Total per story</b></td><td><b id="vib-credits-total">180</b> credits</td></tr>';
+    h += '</tbody></table></div>';
+    h += '<div style="display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;margin-top:12px">';
+    h += '<div><div style="font-size:11px;color:#8a8493;margin-bottom:4px">Contracted rate (A$ / credit)</div><input type="number" id="vib-credit-rate" value="' + DEFAULT_CREDIT_RATE + '" min="0" step="0.001" class="ei" style="width:110px"></div>';
+    h += '<div style="font-size:11px;color:#8a8493;line-height:1.5;flex:1;min-width:200px">Manually set your contracted Flex Credit rate, or fetch the latest list price below and apply it.</div>';
+    h += '</div>';
+    h += '</div>';
+
+    // 3 - Live pricing fetch
+    h += '<div class="sdiv">3 - Latest Salesforce Flex Credit pricing</div>';
+    h += '<div class="card">';
+    h += '<p style="font-size:12px;color:#5a5560;margin-bottom:10px">Fetch the current published Salesforce Agentforce Flex Credit list price via Claude with live web search.</p>';
+    h += '<div id="vib-apikey-row" style="margin-bottom:10px;display:flex;flex-wrap:wrap;gap:10px;align-items:center">';
+    h += '<div style="font-size:12px;color:#555">Anthropic API key:</div>';
+    h += '<input type="password" id="vib-apikey" placeholder="sk-ant-..." autocomplete="off" style="flex:1;min-width:220px;border:1px solid #d0cdc6;border-radius:6px;padding:4px 8px;font-size:12px;font-family:monospace"></div>';
+    h += '<div id="vib-apikey-note" style="font-size:11px;color:#aaa;margin-bottom:10px">Your key stays in this browser (sent only to Anthropic). Reused from the Use case estimator if already entered.</div>';
+    h += '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">';
+    h += '<button id="vib-fetch" class="abtn">Fetch latest Flex credit pricing</button>';
+    h += '<div id="vib-fetch-spin" style="display:none;width:16px;height:16px;border:2px solid #e6e1ec;border-top-color:#A100FF;border-radius:50%;animation:spin 0.8s linear infinite"></div>';
+    h += '<span id="vib-fetch-status" style="font-size:12px;color:#8a8493"></span></div>';
+    h += '<div id="vib-price-result" style="display:none;margin-top:12px"></div>';
+    h += '</div>';
+
+    // 4 - Outcome metrics
+    h += '<div class="sdiv">4 - Annual impact</div>';
+    h += '<div class="metrics" id="vib-metrics"></div>';
+    h += '<div class="metrics" id="vib-story-metrics"></div>';
+
+    root.innerHTML = h;
+
+    if (inArtifact) {
+      document.getElementById('vib-apikey-row').style.display = 'none';
+      var n = document.getElementById('vib-apikey-note');
+      n.style.color = '#3B6D11';
+      n.textContent = 'Running inside Claude.ai - pricing fetch uses the built-in AI (knowledge-based, not live web).';
+    } else {
+      try {
+        var savedKey = sessionStorage.getItem('uc_api_key');
+        if (savedKey) { document.getElementById('vib-apikey').value = savedKey; }
+      } catch (e) {}
+    }
+
+    // Wire events
+    document.getElementById('nav-vibes').addEventListener('click', function() { showTab('vibes'); });
+    document.getElementById('vib-model').addEventListener('change', function() {
+      document.getElementById('vib-rate').value = MODEL_RATES[this.value] || 82;
+      recalc();
+    });
+    ['vib-stories', 'vib-rate', 'vib-credit-rate'].forEach(function(id) {
+      document.getElementById(id).addEventListener('input', recalc);
+    });
+    var dyn = document.querySelectorAll('.vib-trad, .vib-vibe, .vib-cred');
+    for (var i = 0; i < dyn.length; i++) { dyn[i].addEventListener('input', recalc); }
+    document.getElementById('vib-fetch').addEventListener('click', fetchPricing);
+
+    recalc();
+  }
+
+  function recalc() {
+    var trad = document.querySelectorAll('.vib-trad');
+    var vibe = document.querySelectorAll('.vib-vibe');
+    var cred = document.querySelectorAll('.vib-cred');
+    var totalTradH = 0, totalVibeH = 0, totalCredits = 0, i;
+    for (i = 0; i < trad.length; i++) {
+      var t = parseFloat(trad[i].value) || 0;
+      var v = parseFloat(vibe[i].value) || 0;
+      totalTradH += t; totalVibeH += v;
+      var fast = t > 0 ? Math.round(((t - v) / t) * 100) : 0;
+      var fc = document.getElementById('vib-fast-' + i);
+      if (fc) { fc.textContent = '-' + fast + '%'; }
+    }
+    for (i = 0; i < cred.length; i++) { totalCredits += parseFloat(cred[i].value) || 0; }
+    var ct = document.getElementById('vib-credits-total');
+    if (ct) { ct.textContent = totalCredits; }
+
+    var rate = num('vib-rate');
+    var stories = Math.max(0, Math.round(num('vib-stories')));
+    var creditRate = num('vib-credit-rate');
+
+    var tradCostStory = totalTradH * rate;
+    var vibeCostStory = totalVibeH * rate;
+    var creditCostStory = totalCredits * creditRate;
+    var labourSaveStory = tradCostStory - vibeCostStory;
+    var netSaveStory = labourSaveStory - creditCostStory;
+    var timeSavedPct = totalTradH > 0 ? Math.round(((totalTradH - totalVibeH) / totalTradH) * 100) : 0;
+
+    var annTradLabour = tradCostStory * stories;
+    var annVibeAllIn = (vibeCostStory + creditCostStory) * stories;
+    var annLabourSave = labourSaveStory * stories;
+    var annCreditCost = creditCostStory * stories;
+    var annNetSave = netSaveStory * stories;
+
+    document.getElementById('vib-metrics').innerHTML =
+      '<div class="metric"><div class="lbl">Traditional cost / yr</div><div class="val" style="color:#5F5E5A">' + audBig(annTradLabour) + '</div><div class="sub">' + stories + ' stories x ' + totalTradH + 'h</div></div>' +
+      '<div class="metric"><div class="lbl">Vibes all-in / yr</div><div class="val" style="color:#7500C0">' + audBig(annVibeAllIn) + '</div><div class="sub">Labour + Flex credits</div></div>' +
+      '<div class="warn"><div class="lbl">Flex credit cost / yr</div><div class="val">' + audBig(annCreditCost) + '</div><div class="sub">' + Math.round(totalCredits * stories).toLocaleString() + ' credits</div></div>' +
+      '<div class="ok"><div class="lbl">Net annual saving</div><div class="val">' + audBig(annNetSave) + '</div><div class="sub">After Flex credit cost</div></div>';
+
+    document.getElementById('vib-story-metrics').innerHTML =
+      '<div class="metric"><div class="lbl">Effort / story</div><div class="val" style="font-size:17px">' + totalTradH + 'h to ' + totalVibeH + 'h</div><div class="sub">' + timeSavedPct + '% faster</div></div>' +
+      '<div class="ok"><div class="lbl">Labour saving / story</div><div class="val" style="font-size:17px">' + aud(labourSaveStory) + '</div><div class="sub">Before Flex credits</div></div>' +
+      '<div class="warn"><div class="lbl">Flex credits / story</div><div class="val" style="font-size:17px">' + aud(creditCostStory) + '</div><div class="sub">' + totalCredits + ' credits</div></div>' +
+      '<div class="ok"><div class="lbl">Net saving / story</div><div class="val" style="font-size:17px">' + aud(netSaveStory) + '</div><div class="sub">Per delivered story</div></div>';
+  }
+
+  function fetchStatus(msg) { document.getElementById('vib-fetch-status').textContent = msg; }
+
+  function fetchPricing() {
+    var inArtifact = (typeof window.claude !== 'undefined' && window.claude && typeof window.claude.complete === 'function');
+    var apiKey = inArtifact ? '' : document.getElementById('vib-apikey').value.trim();
+    if (!inArtifact && !apiKey) {
+      alert('Enter your Anthropic API key (sk-ant-...) to fetch live pricing.\n\nTip: open this tool inside the Claude.ai chat to run it without a key.');
+      return;
+    }
+    if (apiKey) { try { sessionStorage.setItem('uc_api_key', apiKey); } catch (e) {} }
+
+    var btn = document.getElementById('vib-fetch');
+    btn.disabled = true;
+    document.getElementById('vib-fetch-spin').style.display = 'inline-block';
+    document.getElementById('vib-price-result').style.display = 'none';
+    fetchStatus(inArtifact ? 'Checking pricing...' : 'Searching the web...');
+
+    var sys = 'You are a Salesforce pricing analyst. Find the current published Salesforce Agentforce Flex Credits pricing - the consumption-based model where Flex Credits are purchased in blocks (commonly cited as around USD 1,000 per 100,000 credits). Respond with ONLY a valid JSON object, no markdown and no text outside JSON, matching: {"usdPerCredit": number, "audPerCredit": number, "packDescription": "short string", "summary": "2 sentence plain-English summary", "source": "publisher or URL", "asOf": "approx date"}. If pricing is quoted per pack, compute usdPerCredit from it. Use an approximate USD to AUD rate of 1.5 to derive audPerCredit. Keep strings short.';
+    var userMsg = 'What is the latest Salesforce Agentforce Flex Credit price per credit? Return JSON only.';
+
+    if (inArtifact) {
+      window.claude.complete(sys + '\n\n' + userMsg)
+        .then(function(raw) { showPricing(raw, btn); })
+        .catch(function(e) { failPricing((e && e.message) ? e.message : String(e), btn); });
+      return;
+    }
+
+    var payload = {
+      model: 'claude-sonnet-4-6',
+      max_tokens: 4000,
+      system: sys,
+      tools: [{type: 'web_search_20260209', name: 'web_search'}],
+      messages: [{role: 'user', content: userMsg}]
+    };
+    fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify(payload)
+    })
+    .then(function(resp) { return resp.json(); })
+    .then(function(data) {
+      if (data.error) { throw new Error(data.error.message); }
+      var raw = '';
+      if (data.content) {
+        for (var i = 0; i < data.content.length; i++) {
+          if (data.content[i].type === 'text' && data.content[i].text) { raw += data.content[i].text; }
+        }
+      }
+      showPricing(raw, btn);
+    })
+    .catch(function(e) { failPricing(e.message, btn); });
+  }
+
+  function parsePricing(raw) {
+    var clean = ('' + raw).replace(/```json/g, '').replace(/```/g, '').trim();
+    try { return JSON.parse(clean); }
+    catch (e) {
+      var open = clean.indexOf('{');
+      var close = clean.lastIndexOf('}');
+      if (open >= 0 && close > open) { return JSON.parse(clean.substring(open, close + 1)); }
+      throw e;
+    }
+  }
+
+  function showPricing(raw, btn) {
+    btn.disabled = false;
+    document.getElementById('vib-fetch-spin').style.display = 'none';
+    var r;
+    try { r = parsePricing(raw); }
+    catch (e) { failPricing('Could not read pricing from the response.', btn); return; }
+    fetchStatus('Done');
+
+    var usd = (typeof r.usdPerCredit === 'number') ? r.usdPerCredit : null;
+    var audc = (typeof r.audPerCredit === 'number') ? r.audPerCredit : (usd != null ? usd * 1.5 : null);
+
+    var html = '<div class="fbox" style="margin-bottom:0">';
+    html += '<div style="font-size:11px;color:#7500C0;font-weight:600;margin-bottom:6px">LATEST FLEX CREDIT PRICING</div>';
+    if (r.summary) { html += '<div style="margin-bottom:8px;color:#1a1320">' + r.summary + '</div>'; }
+    html += '<div style="line-height:1.9">';
+    if (usd != null)  { html += '<div>USD per credit: <code>$' + usd + '</code></div>'; }
+    if (audc != null) { html += '<div>Est. AUD per credit: <code>A$' + (Math.round(audc * 1000) / 1000) + '</code></div>'; }
+    if (r.packDescription) { html += '<div>Pack: ' + r.packDescription + '</div>'; }
+    if (r.source) { html += '<div class="src">Source: ' + r.source + (r.asOf ? ' (' + r.asOf + ')' : '') + '</div>'; }
+    html += '</div></div>';
+    if (audc != null) {
+      html += '<button id="vib-apply-rate" class="ebtn" style="margin-top:10px" data-rate="' + (Math.round(audc * 1000) / 1000) + '">Apply A$' + (Math.round(audc * 1000) / 1000) + ' / credit as contracted rate</button>';
+    }
+
+    var box = document.getElementById('vib-price-result');
+    box.innerHTML = html;
+    box.style.display = 'block';
+
+    var applyBtn = document.getElementById('vib-apply-rate');
+    if (applyBtn) {
+      applyBtn.addEventListener('click', function() {
+        document.getElementById('vib-credit-rate').value = this.getAttribute('data-rate');
+        recalc();
+        fetchStatus('Applied to contracted rate');
+      });
+    }
+  }
+
+  function failPricing(msg, btn) {
+    btn.disabled = false;
+    document.getElementById('vib-fetch-spin').style.display = 'none';
+    fetchStatus('Error: ' + msg);
+  }
+
+  return { init: function() { injectUI(); } };
+})();
+AgentforceVibes.init();
 </script>
 </body>
 </html>
