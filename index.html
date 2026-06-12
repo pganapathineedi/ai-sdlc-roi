@@ -2459,7 +2459,7 @@ HelpText.init();
 // Depends on: document, window.claude (environment detection)
 // Adds: a small fixed build + environment badge so you can tell which copy you are viewing
 var VersionStamp = (function() {
-  var APP_VERSION = 'v3.1';
+  var APP_VERSION = 'v3.2';
   var BUILD_DATE = '2026-06-12';
   function injectUI() {
     var inArtifact = (typeof window.claude !== 'undefined' && window.claude && typeof window.claude.complete === 'function');
@@ -2553,7 +2553,13 @@ var AgentforceVibes = (function() {
     });
     h += '<tr><td><b>Total per story</b></td><td><b id="vib-credits-total">180</b> credits</td></tr>';
     h += '</tbody></table></div>';
-    h += '<div style="display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;margin-top:12px">';
+    h += '<p class="note" style="margin:10px 0 6px">The credits above are pre-filled illustrative defaults. Let Claude estimate the actual Flex credit consumption per activity for a typical Salesforce story, then edit any cell.</p>';
+    h += '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">';
+    h += '<button id="vib-cred-fetch" class="abtn">Estimate actual credits with AI</button>';
+    h += '<div id="vib-cred-spin" style="display:none;width:16px;height:16px;border:2px solid #e6e1ec;border-top-color:#A100FF;border-radius:50%;animation:spin 0.8s linear infinite"></div>';
+    h += '<span id="vib-cred-status" style="font-size:12px;color:#8a8493"></span></div>';
+    h += '<div id="vib-cred-result" style="display:none;margin-top:10px"></div>';
+    h += '<div style="display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;margin-top:14px">';
     h += '<div><div style="font-size:11px;color:#8a8493;margin-bottom:4px">Contracted rate (A$ / credit)</div><input type="number" id="vib-credit-rate" value="' + DEFAULT_CREDIT_RATE + '" min="0" step="0.001" class="ei" style="width:110px"></div>';
     h += '<div style="font-size:11px;color:#8a8493;line-height:1.5;flex:1;min-width:200px">Manually set your contracted Flex Credit rate, or fetch the latest list price below and apply it.</div>';
     h += '</div>';
@@ -2599,6 +2605,7 @@ var AgentforceVibes = (function() {
     var dyn = document.querySelectorAll('.vib-trad, .vib-vibe, .vib-cred');
     for (var i = 0; i < dyn.length; i++) { dyn[i].addEventListener('input', recalc); }
     document.getElementById('vib-fetch').addEventListener('click', fetchPricing);
+    document.getElementById('vib-cred-fetch').addEventListener('click', fetchCredits);
 
     recalc();
   }
@@ -2761,6 +2768,131 @@ var AgentforceVibes = (function() {
     btn.disabled = false;
     document.getElementById('vib-fetch-spin').style.display = 'none';
     fetchStatus('Error: ' + msg);
+  }
+
+  function credStatus(msg) {
+    var e = document.getElementById('vib-cred-status');
+    if (e) { e.textContent = msg; }
+  }
+
+  function failCredits(msg, btn) {
+    btn.disabled = false;
+    document.getElementById('vib-cred-spin').style.display = 'none';
+    credStatus('Error: ' + msg);
+  }
+
+  function fetchCredits() {
+    var inArtifact = (typeof window.claude !== 'undefined' && window.claude && typeof window.claude.complete === 'function');
+    var apiKey = inArtifact ? '' : document.getElementById('vib-apikey').value.trim();
+    if (!inArtifact && !apiKey) {
+      alert('Enter your Anthropic API key (sk-ant-...) in the "Latest Salesforce Flex Credit pricing" section below to run the AI estimate.\n\nTip: open this tool inside the Claude.ai chat to run it without a key.');
+      return;
+    }
+    if (apiKey) { try { sessionStorage.setItem('uc_api_key', apiKey); } catch (e) {} }
+
+    var btn = document.getElementById('vib-cred-fetch');
+    btn.disabled = true;
+    document.getElementById('vib-cred-spin').style.display = 'inline-block';
+    document.getElementById('vib-cred-result').style.display = 'none';
+    credStatus(inArtifact ? 'Estimating...' : 'Searching the web and estimating...');
+
+    var labels = [];
+    CREDITS.forEach(function(c) { labels.push(c.act); });
+    var listStr = labels.join('; ');
+
+    var sys = 'You are a Salesforce Agentforce delivery analyst estimating Flex Credit consumption. Agentforce Flex Credits are consumed per AI action based on the tokens each action processes. Estimate the typical Flex Credits consumed per user story for each listed development activity, for a moderate-complexity Salesforce Apex/LWC user story. Base the estimate on published Salesforce Agentforce Flex Credit consumption guidance and typical token usage per action where available. Respond with ONLY a valid JSON object, no markdown and no text outside JSON, matching: {"credits":[{"activity":"exact label from the list","credits":number}],"totalPerStory":number,"summary":"2 sentence plain-English note on how these were derived","source":"publisher or URL","asOf":"approx date"}. Return exactly one entry per activity, in the same order as the list, using the exact activity labels. Keep strings short.';
+    var userMsg = 'Estimate Flex Credits consumed per Agentforce Vibes user story for these activities, in order: ' + listStr + '. Return JSON only.';
+
+    if (inArtifact) {
+      window.claude.complete(sys + '\n\n' + userMsg)
+        .then(function(raw) { showCredits(raw, btn); })
+        .catch(function(e) { failCredits((e && e.message) ? e.message : String(e), btn); });
+      return;
+    }
+
+    var payload = {
+      model: 'claude-sonnet-4-6',
+      max_tokens: 4000,
+      system: sys,
+      tools: [{type: 'web_search_20260209', name: 'web_search'}],
+      messages: [{role: 'user', content: userMsg}]
+    };
+    fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify(payload)
+    })
+    .then(function(resp) { return resp.json(); })
+    .then(function(data) {
+      if (data.error) { throw new Error(data.error.message); }
+      var raw = '';
+      if (data.content) {
+        for (var i = 0; i < data.content.length; i++) {
+          if (data.content[i].type === 'text' && data.content[i].text) { raw += data.content[i].text; }
+        }
+      }
+      showCredits(raw, btn);
+    })
+    .catch(function(e) { failCredits(e.message, btn); });
+  }
+
+  function applyCredits(items) {
+    var inputs = document.querySelectorAll('.vib-cred');
+    var applied = 0, i, j;
+    if (items.length === inputs.length) {
+      for (i = 0; i < items.length; i++) {
+        if (items[i] && typeof items[i].credits === 'number') {
+          inputs[i].value = Math.max(0, Math.round(items[i].credits));
+          applied++;
+        }
+      }
+    } else {
+      for (i = 0; i < items.length; i++) {
+        var it = items[i];
+        if (!it || typeof it.credits !== 'number' || !it.activity) { continue; }
+        var name = ('' + it.activity).toLowerCase();
+        for (j = 0; j < CREDITS.length; j++) {
+          var base = CREDITS[j].act.toLowerCase();
+          if (base === name || base.indexOf(name) >= 0 || name.indexOf(base) >= 0) {
+            inputs[j].value = Math.max(0, Math.round(it.credits));
+            applied++;
+            break;
+          }
+        }
+      }
+    }
+    recalc();
+    return applied;
+  }
+
+  function showCredits(raw, btn) {
+    btn.disabled = false;
+    document.getElementById('vib-cred-spin').style.display = 'none';
+    var r;
+    try { r = parsePricing(raw); }
+    catch (e) { failCredits('Could not read the AI response.', btn); return; }
+    var items = (r && r.credits && r.credits.length) ? r.credits : null;
+    if (!items) { failCredits('No credit estimates returned.', btn); return; }
+
+    var applied = applyCredits(items);
+    credStatus(applied > 0 ? ('Applied ' + applied + ' estimate' + (applied === 1 ? '' : 's')) : 'Nothing applied');
+
+    var html = '<div class="fbox" style="margin-bottom:0">';
+    html += '<div style="font-size:11px;color:#7500C0;font-weight:600;margin-bottom:6px">AI-ESTIMATED FLEX CREDIT CONSUMPTION</div>';
+    if (r.summary) { html += '<div style="margin-bottom:8px;color:#1a1320">' + r.summary + '</div>'; }
+    if (typeof r.totalPerStory === 'number') { html += '<div>Estimated total: <code>' + Math.round(r.totalPerStory) + ' credits / story</code></div>'; }
+    if (r.source) { html += '<div class="src">Source: ' + r.source + (r.asOf ? ' (' + r.asOf + ')' : '') + '</div>'; }
+    html += '<div style="font-size:11px;color:#8a8493;margin-top:8px">Estimates applied to the table above. Adjust any cell to override.</div>';
+    html += '</div>';
+
+    var box = document.getElementById('vib-cred-result');
+    box.innerHTML = html;
+    box.style.display = 'block';
   }
 
   return { init: function() { injectUI(); } };
