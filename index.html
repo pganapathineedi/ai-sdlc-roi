@@ -2319,7 +2319,7 @@ HelpText.init();
 // Depends on: document, window.claude (environment detection)
 // Adds: a small fixed build + environment badge so you can tell which copy you are viewing
 var VersionStamp = (function() {
-  var APP_VERSION = 'v2.8';
+  var APP_VERSION = 'v2.9';
   var BUILD_DATE = '2026-06-12';
   function injectUI() {
     var inArtifact = (typeof window.claude !== 'undefined' && window.claude && typeof window.claude.complete === 'function');
@@ -3207,6 +3207,160 @@ var Provenance = (function() {
   return { init: function() { injectUI(); } };
 })();
 Provenance.init();
+
+// MODULE: Reference (tools + glossary)
+// Depends on: PHASES, showTab, document
+// Adds: a 'Reference' top-nav tab with two sections -
+//   (1) AI tool reference - one row per tool named in PHASES (auto-derived), with curated
+//       vendor + 'what it does'; the SDLC phase(s) it appears in are listed live from PHASES.
+//   (2) Glossary - consolidated definitions of every metric/term/acronym used in the tool.
+// Does NOT repeat prices or sources - those live on the 'Sources & assumptions' tab.
+var Reference = (function() {
+  // Curated descriptions keyed by the exact tool token as it appears in PHASES.tools.
+  // Anything in PHASES with no entry here still shows up (with a blank description),
+  // so the table can never silently drop a tool the model references.
+  var TOOL_INFO = {
+    'Claude / GPT-4': {vendor:'Anthropic / OpenAI', what:'General-purpose LLMs for drafting user stories, acceptance criteria and requirements analysis from plain-language input.'},
+    'Claude':         {vendor:'Anthropic', what:'LLM used here for requirements drafting and documentation generation; also powers this tool\'s use case estimator.'},
+    'Agentforce':     {vendor:'Salesforce', what:'Salesforce\'s autonomous agent platform; builds and runs AI agents on Salesforce data. Priced in Flex credits (see Salesforce tab).'},
+    'GitHub Copilot': {vendor:'GitHub / Microsoft', what:'In-IDE AI pair programmer - code completion, chat and refactoring across most languages. The core developer-productivity tool in this model.'},
+    'Figma AI':       {vendor:'Figma', what:'AI features inside Figma for generating and editing UI designs, mockups and design-system assets.'},
+    'Einstein Code':  {vendor:'Salesforce', what:'AI code assist for Apex and Lightning Web Components inside the Salesforce dev experience.'},
+    'Cursor':         {vendor:'Anysphere', what:'AI-native code editor (VS Code fork) with whole-codebase context, multi-file edits and agentic coding.'},
+    'Copado AI':      {vendor:'Copado', what:'AI features in Copado\'s Salesforce DevOps suite - test generation, risk analysis and release guidance.'},
+    'Copado':         {vendor:'Copado', what:'Salesforce-native CI/CD and release-management platform used for deployment automation.'},
+    'SF Test AI':     {vendor:'Salesforce', what:'Salesforce test-automation AI - generates and maintains tests for Apex and flows.'},
+    'GitLab Duo':     {vendor:'GitLab', what:'GitLab\'s AI suite - code suggestions, vulnerability explanations and merge-request summaries inside the GitLab pipeline.'},
+    'Splunk AI':      {vendor:'Splunk / Cisco', what:'AI-assisted observability - anomaly detection and alert triage over operational and security telemetry.'},
+    'Einstein Analytics': {vendor:'Salesforce', what:'AI-driven analytics and insight layer (now CRM Analytics) over Salesforce operational data.'}
+  };
+
+  // Glossary, grouped by category. Definitions only - no numbers (those are on the Sources tab).
+  var GLOSSARY = [
+    {cat:'Inputs you set', items:[
+      ['Team size (FTE)', 'Full-time-equivalent delivery people in scope. One FTE = one full-time person\'s capacity.'],
+      ['Blended annual rate', 'Fully-loaded average cost of one delivery person per year (salary + on-costs). Converts time saved into money.'],
+      ['AI adoption rate', 'Share of the team actively using AI tools. Scales the benefit - 60% adoption captures 60% of the modelled saving.'],
+      ['Quality review overhead', 'Portion of the time AI saves that is spent reviewing and validating AI output. A drag on the net saving.'],
+      ['Maturity level', 'Where the team sits on the AI-adoption journey: Crawl, Walk, Run or Fly. See the Crawl / Walk / Run / Fly tab.']
+    ]},
+    {cat:'Calculated outputs', items:[
+      ['Maturity multiplier', 'Factor that scales how much of the full benefit and cost each maturity level captures. Run = 1.00 (the baseline for every figure in this tool).'],
+      ['Effort %', 'Share of total SDLC effort a phase consumes. The seven phases sum to 100%.'],
+      ['AI reduction %', 'How much of a phase\'s effort AI can remove, before adoption and review overhead are applied.'],
+      ['Time gain %', 'Modelled reduction in elapsed (calendar) time for a phase, distinct from effort/cost saved.'],
+      ['FTE saved', 'Freed-up capacity, expressed as full-time-equivalent people, after adoption and overhead.'],
+      ['Payback period', 'How long the annual saving takes to recover the one-off investment (mainly training and setup).'],
+      ['ROI', 'Return on investment - the saving relative to the all-in AI cost.']
+    ]},
+    {cat:'Cost-model terms', items:[
+      ['LLM', 'Large language model - the AI behind code, text and analysis generation (e.g. Claude, GPT-4).'],
+      ['Token', 'The unit LLM providers bill by. Tokens in = what you send the model; tokens out = what it returns. Roughly 0.75 words per token.'],
+      ['Model tier', 'Which class of model a task uses: primary (most capable), mid, or cheap. Cheaper tiers suit high-volume, low-complexity tasks.'],
+      ['SaaS add-on', 'A per-seat subscription for an AI dev tool (e.g. GitHub Copilot). Configured in the AI tool catalog on the Configure tab.'],
+      ['Flex credits', 'Salesforce\'s consumption currency for Agentforce - you buy a pool of credits and each agent action draws from it. See the Salesforce tab.'],
+      ['Data Cloud credits', 'Salesforce\'s metered unit for Data Cloud ingestion, processing, queries, segmentation and activation. See the Salesforce tab.'],
+      ['One-off vs recurring', 'One-off costs (e.g. initial training) hit once and drive payback; recurring costs repeat every year.']
+    ]},
+    {cat:'How to read the numbers', items:[
+      ['Confidence bands', 'Low / mid / high scenarios in the Workings tab - the plausible range around each estimate, not a single point.'],
+      ['Live price', 'A published vendor price with a real source link, refreshable from the web (Sources tab).'],
+      ['Benchmark', 'A figure from an industry study - cited, but not refreshed daily (Sources tab).'],
+      ['Your input', 'An assumption about your org with no external source - meant for you to edit (Sources tab).'],
+      ['SDLC', 'Software Development Life Cycle - the seven phases from Requirements through to Docs that this tool models.']
+    ]}
+  ];
+
+  function esc(s) { return ('' + s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+  // Walk PHASES and build: toolName -> [phase names it appears in], preserving first-seen order.
+  function collectTools() {
+    var order = [];
+    var map = {};
+    if (typeof PHASES === 'undefined' || !PHASES) { return { order: order, map: map }; }
+    PHASES.forEach(function(ph) {
+      if (!ph.tools) { return; }
+      ph.tools.split(',').forEach(function(raw) {
+        var t = raw.trim();
+        if (!t) { return; }
+        if (!map[t]) { map[t] = []; order.push(t); }
+        if (map[t].indexOf(ph.name) < 0) { map[t].push(ph.name); }
+      });
+    });
+    return { order: order, map: map };
+  }
+
+  function toolTable() {
+    var c = collectTools();
+    if (!c.order.length) { return '<p class="note">No tools defined.</p>'; }
+    var h = '<div class="card" style="padding:0;overflow-x:auto"><table class="styled-tbl"><thead><tr><th>Tool</th><th>Vendor</th><th>Used in</th><th>What it does</th></tr></thead><tbody>';
+    c.order.forEach(function(name) {
+      var info = TOOL_INFO[name] || {vendor:'', what:''};
+      var phaseTags = c.map[name].map(function(p) { return '<span class="tag">' + esc(p) + '</span>'; }).join('');
+      h += '<tr>' +
+        '<td><b>' + esc(name) + '</b></td>' +
+        '<td style="white-space:nowrap">' + esc(info.vendor) + '</td>' +
+        '<td>' + phaseTags + '</td>' +
+        '<td style="font-size:11px;color:#5a5560;max-width:380px">' + esc(info.what) + '</td>' +
+        '</tr>';
+    });
+    h += '</tbody></table></div>';
+    return h;
+  }
+
+  function glossaryTables() {
+    var h = '';
+    GLOSSARY.forEach(function(g) {
+      h += '<div class="sdiv">' + esc(g.cat) + '</div>';
+      h += '<div class="card" style="padding:0;overflow-x:auto"><table class="styled-tbl"><thead><tr><th style="width:200px">Term</th><th>Meaning</th></tr></thead><tbody>';
+      g.items.forEach(function(row) {
+        h += '<tr><td><b>' + esc(row[0]) + '</b></td>' +
+          '<td style="font-size:11px;color:#5a5560">' + esc(row[1]) + '</td></tr>';
+      });
+      h += '</tbody></table></div>';
+    });
+    return h;
+  }
+
+  function render() {
+    var root = document.getElementById('reference-root');
+    if (!root) { return; }
+    var h = '';
+    h += '<p class="note">A plain-language reference for the tools and terms used throughout this business case. For where each <b>number</b> comes from (prices, benchmarks, sources), see the <b>Sources &amp; assumptions</b> tab.</p>';
+    h += '<div class="sdiv">AI tool reference</div>';
+    h += '<p class="note" style="margin-top:-2px">Every AI tool named across the SDLC phases, what it is and who makes it. The phase tags update live from the SDLC phases / Configure tabs.</p>';
+    h += toolTable();
+    h += '<div style="height:18px"></div>';
+    h += '<div class="sdiv" style="font-size:13px;color:#5a5560;text-transform:none;letter-spacing:0">Glossary of terms</div>';
+    h += glossaryTables();
+    root.innerHTML = h;
+  }
+
+  function injectUI() {
+    // Add the nav button next to the other top-nav buttons.
+    var nav = document.querySelector('.nav');
+    if (nav && !document.getElementById('nav-reference')) {
+      var btn = document.createElement('button');
+      btn.id = 'nav-reference';
+      btn.textContent = 'Reference';
+      btn.addEventListener('click', function() { render(); showTab('reference'); });
+      nav.appendChild(btn);
+    }
+    // Add the tab panel as a sibling of the existing tabs.
+    var srcTab = document.getElementById('tab-sources');
+    if (srcTab && !document.getElementById('tab-reference')) {
+      var tab = document.createElement('div');
+      tab.id = 'tab-reference';
+      tab.className = 'tab';
+      tab.innerHTML = '<div id="reference-root"></div>';
+      srcTab.parentNode.insertBefore(tab, srcTab.nextSibling);
+    }
+    render();
+  }
+
+  return { init: function() { injectUI(); } };
+})();
+Reference.init();
 </script>
 </body>
 </html>
