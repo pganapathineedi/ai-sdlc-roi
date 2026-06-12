@@ -42,12 +42,16 @@ ModuleName.init();
 ## Existing modules
 - **Core app** — tabs, sliders, recalc engine, cost model, config UI
 - **ConfidenceBands** — low/mid/high scenario toggle in Workings tab (injected above slider section)
-- **AgentforceVibes** — 'Agentforce Vibes' tab: story volume + per-story effort calculator (editable benchmarks), Flex credit cost model (defaults to 180 credits/story), live Salesforce Flex credit pricing fetch via Anthropic API web search (`web_search_20260209`), and a manual contracted-rate override. Costs in AUD.
+- **Salesforce tab** — single top-nav 'Salesforce' tab consolidating all SF-specific components, with an inner sub-nav (`.subnav` / `.sfpanel`, switched by the **SalesforceTab** module). Three sub-tabs:
+  - *Add-on licences* — relocated SF add-on cost table (`sf-tbody`, `sf-month`, `sf-year`); still populated by the core `recalc()` from `SF_ADDONS` and feeds the Cost-model roll-up. Editing remains in the Configure tab.
+  - *Agentforce Vibes* — the **AgentforceVibes** module (injects into `vibes-root`): per-story effort calculator (editable benchmarks), Flex credit cost model (defaults to 180 credits/story), live Flex credit pricing fetch via Anthropic API web search (`web_search_20260209`), manual contracted-rate override. AUD.
+  - *Data Cloud* — the **DataCloud** module (injects into `dc-root`): monthly credit consumption by metered type (ingestion/processing, queries & calculated insights, segmentation, activations, identity resolution) + data storage GB/mo, contracted A$/credit & A$/GB rates, live Data Cloud list-price fetch + manual override, annual-cost metrics. Standalone AUD — does NOT feed the USD roll-up (avoids double-counting the `SF_ADDONS` Data Cloud line).
+- **Provenance** — 'Sources & assumptions' tab (injects into `sources-root`). Catalogues every number in the tool in a registry `P[]`, each tagged with a tier: `live` (published vendor price — real source URL, web-refreshable), `bench` (industry study — cited, not daily-live), or `input` (your org assumption — no external source, meant to be edited). Renders grouped-by-category tables with tier badges, publisher links + as-of dates, a rationale column, and a tier filter. A **Refresh live prices from web** button (Anthropic web search on the web build; knowledge-based inside Claude.ai) re-fetches current prices + source URLs for the `live` tier and **applies them back into `SAAS`/`SF_ADDONS`/`LLM_PRICES`** then `recalc()`s. This effectively delivers roadmap modules 2 (Source Footnotes) and 3 (Validate with your data).
 
 ## Modules planned (build in this order)
 1. ~~Confidence Bands~~ DONE
-2. **Source Footnotes** — superscript citations on each benchmark % with a references panel tab
-3. **Validate with your data** — client pilot input fields that override model assumptions with real observed numbers
+2. ~~Source Footnotes~~ DONE (delivered as the **Provenance** / Sources & assumptions tab)
+3. ~~Validate with your data~~ DONE (numbers are editable everywhere; provenance flags `input`-tier assumptions to override)
 
 ## Key globals (used across modules)
 - `PHASES` — live array of SDLC phase objects `{name, pct, aiR, time, tools}`
