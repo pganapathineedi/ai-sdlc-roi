@@ -20,6 +20,11 @@ p{line-height:1.6;color:#5a5560}
 .nav button:hover{border-color:#A100FF;color:#7500C0;background:#faf5ff}
 .nav button.active{background:linear-gradient(120deg,#7500C0,#A100FF);color:#fff;border-color:#7500C0;box-shadow:0 2px 8px rgba(124,0,176,.28)}
 .tab{display:none}.tab.active{display:block;animation:fade .25s ease}
+.subnav{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 16px;padding-bottom:10px;border-bottom:1px solid #eee6f5}
+.subnav button{background:#f7f3fb;border:1px solid #e0d6ee;border-radius:8px;padding:5px 14px;cursor:pointer;color:#6a5a7a;font-size:12px;font-weight:600;transition:all .15s ease}
+.subnav button:hover{border-color:#A100FF;color:#7500C0;background:#fff}
+.subnav button.active{background:linear-gradient(120deg,#7500C0,#A100FF);color:#fff;border-color:#7500C0;box-shadow:0 2px 8px rgba(124,0,176,.22)}
+.sfpanel{display:none}.sfpanel.active{display:block;animation:fade .25s ease}
 @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
 .metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:12px;margin-bottom:16px}
 .metric{background:#fff;border:1px solid #ebe7f0;border-radius:12px;padding:14px;box-shadow:inset 0 3px 0 #A100FF,0 1px 3px rgba(26,19,32,.06);transition:transform .15s ease,box-shadow .15s ease}
@@ -68,6 +73,14 @@ tr:hover td{background:#faf5ff}
 .fbox{background:#faf8fc;border:1px solid #ebe7f0;border-radius:10px;padding:12px;font-size:12px;color:#5a5560;line-height:1.9;margin-bottom:12px}
 .fbox code{background:#f1eef6;padding:1px 5px;border-radius:4px;font-family:monospace;font-size:11px}
 .src{font-size:10px;color:#aaa;font-style:italic}
+.tbadge{display:inline-block;font-size:9.5px;padding:2px 7px;border-radius:6px;font-weight:700;letter-spacing:.3px;white-space:nowrap}
+.tb-live{background:#EAF3DE;color:#3B6D11}
+.tb-bench{background:#E6F1FB;color:#185FA5}
+.tb-input{background:#f0ede8;color:#5F5E5A}
+.slink{font-size:11px;color:#7500C0;text-decoration:none;border-bottom:1px dotted #c9a3e6}
+.slink:hover{color:#A100FF;border-bottom-style:solid}
+.prov-note{font-size:11px;color:#8a8493;line-height:1.6;background:#faf8fc;border:1px solid #eee6f5;border-radius:8px;padding:8px 11px;margin-bottom:12px}
+.styled-tbl td{vertical-align:top}
 .sdiv{font-size:11px;font-weight:600;color:#8a8493;text-transform:uppercase;letter-spacing:.5px;margin:16px 0 8px;padding-bottom:4px;border-bottom:1px solid #ebe7f0}
 .ei{width:72px;border:1px solid #ddd6e6;border-radius:6px;padding:3px 6px;font-size:12px;text-align:right;background:#fff;color:#1a1320}
 .eiw{width:160px;text-align:left}
@@ -112,7 +125,8 @@ select{background:#fff;border:1px solid #ddd6e6;border-radius:6px;padding:5px 9p
   <button id="nav-workings">Workings</button>
   <button id="nav-config">Configure</button>
   <button id="nav-usecase">Use case estimator</button>
-  <button id="nav-vibes">Agentforce Vibes</button>
+  <button id="nav-salesforce">Salesforce</button>
+  <button id="nav-sources">Sources &amp; assumptions</button>
 </div>
 
 <div id="tab-exec" class="tab active">
@@ -154,7 +168,7 @@ select{background:#fff;border:1px solid #ddd6e6;border-radius:6px;padding:5px 9p
 </div>
 
 <div id="tab-costmodel" class="tab">
-  <p class="note">True all-in AI cost. Edit values in Configure tab.</p>
+  <p class="note">True all-in AI cost. Edit values in Configure tab. Every figure's source is listed in the <b>Sources &amp; assumptions</b> tab &mdash; refresh live vendor prices there.</p>
   <div class="sdiv">1 - API / token costs by phase</div>
   <div class="card">
     <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap">
@@ -174,14 +188,7 @@ select{background:#fff;border:1px solid #ddd6e6;border-radius:6px;padding:5px 9p
       <div class="warn" style="flex:1;min-width:120px"><div class="lbl">Annual SaaS cost</div><div class="val" id="saas-year">$0</div></div>
     </div>
   </div>
-  <div class="sdiv">3 - Salesforce add-on costs</div>
-  <div class="card"><div style="overflow-x:auto"><table><thead><tr><th>SF Add-on</th><th>Pricing model</th><th>Unit cost</th><th>Monthly usage</th><th>Monthly $</th><th>Annual $</th><th>Notes</th></tr></thead><tbody id="sf-tbody"></tbody></table></div>
-    <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap">
-      <div class="warn" style="flex:1;min-width:120px"><div class="lbl">Monthly SF cost</div><div class="val" id="sf-month">$0</div></div>
-      <div class="warn" style="flex:1;min-width:120px"><div class="lbl">Annual SF cost</div><div class="val" id="sf-year">$0</div></div>
-    </div>
-  </div>
-  <div class="sdiv">4 - Infrastructure / compute</div>
+  <div class="sdiv">3 - Infrastructure / compute</div>
   <div class="card"><div style="overflow-x:auto"><table><thead><tr><th>Component</th><th>Option</th><th>Monthly</th><th>Annual</th></tr></thead>
     <tbody>
       <tr><td>GPU compute</td><td><select id="gpu-opt"><option value="0">Not applicable</option><option value="2000">AWS p3.2xlarge ~$2k/mo</option><option value="5000">AWS p3.8xlarge ~$5k/mo</option><option value="10000">On-prem A100 ~$10k/mo</option></select></td><td id="gpu-month">$0</td><td id="gpu-year">$0</td></tr>
@@ -193,14 +200,15 @@ select{background:#fff;border:1px solid #ddd6e6;border-radius:6px;padding:5px 9p
       <div class="warn" style="flex:1;min-width:120px"><div class="lbl">Annual infra cost</div><div class="val" id="infra-year">$0</div></div>
     </div>
   </div>
-  <div class="sdiv">5 - Training and enablement</div>
+  <div class="sdiv">4 - Training and enablement</div>
   <div class="card"><div style="overflow-x:auto"><table><thead><tr><th>Item</th><th>Type</th><th>Unit cost</th><th>Units</th><th>One-off $</th><th>Annual $</th></tr></thead><tbody id="train-tbody"></tbody></table></div>
     <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap">
       <div class="warn" style="flex:1;min-width:120px"><div class="lbl">One-off training</div><div class="val" id="train-oneoff">$0</div></div>
       <div class="warn" style="flex:1;min-width:120px"><div class="lbl">Annual training</div><div class="val" id="train-year">$0</div></div>
     </div>
   </div>
-  <div class="sdiv">6 - Total cost roll-up by model</div>
+  <div class="sdiv">5 - Total cost roll-up by model</div>
+  <p class="note" style="margin:2px 0 8px">Salesforce add-on licence costs (Agentforce, Einstein, Data Cloud) are managed in the <b>Salesforce</b> tab and are included in the roll-up below.</p>
   <div class="card" style="overflow-x:auto"><table><thead><tr><th>Cost category</th><th>Crawl</th><th>Walk</th><th>Run</th><th>Fly</th></tr></thead><tbody id="rollup-tbody"></tbody></table></div>
   <div class="metrics" id="cost-summary-metrics"></div>
 </div>
@@ -347,10 +355,39 @@ select{background:#fff;border:1px solid #ddd6e6;border-radius:6px;padding:5px 9p
   </div>
 </div>
 
-<div id="tab-vibes" class="tab">
-  <p class="note">Quantify Agentforce Vibes ROI per user story. Effort and Flex-credit benchmarks are pre-filled from observed delivery data &mdash; edit any cell. Costs shown in AUD.</p>
-  <div id="vibes-root"></div>
-  <div style="text-align:center;margin-top:8px"><span style="font-size:11px;color:#aaa">Indicative figures. Flex credit consumption is illustrative &mdash; validate against your Salesforce licence agreement.</span></div>
+<div id="tab-salesforce" class="tab">
+  <div class="subnav">
+    <button id="sfsub-addons" class="active">Add-on licences</button>
+    <button id="sfsub-vibes">Agentforce Vibes</button>
+    <button id="sfsub-datacloud">Data Cloud</button>
+  </div>
+
+  <div id="sfpanel-addons" class="sfpanel active">
+    <p class="note">Usage-based Salesforce AI add-on licence costs (Agentforce, Einstein, Data Cloud credits). Edit unit cost and monthly usage in the <b>Configure</b> tab; these costs feed the Cost model roll-up.</p>
+    <div class="sdiv">Salesforce add-on costs</div>
+    <div class="card"><div style="overflow-x:auto"><table><thead><tr><th>SF Add-on</th><th>Pricing model</th><th>Unit cost</th><th>Monthly usage</th><th>Monthly $</th><th>Annual $</th><th>Notes</th></tr></thead><tbody id="sf-tbody"></tbody></table></div>
+      <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap">
+        <div class="warn" style="flex:1;min-width:120px"><div class="lbl">Monthly SF cost</div><div class="val" id="sf-month">$0</div></div>
+        <div class="warn" style="flex:1;min-width:120px"><div class="lbl">Annual SF cost</div><div class="val" id="sf-year">$0</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="sfpanel-vibes" class="sfpanel">
+    <p class="note">Quantify Agentforce Vibes ROI per user story. Effort and Flex-credit benchmarks are pre-filled from observed delivery data &mdash; edit any cell. Costs shown in AUD.</p>
+    <div id="vibes-root"></div>
+    <div style="text-align:center;margin-top:8px"><span style="font-size:11px;color:#aaa">Indicative figures. Flex credit consumption is illustrative &mdash; validate against your Salesforce licence agreement.</span></div>
+  </div>
+
+  <div id="sfpanel-datacloud" class="sfpanel">
+    <p class="note">Estimate Salesforce Data Cloud consumption ROI. Data Cloud is metered on consumption credits (data processing, queries, segmentation, activations, identity resolution) plus data storage &mdash; edit any cell. Costs shown in AUD.</p>
+    <div id="dc-root"></div>
+    <div style="text-align:center;margin-top:8px"><span style="font-size:11px;color:#aaa">Indicative figures. Data Cloud credit and storage consumption is illustrative &mdash; validate against your Salesforce licence agreement.</span></div>
+  </div>
+</div>
+
+<div id="tab-sources" class="tab">
+  <div id="sources-root"></div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
@@ -431,7 +468,7 @@ function init() {
   buildConfigUI();
   recalc();
 
-  var navIds = ['exec','phases','models','costmodel','costs','csm','workings','config','usecase'];
+  var navIds = ['exec','phases','models','costmodel','costs','csm','workings','config','usecase','salesforce','sources'];
   navIds.forEach(function(id) {
     document.getElementById('nav-' + id).addEventListener('click', function() { showTab(id); });
   });
@@ -2255,10 +2292,9 @@ var HelpText = (function() {
       var secDesc = {
         '1': 'What you pay LLM providers per token. Driven by tokens per task x model price x tasks/day x adopters - pick your primary model above.',
         '2': 'Per-seat subscriptions for AI dev tools. Add or remove tools in the AI tool catalog on the Configure tab.',
-        '3': 'Usage-based Salesforce AI add-ons (Agentforce, Einstein, Data Cloud).',
-        '4': 'Only relevant if you self-host models. Leave as "Not needed" for a SaaS-only stack.',
-        '5': 'One-off and recurring cost to upskill the team - the one-off here drives the payback period.',
-        '6': 'All-in annual AI cost at each maturity level, side by side.'
+        '3': 'Only relevant if you self-host models. Leave as "Not needed" for a SaaS-only stack.',
+        '4': 'One-off and recurring cost to upskill the team - the one-off here drives the payback period.',
+        '5': 'All-in annual AI cost at each maturity level, side by side.'
       };
       var sdivs = cm.querySelectorAll('.sdiv');
       for (var s = 0; s < sdivs.length; s++) {
@@ -2283,7 +2319,7 @@ HelpText.init();
 // Depends on: document, window.claude (environment detection)
 // Adds: a small fixed build + environment badge so you can tell which copy you are viewing
 var VersionStamp = (function() {
-  var APP_VERSION = 'v2.5';
+  var APP_VERSION = 'v2.7';
   var BUILD_DATE = '2026-06-12';
   function injectUI() {
     var inArtifact = (typeof window.claude !== 'undefined' && window.claude && typeof window.claude.complete === 'function');
@@ -2411,7 +2447,6 @@ var AgentforceVibes = (function() {
     }
 
     // Wire events
-    document.getElementById('nav-vibes').addEventListener('click', function() { showTab('vibes'); });
     document.getElementById('vib-model').addEventListener('change', function() {
       document.getElementById('vib-rate').value = MODEL_RATES[this.value] || 82;
       recalc();
@@ -2589,6 +2624,589 @@ var AgentforceVibes = (function() {
   return { init: function() { injectUI(); } };
 })();
 AgentforceVibes.init();
+
+// MODULE: Salesforce sub-tabs
+// Depends on: document
+// Adds: inner sub-nav switching for the Salesforce tab (Add-on licences / Agentforce Vibes / Data Cloud)
+var SalesforceTab = (function() {
+  var MAP = {
+    'sfsub-addons':    'sfpanel-addons',
+    'sfsub-vibes':     'sfpanel-vibes',
+    'sfsub-datacloud': 'sfpanel-datacloud'
+  };
+  function show(btnId) {
+    var btns = document.querySelectorAll('.subnav button');
+    for (var i = 0; i < btns.length; i++) { btns[i].classList.remove('active'); }
+    var panels = document.querySelectorAll('.sfpanel');
+    for (var j = 0; j < panels.length; j++) { panels[j].classList.remove('active'); }
+    var b = document.getElementById(btnId);
+    var p = document.getElementById(MAP[btnId]);
+    if (b) { b.classList.add('active'); }
+    if (p) { p.classList.add('active'); }
+  }
+  function injectUI() {
+    Object.keys(MAP).forEach(function(btnId) {
+      var b = document.getElementById(btnId);
+      if (b) { b.addEventListener('click', function() { show(btnId); }); }
+    });
+  }
+  return { init: function() { injectUI(); } };
+})();
+SalesforceTab.init();
+
+// MODULE: Data Cloud
+// Depends on: document, sessionStorage, fetch / window.claude.complete
+// Adds: Salesforce Data Cloud consumption + pricing model into #dc-root - monthly credit
+//       consumption by metered type, data storage, contracted A$ rates, live list-price fetch.
+var DataCloud = (function() {
+  // Monthly Data Cloud credit consumption by metered category (illustrative).
+  var CONSUMPTION = [
+    {cat:'Data ingestion & processing',          c:8000},
+    {cat:'Queries & calculated insights',         c:5000},
+    {cat:'Segmentation',                          c:3000},
+    {cat:'Activations',                           c:2000},
+    {cat:'Identity resolution / unification',     c:1500}
+  ];
+  // Default AUD per Data Cloud credit (indicative ~USD 0.01 at ~1.5 FX).
+  var DEFAULT_CREDIT_RATE = 0.015;
+  // Default monthly data storage (GB) and AUD per GB / month (illustrative).
+  var DEFAULT_STORAGE_GB = 50;
+  var DEFAULT_STORAGE_RATE = 0.10;
+
+  function aud(n) { return 'A$' + Math.round(n).toLocaleString(); }
+  function audBig(n) {
+    var a = Math.abs(n);
+    if (a >= 1000000) { return 'A$' + (Math.round(n / 100000) / 10) + 'M'; }
+    if (a >= 1000)    { return 'A$' + Math.round(n / 1000) + 'k'; }
+    return 'A$' + Math.round(n);
+  }
+  function num(id) { var v = parseFloat(document.getElementById(id).value); return isNaN(v) ? 0 : v; }
+
+  function injectUI() {
+    var root = document.getElementById('dc-root');
+    if (!root) { return; }
+    var inArtifact = (typeof window.claude !== 'undefined' && window.claude && typeof window.claude.complete === 'function');
+
+    var h = '';
+
+    // 1 - Monthly consumption
+    h += '<div class="sdiv">1 - Monthly credit consumption</div>';
+    h += '<div class="card">';
+    h += '<div style="overflow-x:auto"><table><thead><tr><th>Data Cloud metered activity</th><th>Credits / month</th></tr></thead><tbody>';
+    CONSUMPTION.forEach(function(c, i) {
+      h += '<tr><td>' + c.cat + '</td>' +
+        '<td><input type="number" class="ei dc-cred" data-i="' + i + '" value="' + c.c + '" min="0" step="100"></td></tr>';
+    });
+    h += '<tr><td><b>Total per month</b></td><td><b id="dc-credits-total">0</b> credits</td></tr>';
+    h += '</tbody></table></div>';
+    h += '</div>';
+
+    // 2 - Pricing & storage
+    h += '<div class="sdiv">2 - Pricing &amp; storage</div>';
+    h += '<div class="card">';
+    h += '<div style="display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end">';
+    h += '<div><div style="font-size:11px;color:#8a8493;margin-bottom:4px">Contracted rate (A$ / credit)</div><input type="number" id="dc-credit-rate" value="' + DEFAULT_CREDIT_RATE + '" min="0" step="0.001" class="ei" style="width:120px"></div>';
+    h += '<div><div style="font-size:11px;color:#8a8493;margin-bottom:4px">Data storage (GB / mo)</div><input type="number" id="dc-storage-gb" value="' + DEFAULT_STORAGE_GB + '" min="0" step="1" class="ei" style="width:120px"></div>';
+    h += '<div><div style="font-size:11px;color:#8a8493;margin-bottom:4px">Storage rate (A$ / GB / mo)</div><input type="number" id="dc-storage-rate" value="' + DEFAULT_STORAGE_RATE + '" min="0" step="0.01" class="ei" style="width:120px"></div>';
+    h += '</div>';
+    h += '<div style="font-size:11px;color:#8a8493;line-height:1.5;margin-top:10px">Manually set your contracted Data Cloud rates, or fetch the latest list price below and apply it.</div>';
+    h += '</div>';
+
+    // 3 - Live pricing fetch
+    h += '<div class="sdiv">3 - Latest Salesforce Data Cloud pricing</div>';
+    h += '<div class="card">';
+    h += '<p style="font-size:12px;color:#5a5560;margin-bottom:10px">Fetch the current published Salesforce Data Cloud credit and storage list price via Claude with live web search.</p>';
+    h += '<div id="dc-apikey-row" style="margin-bottom:10px;display:flex;flex-wrap:wrap;gap:10px;align-items:center">';
+    h += '<div style="font-size:12px;color:#555">Anthropic API key:</div>';
+    h += '<input type="password" id="dc-apikey" placeholder="sk-ant-..." autocomplete="off" style="flex:1;min-width:220px;border:1px solid #d0cdc6;border-radius:6px;padding:4px 8px;font-size:12px;font-family:monospace"></div>';
+    h += '<div id="dc-apikey-note" style="font-size:11px;color:#aaa;margin-bottom:10px">Your key stays in this browser (sent only to Anthropic). Reused from the Use case estimator if already entered.</div>';
+    h += '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">';
+    h += '<button id="dc-fetch" class="abtn">Fetch latest Data Cloud pricing</button>';
+    h += '<div id="dc-fetch-spin" style="display:none;width:16px;height:16px;border:2px solid #e6e1ec;border-top-color:#A100FF;border-radius:50%;animation:spin 0.8s linear infinite"></div>';
+    h += '<span id="dc-fetch-status" style="font-size:12px;color:#8a8493"></span></div>';
+    h += '<div id="dc-price-result" style="display:none;margin-top:12px"></div>';
+    h += '</div>';
+
+    // 4 - Annual impact
+    h += '<div class="sdiv">4 - Annual cost</div>';
+    h += '<div class="metrics" id="dc-metrics"></div>';
+
+    root.innerHTML = h;
+
+    if (inArtifact) {
+      document.getElementById('dc-apikey-row').style.display = 'none';
+      var n = document.getElementById('dc-apikey-note');
+      n.style.color = '#3B6D11';
+      n.textContent = 'Running inside Claude.ai - pricing fetch uses the built-in AI (knowledge-based, not live web).';
+    } else {
+      try {
+        var savedKey = sessionStorage.getItem('uc_api_key');
+        if (savedKey) { document.getElementById('dc-apikey').value = savedKey; }
+      } catch (e) {}
+    }
+
+    // Wire events
+    ['dc-credit-rate', 'dc-storage-gb', 'dc-storage-rate'].forEach(function(id) {
+      document.getElementById(id).addEventListener('input', recalc);
+    });
+    var dyn = document.querySelectorAll('.dc-cred');
+    for (var i = 0; i < dyn.length; i++) { dyn[i].addEventListener('input', recalc); }
+    document.getElementById('dc-fetch').addEventListener('click', fetchPricing);
+
+    recalc();
+  }
+
+  function recalc() {
+    var cred = document.querySelectorAll('.dc-cred');
+    var totalCredits = 0, i;
+    for (i = 0; i < cred.length; i++) { totalCredits += parseFloat(cred[i].value) || 0; }
+    var ct = document.getElementById('dc-credits-total');
+    if (ct) { ct.textContent = Math.round(totalCredits).toLocaleString(); }
+
+    var creditRate = num('dc-credit-rate');
+    var storageGb = num('dc-storage-gb');
+    var storageRate = num('dc-storage-rate');
+
+    var monthlyCreditCost = totalCredits * creditRate;
+    var monthlyStorageCost = storageGb * storageRate;
+    var monthlyTotal = monthlyCreditCost + monthlyStorageCost;
+    var annCreditCost = monthlyCreditCost * 12;
+    var annStorageCost = monthlyStorageCost * 12;
+    var annTotal = monthlyTotal * 12;
+
+    document.getElementById('dc-metrics').innerHTML =
+      '<div class="metric"><div class="lbl">Credit cost / yr</div><div class="val" style="color:#7500C0">' + audBig(annCreditCost) + '</div><div class="sub">' + Math.round(totalCredits * 12).toLocaleString() + ' credits/yr</div></div>' +
+      '<div class="metric"><div class="lbl">Storage cost / yr</div><div class="val" style="color:#185FA5">' + audBig(annStorageCost) + '</div><div class="sub">' + Math.round(storageGb) + ' GB/mo</div></div>' +
+      '<div class="warn"><div class="lbl">Total Data Cloud / mo</div><div class="val">' + aud(monthlyTotal) + '</div><div class="sub">Credits + storage</div></div>' +
+      '<div class="warn"><div class="lbl">Total Data Cloud / yr</div><div class="val">' + audBig(annTotal) + '</div><div class="sub">All-in consumption</div></div>';
+  }
+
+  function fetchStatus(msg) { document.getElementById('dc-fetch-status').textContent = msg; }
+
+  function fetchPricing() {
+    var inArtifact = (typeof window.claude !== 'undefined' && window.claude && typeof window.claude.complete === 'function');
+    var apiKey = inArtifact ? '' : document.getElementById('dc-apikey').value.trim();
+    if (!inArtifact && !apiKey) {
+      alert('Enter your Anthropic API key (sk-ant-...) to fetch live pricing.\n\nTip: open this tool inside the Claude.ai chat to run it without a key.');
+      return;
+    }
+    if (apiKey) { try { sessionStorage.setItem('uc_api_key', apiKey); } catch (e) {} }
+
+    var btn = document.getElementById('dc-fetch');
+    btn.disabled = true;
+    document.getElementById('dc-fetch-spin').style.display = 'inline-block';
+    document.getElementById('dc-price-result').style.display = 'none';
+    fetchStatus(inArtifact ? 'Checking pricing...' : 'Searching the web...');
+
+    var sys = 'You are a Salesforce pricing analyst. Find the current published Salesforce Data Cloud pricing - the consumption-based model priced on Data Cloud Credits plus data storage (per GB). Respond with ONLY a valid JSON object, no markdown and no text outside JSON, matching: {"usdPerCredit": number, "audPerCredit": number, "usdPerGbStorage": number, "audPerGbStorage": number, "summary": "2 sentence plain-English summary", "source": "publisher or URL", "asOf": "approx date"}. Use an approximate USD to AUD rate of 1.5 to derive the AUD figures. Keep strings short.';
+    var userMsg = 'What is the latest Salesforce Data Cloud price per credit and per GB of storage per month? Return JSON only.';
+
+    if (inArtifact) {
+      window.claude.complete(sys + '\n\n' + userMsg)
+        .then(function(raw) { showPricing(raw, btn); })
+        .catch(function(e) { failPricing((e && e.message) ? e.message : String(e), btn); });
+      return;
+    }
+
+    var payload = {
+      model: 'claude-sonnet-4-6',
+      max_tokens: 4000,
+      system: sys,
+      tools: [{type: 'web_search_20260209', name: 'web_search'}],
+      messages: [{role: 'user', content: userMsg}]
+    };
+    fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify(payload)
+    })
+    .then(function(resp) { return resp.json(); })
+    .then(function(data) {
+      if (data.error) { throw new Error(data.error.message); }
+      var raw = '';
+      if (data.content) {
+        for (var i = 0; i < data.content.length; i++) {
+          if (data.content[i].type === 'text' && data.content[i].text) { raw += data.content[i].text; }
+        }
+      }
+      showPricing(raw, btn);
+    })
+    .catch(function(e) { failPricing(e.message, btn); });
+  }
+
+  function parsePricing(raw) {
+    var clean = ('' + raw).replace(/```json/g, '').replace(/```/g, '').trim();
+    try { return JSON.parse(clean); }
+    catch (e) {
+      var open = clean.indexOf('{');
+      var close = clean.lastIndexOf('}');
+      if (open >= 0 && close > open) { return JSON.parse(clean.substring(open, close + 1)); }
+      throw e;
+    }
+  }
+
+  function showPricing(raw, btn) {
+    btn.disabled = false;
+    document.getElementById('dc-fetch-spin').style.display = 'none';
+    var r;
+    try { r = parsePricing(raw); }
+    catch (e) { failPricing('Could not read pricing from the response.', btn); return; }
+    fetchStatus('Done');
+
+    var usd = (typeof r.usdPerCredit === 'number') ? r.usdPerCredit : null;
+    var audc = (typeof r.audPerCredit === 'number') ? r.audPerCredit : (usd != null ? usd * 1.5 : null);
+    var usdGb = (typeof r.usdPerGbStorage === 'number') ? r.usdPerGbStorage : null;
+    var audGb = (typeof r.audPerGbStorage === 'number') ? r.audPerGbStorage : (usdGb != null ? usdGb * 1.5 : null);
+
+    var html = '<div class="fbox" style="margin-bottom:0">';
+    html += '<div style="font-size:11px;color:#7500C0;font-weight:600;margin-bottom:6px">LATEST DATA CLOUD PRICING</div>';
+    if (r.summary) { html += '<div style="margin-bottom:8px;color:#1a1320">' + r.summary + '</div>'; }
+    html += '<div style="line-height:1.9">';
+    if (usd != null)  { html += '<div>USD per credit: <code>$' + usd + '</code></div>'; }
+    if (audc != null) { html += '<div>Est. AUD per credit: <code>A$' + (Math.round(audc * 1000) / 1000) + '</code></div>'; }
+    if (usdGb != null)  { html += '<div>USD per GB storage/mo: <code>$' + usdGb + '</code></div>'; }
+    if (audGb != null)  { html += '<div>Est. AUD per GB storage/mo: <code>A$' + (Math.round(audGb * 1000) / 1000) + '</code></div>'; }
+    if (r.source) { html += '<div class="src">Source: ' + r.source + (r.asOf ? ' (' + r.asOf + ')' : '') + '</div>'; }
+    html += '</div></div>';
+    if (audc != null || audGb != null) {
+      html += '<button id="dc-apply-rate" class="ebtn" style="margin-top:10px" data-credit="' + (audc != null ? (Math.round(audc * 1000) / 1000) : '') + '" data-storage="' + (audGb != null ? (Math.round(audGb * 1000) / 1000) : '') + '">Apply fetched rates as contracted</button>';
+    }
+
+    var box = document.getElementById('dc-price-result');
+    box.innerHTML = html;
+    box.style.display = 'block';
+
+    var applyBtn = document.getElementById('dc-apply-rate');
+    if (applyBtn) {
+      applyBtn.addEventListener('click', function() {
+        var cr = this.getAttribute('data-credit');
+        var sr = this.getAttribute('data-storage');
+        if (cr !== '') { document.getElementById('dc-credit-rate').value = cr; }
+        if (sr !== '') { document.getElementById('dc-storage-rate').value = sr; }
+        recalc();
+        fetchStatus('Applied to contracted rates');
+      });
+    }
+  }
+
+  function failPricing(msg, btn) {
+    btn.disabled = false;
+    document.getElementById('dc-fetch-spin').style.display = 'none';
+    fetchStatus('Error: ' + msg);
+  }
+
+  return { init: function() { injectUI(); } };
+})();
+DataCloud.init();
+
+// MODULE: Provenance (Sources & assumptions)
+// Depends on: showTab, SAAS, SF_ADDONS, LLM_PRICES, recalc, sessionStorage, fetch / window.claude.complete
+// Adds: 'Sources & assumptions' tab cataloguing every number by tier (live price / benchmark /
+//       your input) with publisher links + as-of dates, a tier filter, and a live web price refresh
+//       that updates values + source links and applies fetched prices back into the model.
+var Provenance = (function() {
+  // tier: 'live' = published vendor price (web-refreshable, real URL)
+  //       'bench' = industry benchmark / study (cited, not daily-live)
+  //       'input' = your org's assumption (meant to be edited, no external source)
+  // fid + apply: only on 'live' rows that can be refreshed and written back into the model.
+  var P = [
+    // --- LLM / token pricing ---
+    {cat:'LLM token pricing', label:'Claude Sonnet ($/1M in / out)', val:'$3 / $15', tier:'live', fid:'claude_sonnet', apply:{type:'llm',key:'sonnet'}, src:'Anthropic', url:'https://www.anthropic.com/pricing', asOf:'baseline', why:'Primary model option for code/requirements tasks.'},
+    {cat:'LLM token pricing', label:'Claude Haiku ($/1M in / out)', val:'$0.80 / $4', tier:'live', fid:'claude_haiku', apply:{type:'llm',key:'haiku'}, src:'Anthropic', url:'https://www.anthropic.com/pricing', asOf:'baseline', why:'Low-cost tier for high-volume tasks.'},
+    {cat:'LLM token pricing', label:'Claude Opus ($/1M in / out)', val:'$15 / $75', tier:'live', fid:'claude_opus', apply:{type:'llm',key:'opus'}, src:'Anthropic', url:'https://www.anthropic.com/pricing', asOf:'baseline', why:'Premium tier for hardest reasoning.'},
+    {cat:'LLM token pricing', label:'GPT-4o ($/1M in / out)', val:'$5 / $15', tier:'live', fid:'gpt4o', apply:{type:'llm',key:'gpt4o'}, src:'OpenAI', url:'https://openai.com/api/pricing/', asOf:'baseline', why:'Alternative primary model option.'},
+    {cat:'LLM token pricing', label:'GPT-4o mini ($/1M in / out)', val:'$0.15 / $0.60', tier:'live', fid:'gpt4mini', apply:{type:'llm',key:'gpt4mini'}, src:'OpenAI', url:'https://openai.com/api/pricing/', asOf:'baseline', why:'Low-cost alternative tier.'},
+    // --- SaaS dev-tool licences ---
+    {cat:'SaaS dev-tool licences', label:'GitHub Copilot Business ($/seat/mo)', val:'$19', tier:'live', fid:'copilot_business', apply:{type:'saas',name:'GitHub Copilot Business',field:'rate'}, src:'GitHub', url:'https://github.com/features/copilot/plans', asOf:'baseline', why:'Per-seat AI pair-programming.'},
+    {cat:'SaaS dev-tool licences', label:'GitHub Copilot Enterprise ($/seat/mo)', val:'$39', tier:'live', fid:'copilot_enterprise', apply:{type:'saas',name:'GitHub Copilot Enterprise',field:'rate'}, src:'GitHub', url:'https://github.com/features/copilot/plans', asOf:'baseline', why:'Enterprise tier with org context.'},
+    {cat:'SaaS dev-tool licences', label:'GitLab Duo Pro ($/seat/mo)', val:'$19', tier:'live', fid:'gitlab_duo', apply:{type:'saas',name:'GitLab Duo Pro',field:'rate'}, src:'GitLab', url:'https://about.gitlab.com/pricing/', asOf:'baseline', why:'AI add-on for GitLab.'},
+    {cat:'SaaS dev-tool licences', label:'Notion AI ($/seat/mo)', val:'$10', tier:'live', fid:'notion_ai', apply:{type:'saas',name:'Notion AI',field:'rate'}, src:'Notion', url:'https://www.notion.com/pricing', asOf:'baseline', why:'AI docs/knowledge add-on.'},
+    {cat:'SaaS dev-tool licences', label:'Copado Robotic Testing ($/seat/mo)', val:'$150', tier:'live', fid:'copado', apply:{type:'saas',name:'Copado Robotic Testing',field:'rate'}, src:'Copado', url:'https://www.copado.com/pricing', asOf:'indicative', why:'Salesforce test automation. Vendor pricing is quote-based - figure is indicative.'},
+    {cat:'SaaS dev-tool licences', label:'Mabl / Testim AI ($/seat/mo)', val:'$200', tier:'live', fid:'mabl', apply:{type:'saas',name:'Mabl / Testim AI',field:'rate'}, src:'mabl', url:'https://www.mabl.com/pricing', asOf:'indicative', why:'AI test automation. Quote-based - indicative.'},
+    {cat:'SaaS dev-tool licences', label:'Splunk AI ($/seat/mo)', val:'$300', tier:'live', fid:'splunk', apply:{type:'saas',name:'Splunk AI',field:'rate'}, src:'Splunk', url:'https://www.splunk.com/en_us/products/pricing.html', asOf:'indicative', why:'AIOps / monitoring. Quote-based - indicative.'},
+    // --- Salesforce add-on pricing ---
+    {cat:'Salesforce add-on pricing', label:'Agentforce ($/conversation)', val:'$0.10', tier:'live', fid:'sf_agentforce', apply:{type:'sf',name:'Agentforce',field:'unit'}, src:'Salesforce', url:'https://www.salesforce.com/agentforce/pricing/', asOf:'baseline', why:'Consumption pricing per AI conversation.'},
+    {cat:'Salesforce add-on pricing', label:'Einstein Copilot ($/seat/mo)', val:'$50', tier:'live', fid:'sf_einstein_copilot', apply:{type:'sf',name:'Einstein Copilot seats',field:'unit'}, src:'Salesforce', url:'https://www.salesforce.com/products/einstein-ai-solutions/pricing/', asOf:'baseline', why:'Power-user AI assistant seats.'},
+    {cat:'Salesforce add-on pricing', label:'Einstein for Developers ($/seat/mo)', val:'$25', tier:'live', fid:'sf_einstein_code', apply:{type:'sf',name:'Einstein Code',field:'unit'}, src:'Salesforce', url:'https://www.salesforce.com/products/platform/einstein-for-developers/', asOf:'indicative', why:'Apex/code generation. List price indicative.'},
+    {cat:'Salesforce add-on pricing', label:'Data Cloud credits ($/credit)', val:'$0.012', tier:'live', fid:'sf_datacloud', apply:{type:'sf',name:'Data Cloud credits',field:'unit'}, src:'Salesforce', url:'https://www.salesforce.com/data/pricing/', asOf:'indicative', why:'Consumption pricing per Data Cloud credit. See the Salesforce tab for the detailed consumption model.'},
+    {cat:'Salesforce add-on pricing', label:'Agentforce Flex credits', val:'~A$0.015 / credit', tier:'live', fid:'sf_flex', src:'Salesforce', url:'https://www.salesforce.com/agentforce/pricing/', asOf:'indicative', why:'Used in the Agentforce Vibes model. Refresh on the Salesforce > Agentforce Vibes tab.'},
+    // --- Productivity benchmarks ---
+    {cat:'Productivity benchmarks', label:'AI reduction by SDLC phase (20-50%)', val:'Req 25% / Design 20% / Dev 45% / Test 40% / Deploy 20% / Monitor 25% / Docs 50%', tier:'bench', src:'GitHub Copilot study; McKinsey', url:'https://github.blog/news-insights/research/research-quantifying-github-copilots-impact-on-developer-productivity-and-happiness/', asOf:'2022-2023', why:'GitHub measured ~55% faster on a coding task; phase-level reductions are scaled from that and McKinsey gen-AI estimates - conservative vs the headline.'},
+    {cat:'Productivity benchmarks', label:'Economic potential / uplift context', val:'qualitative', tier:'bench', src:'McKinsey - Economic potential of generative AI', url:'https://www.mckinsey.com/capabilities/mckinsey-digital/our-insights/the-economic-potential-of-generative-ai-the-next-productivity-frontier', asOf:'2023', why:'Supports the magnitude of SDLC productivity gains.'},
+    {cat:'Productivity benchmarks', label:'Agentforce Vibes effort uplift (~30% faster)', val:'22h to 15.5h / story', tier:'bench', src:'Observed delivery sample', url:'', asOf:'internal', why:'Pre-filled from observed delivery data; validate against your own pilots.'},
+    {cat:'Productivity benchmarks', label:'SDLC phase effort distribution', val:'Req 10% / Design 10% / Dev 35% / Test 20% / Deploy 10% / Monitor 10% / Docs 5%', tier:'bench', src:'Industry SDLC effort norms', url:'https://dora.dev/', asOf:'general', why:'Typical effort split across phases; development-heavy. Adjust to your delivery shape.'},
+    // --- Your inputs / assumptions ---
+    {cat:'Your inputs (edit to match your org)', label:'Team size (FTE)', val:'10', tier:'input', src:'Your input', url:'', asOf:'-', why:'Delivery people in scope. Set on the Configure tab.'},
+    {cat:'Your inputs (edit to match your org)', label:'Blended annual rate', val:'$120,000', tier:'input', src:'Your input', url:'', asOf:'-', why:'Fully-loaded average cost per person. Set on the Configure tab.'},
+    {cat:'Your inputs (edit to match your org)', label:'AI adoption rate', val:'70%', tier:'input', src:'Your input', url:'', asOf:'-', why:'Share of the team actively using AI.'},
+    {cat:'Your inputs (edit to match your org)', label:'Quality review overhead', val:'25%', tier:'input', src:'Your input', url:'', asOf:'-', why:'Portion of saved time spent reviewing AI output.'},
+    {cat:'Your inputs (edit to match your org)', label:'Maturity-level cost multipliers', val:'Crawl 0.42 / Walk 0.70 / Run 1.00 / Fly 1.43', tier:'input', src:'Model design', url:'', asOf:'-', why:'How spend scales across Crawl/Walk/Run/Fly - a modelling choice, not a market price.'},
+    {cat:'Your inputs (edit to match your org)', label:'Token usage per task (in/out, tasks/day)', val:'1k-3k in / 0.8k-3k out; 2-25 tasks/day', tier:'input', src:'Usage estimate', url:'', asOf:'-', why:'Estimated per-task token consumption per phase. Tune on the Configure tab.'},
+    {cat:'Your inputs (edit to match your org)', label:'Stories per year (Agentforce Vibes)', val:'500', tier:'input', src:'Your input', url:'', asOf:'-', why:'Annual story volume for the Vibes ROI model.'},
+    {cat:'Your inputs (edit to match your org)', label:'Data Cloud monthly consumption + storage', val:'~19.5k credits/mo + 50 GB', tier:'input', src:'Usage estimate', url:'', asOf:'-', why:'Estimated Data Cloud consumption; depends entirely on your data volumes.'},
+    {cat:'Your inputs (edit to match your org)', label:'Training & enablement costs', val:'$500 workshop / $200 certs / $5k champion prog', tier:'input', src:'Estimate', url:'', asOf:'-', why:'One-off and recurring upskilling spend; adjust to your plan.'}
+  ];
+
+  var TIERS = {
+    live:  {name:'Live price', cls:'tb-live',  desc:'Published vendor list price - has a real source link and can be refreshed from the web below.'},
+    bench: {name:'Benchmark',  cls:'tb-bench', desc:'Industry research / study - cited to a publisher, but not a daily-live figure.'},
+    input: {name:'Your input', cls:'tb-input', desc:'Your organisation assumption - no external source; meant to be edited to match your reality.'}
+  };
+  var filter = 'all';
+
+  function esc(s) { return ('' + s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+  function tierBadge(t) {
+    var ti = TIERS[t];
+    return '<span class="tbadge ' + ti.cls + '">' + ti.name + '</span>';
+  }
+
+  function srcCell(e) {
+    if (e.url) {
+      return '<a class="slink" href="' + e.url + '" target="_blank" rel="noopener">' + esc(e.src) + '</a>' + (e.asOf && e.asOf !== '-' ? ' <span class="src">(' + esc(e.asOf) + ')</span>' : '');
+    }
+    return '<span class="src">' + esc(e.src) + (e.asOf && e.asOf !== '-' ? ' (' + esc(e.asOf) + ')' : '') + '</span>';
+  }
+
+  function injectUI() {
+    var root = document.getElementById('sources-root');
+    if (!root) { return; }
+    var inArtifact = (typeof window.claude !== 'undefined' && window.claude && typeof window.claude.complete === 'function');
+
+    var h = '';
+    h += '<p class="note">Every number in this tool, with where it came from. We pre-populate sensible defaults and show the source for each so the business case is auditable. <b>All values stay editable</b> - prices on the Configure tab, model assumptions across the relevant tabs. Click <b>Refresh live prices</b> to pull current published vendor prices from the web and update both the figures and their source links.</p>';
+
+    // Legend
+    h += '<div class="prov-note">';
+    h += '<b>How to read this:</b><br>';
+    Object.keys(TIERS).forEach(function(k) {
+      h += tierBadge(k) + ' &mdash; ' + TIERS[k].desc + '<br>';
+    });
+    h += '</div>';
+
+    // Filter + refresh controls
+    h += '<div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:12px">';
+    h += '<div style="display:flex;gap:6px;flex-wrap:wrap">';
+    h += '<button class="ebtn prov-filter" data-f="all" style="padding:6px 13px">All</button>';
+    h += '<button class="ebtn prov-filter" data-f="live" style="padding:6px 13px">Live price</button>';
+    h += '<button class="ebtn prov-filter" data-f="bench" style="padding:6px 13px">Benchmark</button>';
+    h += '<button class="ebtn prov-filter" data-f="input" style="padding:6px 13px">Your input</button>';
+    h += '</div>';
+    h += '<div style="flex:1"></div>';
+    h += '<button id="prov-refresh" class="abtn" style="margin-top:0;padding:8px 18px">Refresh live prices from web</button>';
+    h += '<div id="prov-spin" style="display:none;width:16px;height:16px;border:2px solid #e6e1ec;border-top-color:#A100FF;border-radius:50%;animation:spin 0.8s linear infinite"></div>';
+    h += '</div>';
+
+    // API key row (web build only)
+    h += '<div id="prov-apikey-row" style="margin-bottom:10px;display:flex;flex-wrap:wrap;gap:10px;align-items:center">';
+    h += '<div style="font-size:12px;color:#555">Anthropic API key:</div>';
+    h += '<input type="password" id="prov-apikey" placeholder="sk-ant-..." autocomplete="off" style="flex:1;min-width:220px;border:1px solid #d0cdc6;border-radius:6px;padding:4px 8px;font-size:12px;font-family:monospace"></div>';
+    h += '<div id="prov-apikey-note" style="font-size:11px;color:#aaa;margin-bottom:10px">Your key stays in this browser (sent only to Anthropic). Reused from the Use case estimator if already entered.</div>';
+    h += '<div id="prov-status" style="font-size:12px;color:#8a8493;margin-bottom:12px;min-height:16px"></div>';
+
+    h += '<div id="prov-table"></div>';
+
+    root.innerHTML = h;
+
+    if (inArtifact) {
+      document.getElementById('prov-apikey-row').style.display = 'none';
+      var n = document.getElementById('prov-apikey-note');
+      n.style.color = '#3B6D11';
+      n.textContent = 'Running inside Claude.ai - price refresh uses the built-in AI (knowledge-based, not live web links).';
+    } else {
+      try {
+        var savedKey = sessionStorage.getItem('uc_api_key');
+        if (savedKey) { document.getElementById('prov-apikey').value = savedKey; }
+      } catch (e) {}
+    }
+
+    var fbtns = document.querySelectorAll('.prov-filter');
+    for (var i = 0; i < fbtns.length; i++) {
+      (function(b) {
+        b.addEventListener('click', function() { filter = b.getAttribute('data-f'); renderTable(); });
+      })(fbtns[i]);
+    }
+    document.getElementById('prov-refresh').addEventListener('click', refresh);
+
+    renderTable();
+  }
+
+  function renderTable() {
+    var box = document.getElementById('prov-table');
+    if (!box) { return; }
+    // group by category, preserving order
+    var cats = [];
+    P.forEach(function(e) { if (cats.indexOf(e.cat) < 0) { cats.push(e.cat); } });
+
+    var h = '';
+    cats.forEach(function(cat) {
+      var rows = P.filter(function(e) { return e.cat === cat && (filter === 'all' || e.tier === filter); });
+      if (!rows.length) { return; }
+      h += '<div class="sdiv">' + esc(cat) + '</div>';
+      h += '<div class="card" style="padding:0;overflow-x:auto"><table class="styled-tbl"><thead><tr><th>Number</th><th>Value</th><th>Type</th><th>Source</th><th>Why this value</th></tr></thead><tbody>';
+      rows.forEach(function(e) {
+        h += '<tr>' +
+          '<td><b>' + esc(e.label) + '</b></td>' +
+          '<td style="white-space:nowrap">' + esc(e.val) + (e.refreshed ? ' <span class="tbadge tb-live">updated</span>' : '') + '</td>' +
+          '<td>' + tierBadge(e.tier) + '</td>' +
+          '<td>' + srcCell(e) + '</td>' +
+          '<td style="font-size:11px;color:#5a5560;max-width:320px">' + esc(e.why) + '</td>' +
+          '</tr>';
+      });
+      h += '</tbody></table></div>';
+    });
+    box.innerHTML = h;
+  }
+
+  function status(msg) { var s = document.getElementById('prov-status'); if (s) { s.textContent = msg; } }
+
+  function findSaas(name) { for (var i = 0; i < SAAS.length; i++) { if (SAAS[i].name === name) { return i; } } return -1; }
+  function findSf(name)   { for (var i = 0; i < SF_ADDONS.length; i++) { if (SF_ADDONS[i].name === name) { return i; } } return -1; }
+
+  function applyToModel(e, value) {
+    if (!e.apply || typeof value !== 'number' || !isFinite(value)) { return false; }
+    var a = e.apply, idx;
+    if (a.type === 'saas') {
+      idx = findSaas(a.name);
+      if (idx < 0) { return false; }
+      SAAS[idx].rate = value;
+      var cs = document.querySelectorAll('.csrate');
+      if (cs[idx]) { cs[idx].value = value; }
+      return true;
+    }
+    if (a.type === 'sf') {
+      idx = findSf(a.name);
+      if (idx < 0) { return false; }
+      SF_ADDONS[idx].unit = value;
+      var cu = document.querySelectorAll('.csfunit');
+      if (cu[idx]) { cu[idx].value = value; }
+      return true;
+    }
+    if (a.type === 'llm') {
+      if (!LLM_PRICES[a.key]) { return false; }
+      LLM_PRICES[a.key].pIn = value;
+      return true;
+    }
+    return false;
+  }
+
+  function refresh() {
+    var inArtifact = (typeof window.claude !== 'undefined' && window.claude && typeof window.claude.complete === 'function');
+    var apiKey = inArtifact ? '' : document.getElementById('prov-apikey').value.trim();
+    if (!inArtifact && !apiKey) {
+      alert('Enter your Anthropic API key (sk-ant-...) to fetch live prices.\n\nTip: open this tool inside the Claude.ai chat to run it without a key.');
+      return;
+    }
+    if (apiKey) { try { sessionStorage.setItem('uc_api_key', apiKey); } catch (e) {} }
+
+    var btn = document.getElementById('prov-refresh');
+    btn.disabled = true;
+    document.getElementById('prov-spin').style.display = 'inline-block';
+    status(inArtifact ? 'Checking current prices...' : 'Searching the web for current published prices...');
+
+    var ids = [];
+    P.forEach(function(e) { if (e.tier === 'live' && e.fid && e.apply) { ids.push(e.fid); } });
+
+    var sys = 'You are a software pricing analyst. Find the CURRENT published list prices for the requested products. For LLM token prices, report USD per 1,000,000 INPUT tokens. For per-seat tools report USD per seat per month. For Salesforce consumption items report USD per unit (per conversation, per seat, or per credit). Respond with ONLY a valid JSON object, no markdown, matching: {"items":[{"id":"<the id>","value":<number>,"unit":"<short unit>","source":"<publisher>","url":"<source url>","asOf":"<approx month/year>"}]}. Include one entry per requested id. If you cannot find a price, omit that id. Keep strings short.';
+    var userMsg = 'Return current prices as JSON for these ids: ' + ids.join(', ') + '. ' +
+      'ids map to: claude_sonnet/claude_haiku/claude_opus = Anthropic Claude model input token price per 1M; gpt4o/gpt4mini = OpenAI model input token price per 1M; copilot_business/copilot_enterprise = GitHub Copilot per seat/mo; gitlab_duo = GitLab Duo Pro per seat/mo; notion_ai = Notion AI per seat/mo; copado/mabl/splunk = those tools per seat/mo; sf_agentforce = Salesforce Agentforce per conversation; sf_einstein_copilot = Einstein Copilot per seat/mo; sf_einstein_code = Einstein for Developers per seat/mo; sf_datacloud = Salesforce Data Cloud per credit. Return JSON only.';
+
+    if (inArtifact) {
+      window.claude.complete(sys + '\n\n' + userMsg)
+        .then(function(raw) { applyFetched(raw, btn); })
+        .catch(function(e) { fail((e && e.message) ? e.message : String(e), btn); });
+      return;
+    }
+
+    var payload = {
+      model: 'claude-sonnet-4-6',
+      max_tokens: 4000,
+      system: sys,
+      tools: [{type: 'web_search_20260209', name: 'web_search'}],
+      messages: [{role: 'user', content: userMsg}]
+    };
+    fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify(payload)
+    })
+    .then(function(resp) { return resp.json(); })
+    .then(function(data) {
+      if (data.error) { throw new Error(data.error.message); }
+      var raw = '';
+      if (data.content) {
+        for (var i = 0; i < data.content.length; i++) {
+          if (data.content[i].type === 'text' && data.content[i].text) { raw += data.content[i].text; }
+        }
+      }
+      applyFetched(raw, btn);
+    })
+    .catch(function(e) { fail(e.message, btn); });
+  }
+
+  function parseJson(raw) {
+    var clean = ('' + raw).replace(/```json/g, '').replace(/```/g, '').trim();
+    try { return JSON.parse(clean); }
+    catch (e) {
+      var open = clean.indexOf('{');
+      var close = clean.lastIndexOf('}');
+      if (open >= 0 && close > open) { return JSON.parse(clean.substring(open, close + 1)); }
+      throw e;
+    }
+  }
+
+  function entryByFid(fid) { for (var i = 0; i < P.length; i++) { if (P[i].fid === fid) { return P[i]; } } return null; }
+
+  function applyFetched(raw, btn) {
+    btn.disabled = false;
+    document.getElementById('prov-spin').style.display = 'none';
+    var obj;
+    try { obj = parseJson(raw); }
+    catch (e) { fail('Could not read prices from the response.', btn); return; }
+    var items = (obj && obj.items) ? obj.items : [];
+    if (!items.length) { status('No prices returned. Try again or check your key.'); return; }
+
+    var applied = 0;
+    items.forEach(function(it) {
+      var e = entryByFid(it.id);
+      if (!e) { return; }
+      var v = (typeof it.value === 'number') ? it.value : parseFloat(it.value);
+      if (isNaN(v)) { return; }
+      // display value: keep the model's unit string if provided
+      e.val = '$' + v + (it.unit ? ' ' + it.unit : '');
+      if (it.source) { e.src = it.source; }
+      if (it.url) { e.url = it.url; }
+      if (it.asOf) { e.asOf = it.asOf; }
+      e.refreshed = true;
+      if (applyToModel(e, v)) { applied++; }
+    });
+
+    // push applied LLM/SaaS/SF changes through the model
+    phaseChart = null; roiChart = null;
+    recalc();
+    renderTable();
+    status('Updated ' + applied + ' live prices and applied them to the cost model. Source links above now point to what was fetched.');
+  }
+
+  function fail(msg, btn) {
+    btn.disabled = false;
+    document.getElementById('prov-spin').style.display = 'none';
+    status('Error: ' + msg);
+  }
+
+  return { init: function() { injectUI(); } };
+})();
+Provenance.init();
 </script>
 </body>
 </html>
