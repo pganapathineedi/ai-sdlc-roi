@@ -31,81 +31,60 @@ async function sfRest(instanceUrl: string, accessToken: string, path: string): P
   return res.json();
 }
 
+// COUNT() queries return totalSize at the root; records array is always empty.
+// Tooling API does the same. Never read records[0].expr0.
+type SfCountResult = { totalSize: number; records: unknown[] };
+
+function countOf(settled: PromiseSettledResult<SfCountResult>): number {
+  return settled.status === 'fulfilled' ? (settled.value.totalSize || 0) : 0;
+}
+
+function rowsOf(settled: PromiseSettledResult<SfCountResult>): Record<string, unknown>[] {
+  return settled.status === 'fulfilled'
+    ? (settled.value.records as Record<string, unknown>[]) || []
+    : [];
+}
+
 export async function fetchOrgMetadata(instanceUrl: string, accessToken: string): Promise<SfOrgMetadata> {
-  // Run queries in parallel where possible
   const [
-    orgInfo,
-    userCounts,
-    devUserCount,
+    orgResult,
+    activeUserCount,
     apexClassCount,
     apexTriggerCount,
     lwcCount,
     auraCount,
     flowCount,
-    customObjCount,
-    packages,
-    licenses,
+    licenseResult,
   ] = await Promise.allSettled([
-    sfRest(instanceUrl, accessToken, '/services/data/' + SF_VERSION + '/sobjects/Organization/describe').catch(() => ({})),
-    sfQuery(instanceUrl, accessToken, "SELECT COUNT() FROM User WHERE IsActive = true"),
-    sfQuery(instanceUrl, accessToken, "SELECT COUNT() FROM User WHERE IsActive = true AND UserType = 'Standard' AND Profile.UserLicense.Name LIKE '%Developer%'"),
-    sfToolingQuery(instanceUrl, accessToken, "SELECT COUNT() FROM ApexClass WHERE NamespacePrefix = null"),
-    sfToolingQuery(instanceUrl, accessToken, "SELECT COUNT() FROM ApexTrigger WHERE NamespacePrefix = null"),
-    sfToolingQuery(instanceUrl, accessToken, "SELECT COUNT() FROM LightningComponentBundle WHERE NamespacePrefix = null"),
-    sfToolingQuery(instanceUrl, accessToken, "SELECT COUNT() FROM AuraDefinitionBundle WHERE NamespacePrefix = null"),
-    sfQuery(instanceUrl, accessToken, "SELECT COUNT() FROM Flow WHERE NamespacePrefix = null AND Status = 'Active'"),
-    sfRest(instanceUrl, accessToken, '/services/data/' + SF_VERSION + '/describe').then((d: Record<string, unknown>) => {
-      const sobjs = (d.sobjects as Array<{ custom: boolean; name: string }>) || [];
-      return { count: sobjs.filter((o) => o.custom).length };
-    }),
-    sfQuery(instanceUrl, accessToken, "SELECT SubscriberPackage.Name, SubscriberPackage.NamespacePrefix, SubscriberPackageVersion.VersionNumber FROM InstalledSubscriberPackage LIMIT 50"),
-    sfQuery(instanceUrl, accessToken, "SELECT Name, TotalLicenses, UsedLicenses FROM UserLicense ORDER BY UsedLicenses DESC LIMIT 20"),
+    sfQuery(instanceUrl, accessToken, 'SELECT Name, Id, OrganizationType FROM Organization LIMIT 1'),
+    sfQuery(instanceUrl, accessToken, 'SELECT COUNT() FROM User WHERE IsActive = true'),
+    sfToolingQuery(instanceUrl, accessToken, 'SELECT COUNT() FROM ApexClass WHERE NamespacePrefix = null'),
+    sfToolingQuery(instanceUrl, accessToken, 'SELECT COUNT() FROM ApexTrigger WHERE NamespacePrefix = null'),
+    sfToolingQuery(instanceUrl, accessToken, 'SELECT COUNT() FROM LightningComponentBundle WHERE NamespacePrefix = null'),
+    sfToolingQuery(instanceUrl, accessToken, 'SELECT COUNT() FROM AuraDefinitionBundle WHERE NamespacePrefix = null'),
+    // FlowDefinitionView is the correct queryable object for active flows
+    sfQuery(instanceUrl, accessToken, 'SELECT COUNT() FROM FlowDefinitionView WHERE IsActive = true'),
+    sfQuery(instanceUrl, accessToken, 'SELECT Name, TotalLicenses, UsedLicenses FROM UserLicense ORDER BY UsedLicenses DESC LIMIT 20'),
   ]);
 
-  function val<T>(settled: PromiseSettledResult<T>, fallback: T): T {
-    return settled.status === 'fulfilled' ? settled.value : fallback;
-  }
-
-  const orgData = val(orgInfo, {}) as Record<string, unknown>;
-  const userCountData = val(userCounts, { records: [{ expr0: 0 }] }) as { records: Record<string, unknown>[] };
-  const devData = val(devUserCount, { records: [{ expr0: 0 }] }) as { records: Record<string, unknown>[] };
-  const apexData = val(apexClassCount, { records: [{ expr0: 0 }] }) as { records: Record<string, unknown>[] };
-  const triggerData = val(apexTriggerCount, { records: [{ expr0: 0 }] }) as { records: Record<string, unknown>[] };
-  const lwcData = val(lwcCount, { records: [{ expr0: 0 }] }) as { records: Record<string, unknown>[] };
-  const auraData = val(auraCount, { records: [{ expr0: 0 }] }) as { records: Record<string, unknown>[] };
-  const flowData = val(flowCount, { records: [{ expr0: 0 }] }) as { records: Record<string, unknown>[] };
-  const customObjData = val(customObjCount, { count: 0 }) as { count: number };
-  const pkgData = val(packages, { records: [] }) as { records: Record<string, unknown>[] };
-  const licData = val(licenses, { records: [] }) as { records: Record<string, unknown>[] };
-
-  // Fetch org details separately (different endpoint)
-  const orgRes = await sfQuery(instanceUrl, accessToken, "SELECT Name, Id, OrganizationType, InstanceName FROM Organization LIMIT 1").catch(() => ({ records: [] }));
-  const org = orgRes.records[0] as Record<string, unknown> || {};
+  const orgRow = rowsOf(orgResult as PromiseSettledResult<SfCountResult>)[0] as Record<string, unknown> || {};
 
   return {
-    orgName: (org.Name as string) || 'Your Org',
-    orgId: (org.Id as string) || '',
-    orgType: (org.OrganizationType as string) || 'Unknown',
-    edition: (orgData.name as string) || 'Salesforce',
-    totalUsers: (userCountData.records[0]?.expr0 as number) || 0,
-    activeUsers: (userCountData.records[0]?.expr0 as number) || 0,
-    developerUsers: (devData.records[0]?.expr0 as number) || 0,
-    apexClasses: (apexData.records[0]?.expr0 as number) || 0,
-    apexTriggers: (triggerData.records[0]?.expr0 as number) || 0,
-    lwcComponents: (lwcData.records[0]?.expr0 as number) || 0,
-    auraComponents: (auraData.records[0]?.expr0 as number) || 0,
-    flows: (flowData.records[0]?.expr0 as number) || 0,
-    customObjects: customObjData.count || 0,
-    installedPackages: pkgData.records.map((r) => {
-      const pkg = r.SubscriberPackage as Record<string, unknown>;
-      const ver = r.SubscriberPackageVersion as Record<string, unknown>;
-      return {
-        name: (pkg?.Name as string) || '',
-        namespace: (pkg?.NamespacePrefix as string) || '',
-        version: (ver?.VersionNumber as string) || '',
-      };
-    }),
-    sfLicenses: licData.records.map((r) => ({
+    orgName: (orgRow.Name as string) || 'Your Org',
+    orgId: (orgRow.Id as string) || '',
+    orgType: (orgRow.OrganizationType as string) || 'Developer Edition',
+    edition: 'Salesforce',
+    totalUsers: countOf(activeUserCount as PromiseSettledResult<SfCountResult>),
+    activeUsers: countOf(activeUserCount as PromiseSettledResult<SfCountResult>),
+    developerUsers: 0,
+    apexClasses: countOf(apexClassCount as PromiseSettledResult<SfCountResult>),
+    apexTriggers: countOf(apexTriggerCount as PromiseSettledResult<SfCountResult>),
+    lwcComponents: countOf(lwcCount as PromiseSettledResult<SfCountResult>),
+    auraComponents: countOf(auraCount as PromiseSettledResult<SfCountResult>),
+    flows: countOf(flowCount as PromiseSettledResult<SfCountResult>),
+    customObjects: 0,
+    installedPackages: [],
+    sfLicenses: rowsOf(licenseResult as PromiseSettledResult<SfCountResult>).map((r) => ({
       name: (r.Name as string) || '',
       total: (r.TotalLicenses as number) || 0,
       used: (r.UsedLicenses as number) || 0,
