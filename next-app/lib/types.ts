@@ -74,3 +74,68 @@ export interface RoiResult {
   fteSaved: number;
   roiMultiple: number;
 }
+
+// ── Estimator types ──────────────────────────────────────────────────────────
+
+export type AiToolCategory =
+  | 'Code Gen'
+  | 'Test Automation'
+  | 'Requirements'
+  | 'Deployment'
+  | 'Monitoring'
+  | 'Docs'
+  | 'LLM/Agent';
+
+export interface EstimatorTask {
+  phase: string;
+  task: string;
+  description: string;
+  aiTool: string;
+  aiToolCategory: AiToolCategory;
+  manualDays: number;
+  aiDays: number;
+  toolMonthlyCost: number;
+  confidence: 'High' | 'Medium' | 'Low';
+  rationale: string;
+}
+
+export interface ToolchainLayer {
+  layer: string;
+  tool: string;
+  purpose: string;
+  monthlyCost: number;
+  alternatives: string;
+}
+
+export interface EstimatorOption {
+  optionLabel: string;
+  optimizedFor: string;
+  tradeoff: string;
+  title: string;
+  summary: string;
+  complexity: 'Low' | 'Medium' | 'High' | 'Very High';
+  totalManualDays: number;
+  totalAiDays: number;
+  totalManualCost: number;
+  totalAiCost: number;
+  monthlyRunCost: number;
+  deployTimeWeeks: number;
+  aiTimeSavingPct: number;
+  banner: string;
+  tasks: EstimatorTask[];
+  toolchain: ToolchainLayer[];
+  risks: string[];
+  architectureNotes: string[];
+}
+
+export interface EstimatorRequest {
+  usecase: string;
+  fte: number;
+  rate: number;
+  platform: 'salesforce' | 'generic' | 'both';
+  orgContext?: string;
+}
+
+export interface EstimatorResponse {
+  options: EstimatorOption[];
+}
