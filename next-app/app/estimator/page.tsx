@@ -1,8 +1,7 @@
 import { getSession } from '@/lib/session';
 import { fetchOrgMetadata } from '@/lib/salesforce';
-import { estimateFteFromOrg } from '@/lib/calculations';
 import EstimatorClient from '@/components/estimator/EstimatorClient';
-import type { SfOrgMetadata } from '@/lib/types';
+import type { SfOrgMetadata, EstimatorOrgSnapshot } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,28 +13,26 @@ export default async function EstimatorPage() {
     try {
       metadata = await fetchOrgMetadata(session.instanceUrl, session.accessToken);
     } catch {
-      // fall through to defaults
+      // fall through to no-org mode
     }
   }
 
-  const defaultFte = metadata
-    ? estimateFteFromOrg(metadata.apexClasses, metadata.lwcComponents, metadata.flows, metadata.activeUsers)
-    : 5;
-
-  const orgContext = metadata
-    ? metadata.orgName +
-      ' org: ' + metadata.apexClasses + ' Apex classes, ' +
-      metadata.lwcComponents + ' LWC, ' +
-      metadata.flows + ' flows, ' +
-      metadata.activeUsers + ' active users, ' +
-      metadata.customObjects + ' custom objects'
-    : undefined;
+  const orgSnapshot: EstimatorOrgSnapshot | undefined = metadata ? {
+    orgName: metadata.orgName,
+    orgType: metadata.orgType,
+    activeUsers: metadata.activeUsers,
+    apexClasses: metadata.apexClasses,
+    apexTriggers: metadata.apexTriggers,
+    lwcComponents: metadata.lwcComponents,
+    auraComponents: metadata.auraComponents,
+    flows: metadata.flows,
+    sfLicenses: metadata.sfLicenses,
+  } : undefined;
 
   return (
     <EstimatorClient
-      defaultFte={defaultFte}
       orgName={metadata?.orgName}
-      orgContext={orgContext}
+      orgSnapshot={orgSnapshot}
       isConnected={!!session}
     />
   );

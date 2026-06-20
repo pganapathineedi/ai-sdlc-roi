@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import type { EstimatorOption, EstimatorResponse, EstimatorTask, ToolchainLayer } from '@/lib/types';
+import type { EstimatorOption, EstimatorOrgSnapshot, EstimatorResponse, EstimatorTask, ToolchainLayer } from '@/lib/types';
 
 const DEMO_UC =
   'Build an AI-powered Apex code review and quality gate bot for Salesforce that automatically reviews pull requests, enforces coding standards, detects security vulnerabilities in Apex and LWC code, and blocks deployments that fail quality thresholds. The bot should integrate with GitHub Actions and Copado CI/CD pipelines.';
@@ -34,9 +34,8 @@ const TC_FG: Record<string, string> = {
 };
 
 interface Props {
-  defaultFte: number;
   orgName?: string;
-  orgContext?: string;
+  orgSnapshot?: EstimatorOrgSnapshot;
   isConnected: boolean;
 }
 
@@ -52,9 +51,9 @@ function fmt(n: number): string {
   return '$' + Math.round(n).toLocaleString('en-US');
 }
 
-export default function EstimatorClient({ defaultFte, orgName, orgContext, isConnected }: Props) {
+export default function EstimatorClient({ orgName, orgSnapshot, isConnected }: Props) {
   const [usecase, setUsecase] = useState('');
-  const [fte, setFte] = useState(defaultFte);
+  const [fte, setFte] = useState(5);
   const [rate, setRate] = useState(120000);
   const [platform, setPlatform] = useState<'salesforce' | 'generic' | 'both'>('salesforce');
   const [status, setStatus] = useState<Status>('idle');
@@ -79,15 +78,15 @@ export default function EstimatorClient({ defaultFte, orgName, orgContext, isCon
     addLog('Use case: ' + usecase.substring(0, 60) + '...');
     addLog('Platform: ' + platform);
     addLog('Team: ' + fte + ' FTE at $' + rate.toLocaleString() + '/yr');
-    if (orgContext) addLog('Org context: ' + orgContext.substring(0, 80) + '...');
+    if (orgSnapshot) addLog('Org: ' + orgSnapshot.orgName + ' — ' + orgSnapshot.apexClasses + ' Apex, ' + orgSnapshot.flows + ' flows, ' + orgSnapshot.activeUsers + ' users');
 
-    setStatusText('Step 2 of 3 — evaluating AI tools...');
+    setStatusText('Step 2 of 3 — evaluating AI tools against org metadata...');
 
     try {
       const res = await fetch('/api/estimate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ usecase, fte, rate, platform, orgContext }),
+        body: JSON.stringify({ usecase, fte, rate, platform, orgSnapshot }),
       });
 
       setStatusText('Step 3 of 3 — building delivery plan...');
@@ -149,13 +148,38 @@ export default function EstimatorClient({ defaultFte, orgName, orgContext, isCon
         {/* Form card */}
         <div className="bg-white rounded-2xl border border-gray-200 p-6">
           <h1 className="text-lg font-bold text-gray-900 mb-1">AI use case estimator</h1>
-          <p className="text-sm text-gray-500 mb-5">
-            Describe any Salesforce or IT use case. The AI agent breaks it into SDLC tasks, recommends the best
-            AI tools, estimates effort and cost, and produces three delivery options.
-            {isConnected && orgContext && (
-              <span className="text-blue-600"> Estimates are grounded in your {orgName} org metrics.</span>
-            )}
+          <p className="text-sm text-gray-500 mb-4">
+            Describe any Salesforce or IT use case. The AI agent breaks it into SDLC tasks, recommends tools,
+            estimates effort and cost, and produces three delivery options.
           </p>
+
+          {orgSnapshot ? (
+            <div className="flex flex-wrap gap-3 mb-5 bg-blue-50 border border-blue-100 rounded-xl px-4 py-3">
+              <span className="flex items-center gap-1.5 text-xs font-semibold text-blue-700">
+                <span className="w-1.5 h-1.5 bg-green-500 rounded-full" />
+                Grounded in {orgSnapshot.orgName}
+              </span>
+              {[
+                { label: 'Apex classes', val: orgSnapshot.apexClasses },
+                { label: 'LWC', val: orgSnapshot.lwcComponents },
+                { label: 'Aura', val: orgSnapshot.auraComponents },
+                { label: 'Flows', val: orgSnapshot.flows },
+                { label: 'Users', val: orgSnapshot.activeUsers },
+              ].map(item => (
+                <span key={item.label} className="text-xs bg-white border border-blue-200 text-blue-800 px-2 py-0.5 rounded-full">
+                  {item.val} {item.label}
+                </span>
+              ))}
+              <span className="text-xs text-blue-500 ml-auto">Claude will calibrate effort against this org&apos;s real codebase</span>
+            </div>
+          ) : (
+            !isConnected && (
+              <div className="mb-5 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-xs text-amber-800">
+                <span className="font-semibold">No org connected</span> — estimates will use generic Salesforce benchmarks.{' '}
+                <a href="/connect" className="underline">Connect your org</a> to ground estimates in your real codebase.
+              </div>
+            )
+          )}
 
           <textarea
             className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm text-gray-900 resize-y focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400"

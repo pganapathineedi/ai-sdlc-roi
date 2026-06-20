@@ -128,12 +128,24 @@ export interface EstimatorOption {
   architectureNotes: string[];
 }
 
+export interface EstimatorOrgSnapshot {
+  orgName: string;
+  orgType: string;
+  activeUsers: number;
+  apexClasses: number;
+  apexTriggers: number;
+  lwcComponents: number;
+  auraComponents: number;
+  flows: number;
+  sfLicenses: Array<{ name: string; total: number; used: number }>;
+}
+
 export interface EstimatorRequest {
   usecase: string;
   fte: number;
   rate: number;
   platform: 'salesforce' | 'generic' | 'both';
-  orgContext?: string;
+  orgSnapshot?: EstimatorOrgSnapshot;
 }
 
 export interface EstimatorResponse {
