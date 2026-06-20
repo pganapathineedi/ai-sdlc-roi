@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import type { EstimatorOption, EstimatorOrgSnapshot, EstimatorResponse, EstimatorTask, ToolchainLayer } from '@/lib/types';
+import { DEMO_RESPONSE } from '@/lib/demoResponse';
 
 const DEMO_UC =
   'Build an AI-powered Apex code review and quality gate bot for Salesforce that automatically reviews pull requests, enforces coding standards, detects security vulnerabilities in Apex and LWC code, and blocks deployments that fail quality thresholds. The bot should integrate with GitHub Actions and Copado CI/CD pipelines.';
@@ -116,6 +117,19 @@ export default function EstimatorClient({ orgName, orgSnapshot, isConnected }: P
     setFte(3);
     setRate(120000);
     setPlatform('salesforce');
+  }
+
+  function runDemoResponse() {
+    setUsecase(DEMO_UC);
+    setFte(3);
+    setRate(120000);
+    setPlatform('salesforce');
+    setStatus('done');
+    setStatusText('Complete (demo response)');
+    setLog(['Demo mode — pre-built response, no API call made', 'Accenture org: 53 Apex classes, 5 Aura, 3 LWC, 21 users', 'Done — 3 delivery options loaded']);
+    setOptions(DEMO_RESPONSE.options);
+    setActiveIdx(2);
+    setError('');
   }
 
   const activeOption = options && options[activeIdx] ? options[activeIdx] : null;
@@ -234,12 +248,19 @@ export default function EstimatorClient({ orgName, orgSnapshot, isConnected }: P
                 <option value="both">Salesforce + Custom dev</option>
               </select>
             </div>
-            <div className="flex gap-2 ml-auto">
+            <div className="flex gap-2 ml-auto flex-wrap justify-end">
               <button
                 onClick={loadDemo}
                 className="text-sm text-gray-500 hover:text-gray-700 px-4 py-2 rounded-xl border border-gray-300 hover:border-gray-400 transition-colors"
               >
                 Load demo
+              </button>
+              <button
+                onClick={runDemoResponse}
+                className="text-sm text-gray-600 hover:text-gray-800 px-4 py-2 rounded-xl border border-gray-300 hover:border-gray-400 transition-colors bg-gray-50"
+                title="Loads a pre-built result instantly — no API key needed"
+              >
+                Run demo response
               </button>
               <button
                 onClick={runEstimate}
