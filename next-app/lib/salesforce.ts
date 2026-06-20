@@ -113,14 +113,46 @@ export async function fetchOrgMetadata(instanceUrl: string, accessToken: string)
   };
 }
 
-export function buildOAuthUrl(clientId: string, callbackUrl: string, loginUrl: string = 'https://login.salesforce.com'): string {
-  const params = new URLSearchParams({
+// ── PKCE helpers ─────────────────────────────────────────────────────────────
+
+function base64urlEncode(buf: ArrayBuffer): string {
+  return Buffer.from(buf).toString('base64')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=/g, '');
+}
+
+export function generateCodeVerifier(): string {
+  const bytes = new Uint8Array(32);
+  crypto.getRandomValues(bytes);
+  return base64urlEncode(bytes.buffer);
+}
+
+export async function generateCodeChallenge(verifier: string): Promise<string> {
+  const encoded = new TextEncoder().encode(verifier);
+  const hash = await crypto.subtle.digest('SHA-256', encoded);
+  return base64urlEncode(hash);
+}
+
+// ── OAuth helpers ─────────────────────────────────────────────────────────────
+
+export function buildOAuthUrl(
+  clientId: string,
+  callbackUrl: string,
+  loginUrl: string = 'https://login.salesforce.com',
+  codeChallenge?: string,
+): string {
+  const params: Record<string, string> = {
     response_type: 'code',
     client_id: clientId,
     redirect_uri: callbackUrl,
     scope: 'api refresh_token',
-  });
-  return loginUrl + '/services/oauth2/authorize?' + params.toString();
+  };
+  if (codeChallenge) {
+    params.code_challenge = codeChallenge;
+    params.code_challenge_method = 'S256';
+  }
+  return loginUrl + '/services/oauth2/authorize?' + new URLSearchParams(params).toString();
 }
 
 export async function exchangeCodeForToken(
@@ -128,18 +160,23 @@ export async function exchangeCodeForToken(
   clientId: string,
   clientSecret: string,
   callbackUrl: string,
-  loginUrl: string = 'https://login.salesforce.com'
+  loginUrl: string = 'https://login.salesforce.com',
+  codeVerifier?: string,
 ): Promise<{ access_token: string; instance_url: string; id: string }> {
+  const body: Record<string, string> = {
+    grant_type: 'authorization_code',
+    code,
+    client_id: clientId,
+    client_secret: clientSecret,
+    redirect_uri: callbackUrl,
+  };
+  if (codeVerifier) {
+    body.code_verifier = codeVerifier;
+  }
   const res = await fetch(loginUrl + '/services/oauth2/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      grant_type: 'authorization_code',
-      code,
-      client_id: clientId,
-      client_secret: clientSecret,
-      redirect_uri: callbackUrl,
-    }),
+    body: new URLSearchParams(body),
   });
   if (!res.ok) {
     const err = await res.text();

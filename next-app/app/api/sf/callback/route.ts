@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import { exchangeCodeForToken } from '@/lib/salesforce';
 import { encodeSession, SESSION_COOKIE, MAX_AGE } from '@/lib/session';
 
@@ -19,8 +20,12 @@ export async function GET(request: Request) {
     return NextResponse.redirect(origin + '/connect?error=missing_config');
   }
 
+  // Retrieve the PKCE verifier stored during the auth redirect
+  const cookieStore = await cookies();
+  const codeVerifier = cookieStore.get('sf_pkce_verifier')?.value;
+
   try {
-    const token = await exchangeCodeForToken(code, clientId, clientSecret, callbackUrl);
+    const token = await exchangeCodeForToken(code, clientId, clientSecret, callbackUrl, undefined, codeVerifier);
 
     // Fetch user identity
     const idRes = await fetch(token.id, {
@@ -44,6 +49,8 @@ export async function GET(request: Request) {
       maxAge: MAX_AGE,
       path: '/',
     });
+    // Clean up the one-time PKCE verifier cookie
+    response.cookies.delete('sf_pkce_verifier');
     return response;
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'unknown';
