@@ -1276,6 +1276,9 @@ function runEstimator() {
 
   var sysParts = [];
   sysParts.push('You are an expert AI SDLC estimator specialising in ' + pctx + '.');
+  if (window.SF_ORG_SNAPSHOT && typeof window.buildSFOrgGrounding === 'function') {
+    sysParts.push(window.buildSFOrgGrounding(window.SF_ORG_SNAPSHOT));
+  }
   sysParts.push('Produce EXACTLY 3 delivery options for the SAME use case: option 1 optimised for LOWEST COST, option 2 for FASTEST TIME-TO-MARKET, option 3 BALANCED (best overall value). Set each optionLabel to "Lowest cost", "Fastest time-to-market", "Balanced" respectively, and give a one-line tradeoff and a short optimizedFor for each.');
   sysParts.push('CRITICAL numeric ordering across the 3 options (scope is identical, so the numbers MUST be internally consistent): the "Lowest cost" option MUST have the LOWEST totalAiCost and monthlyRunCost of the three. The "Fastest time-to-market" option MUST have the LOWEST deployTimeWeeks and totalAiDays, and normally the HIGHEST totalAiCost (speed is bought with more tooling, licences and parallelism). The "Balanced" option MUST have a totalAiCost AND a deployTimeWeeks that both fall strictly BETWEEN the other two. Never let "Lowest cost" cost more than another option, and never let "Fastest time-to-market" be slower than another option. Re-check these inequalities before responding.');
   if (toolList) {
@@ -1295,6 +1298,7 @@ function runEstimator() {
   ucLog('Use case: ' + usecase.substring(0, 60) + '...');
   ucLog('Platform: ' + pctx);
   ucLog('Team: ' + fte + ' FTE at $' + rate.toLocaleString() + '/yr');
+  if (window.SF_ORG_SNAPSHOT) { ucLog('SF org: ' + (window.SF_ORG_SNAPSHOT.orgName || 'connected') + ' (' + window.SF_ORG_SNAPSHOT.apexClasses + ' Apex classes)'); }
   ucStatus('Step 1 of 3 - parsing use case...');
 
   var userMsg = 'Use case: ' + usecase + '. Team: ' + fte + ' FTE at $' + rate + '/yr. Platform: ' + pctx + '. Return JSON only.';
@@ -3637,6 +3641,516 @@ var Reference = (function() {
   return { init: function() { injectUI(); } };
 })();
 Reference.init();
+
+// MODULE: Snapshot
+// Depends on: getP, calcSaving, totalCost, trainCosts, tokAnn, saasAnn, sfAnn, infraAnn,
+//             PHASES, MODELS_DEF, LEVEL_NAMES, LLM_PRICES, fk, fm, pbFmt, document, window.print
+// Adds: a 'Print / Save as PDF' action on the Executive summary tab that generates a synthesized,
+//       print-ready one-pager: Inputs given -> Modelling done -> Outcomes -> Net total for the customer.
+var Snapshot = (function() {
+  var LLM_LABELS = {
+    sonnet: 'Claude Sonnet', gpt4o: 'GPT-4o', haiku: 'Claude Haiku',
+    gpt4mini: 'GPT-4o mini', opus: 'Claude Opus'
+  };
+
+  function injectStyle() {
+    if (document.getElementById('snap-style')) { return; }
+    var css =
+      '@media screen { #snapshot-sheet { display:none; } }' +
+      '@media print {' +
+      '  body > *:not(#snapshot-sheet) { display:none !important; }' +
+      '  #snapshot-sheet { display:block !important; }' +
+      '  @page { margin: 12mm; }' +
+      '}' +
+      '#snapshot-sheet { font-family:inherit; color:#1a1320; line-height:1.45; }' +
+      '#snapshot-sheet .snap-head { border-bottom:2px solid #A100FF; padding-bottom:8px; margin-bottom:14px; }' +
+      '#snapshot-sheet .snap-head h1 { font-size:19px; margin:0 0 3px; color:#1a1320; }' +
+      '#snapshot-sheet .snap-head .sub { font-size:11px; color:#777; }' +
+      '#snapshot-sheet h2 { font-size:13px; color:#7500C0; margin:16px 0 6px; text-transform:uppercase; letter-spacing:.04em; }' +
+      '#snapshot-sheet .snap-note { font-size:11px; color:#555; margin:0 0 8px; }' +
+      '#snapshot-sheet table { width:100%; border-collapse:collapse; font-size:11px; margin-bottom:4px; }' +
+      '#snapshot-sheet th { text-align:left; color:#888; font-weight:600; border-bottom:1px solid #ddd; padding:4px 6px; }' +
+      '#snapshot-sheet td { padding:4px 6px; border-bottom:1px solid #f0eee9; }' +
+      '#snapshot-sheet tr.tot td { font-weight:700; background:#faf9f6; border-top:1px solid #ccc; }' +
+      '#snapshot-sheet .snap-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:4px; }' +
+      '#snapshot-sheet .snap-kv { display:grid; grid-template-columns:repeat(2,1fr); gap:4px 18px; font-size:11px; }' +
+      '#snapshot-sheet .snap-kv div span { color:#888; }' +
+      '#snapshot-sheet .snap-m { border:1px solid #e6e1ec; border-radius:8px; padding:8px 10px; }' +
+      '#snapshot-sheet .snap-m .lbl { font-size:10px; color:#888; }' +
+      '#snapshot-sheet .snap-m .val { font-size:17px; font-weight:700; }' +
+      '#snapshot-sheet .snap-m .vsub { font-size:10px; color:#999; }' +
+      '#snapshot-sheet .snap-read { background:#faf7ff; border:1px solid #ece3fb; border-left:4px solid #A100FF; border-radius:8px; padding:10px 12px; margin-bottom:6px; }' +
+      '#snapshot-sheet .snap-read .rh { font-size:10px; font-weight:700; color:#7500C0; text-transform:uppercase; letter-spacing:.05em; margin-bottom:4px; }' +
+      '#snapshot-sheet .snap-read p { font-size:12px; margin:0 0 4px; }' +
+      '#snapshot-sheet .snap-read p:last-child { margin-bottom:0; }' +
+      '#snapshot-sheet .snap-syn { font-size:11px; font-style:italic; color:#5a5560; margin:0 0 6px; }' +
+      '#snapshot-sheet .snap-foot { margin-top:18px; padding-top:8px; border-top:1px solid #eee; font-size:9px; color:#aaa; }';
+    var st = document.createElement('style');
+    st.id = 'snap-style';
+    st.textContent = css;
+    document.head.appendChild(st);
+  }
+
+  function metric(lbl, val, sub, color) {
+    return '<div class="snap-m"><div class="lbl">' + lbl + '</div>' +
+      '<div class="val"' + (color ? ' style="color:' + color + '"' : '') + '>' + val + '</div>' +
+      '<div class="vsub">' + (sub || '') + '</div></div>';
+  }
+
+  function build() {
+    var p = getP();
+    var lvl = p.level;
+    var mdl = MODELS_DEF[lvl];
+    var fteSaved = calcSaving(p, lvl);
+    var gross = fteSaved * p.rate;
+    var cost = totalCost(p);
+    var net = gross - cost;
+    var tr = trainCosts(p);
+    var pb = net > 0 ? (tr.oo / Math.max(net, 1)) * 12 : null;
+    var avgEff = 0;
+    PHASES.forEach(function(ph){ avgEff += ph.pct * ph.aiR; });
+    var llmK = document.getElementById('llm-model').value;
+    var llmLbl = LLM_LABELS[llmK] || llmK;
+
+    // ---- synthesis: derive insight from the figures ----
+    var contribs = PHASES.map(function(ph) {
+      var nf = ph.pct * p.fte * ph.aiR * p.adopt * (1 - p.overhead) * mdl.mult;
+      return { name: ph.name, sv: nf * p.rate };
+    }).sort(function(a, b){ return b.sv - a.sv; });
+    var top2 = contribs.slice(0, 2);
+    var top2sv = top2[0].sv + (top2[1] ? top2[1].sv : 0);
+    var top2share = gross > 0 ? Math.round(top2sv / gross * 100) : 0;
+    var top2names = top2.map(function(x){ return x.name; }).join(' + ');
+    var top3names = contribs.slice(0, 3).map(function(x){ return x.name + ' (' + (gross > 0 ? Math.round(x.sv / gross * 100) : 0) + '%)'; }).join(', ');
+    var roiX = cost > 0 ? gross / cost : null;
+
+    var tokC = tokAnn(p), saasC = saasAnn(p), sfC = sfAnn(p), infraC = infraAnn(p), trainC = tr.an;
+    var comps = [
+      {n:'API / token costs', v:tokC}, {n:'SaaS licences', v:saasC}, {n:'Salesforce add-ons', v:sfC},
+      {n:'Infrastructure', v:infraC}, {n:'Training', v:trainC}
+    ].sort(function(a, b){ return b.v - a.v; });
+    var domc = comps[0];
+
+    var best = null;
+    MODELS_DEF.forEach(function(m, i) {
+      var pp2 = Object.assign({}, p, {level: i});
+      var n2 = calcSaving(pp2, i) * p.rate - totalCost(pp2);
+      if (best === null || n2 > best.net) { best = {i: i, name: m.name, net: n2}; }
+    });
+
+    // narrative sentences
+    var nar1 = 'At <b>' + LEVEL_NAMES[lvl] + '</b> maturity, a ' + p.fte + '-person team adopting AI at ' +
+      Math.round(p.adopt * 100) + '% frees about <b>' + fteSaved.toFixed(1) + ' FTE</b> (' + fk(gross) +
+      ' of effort) for <b>' + fk(cost) + '</b> of all-in AI cost.';
+    var nar2;
+    if (net > 0) {
+      nar2 = 'That is a <b>net ' + fk(net) + '/yr</b>' +
+        (pb !== null ? ', recovered in <b>' + pbFmt(pb) + '</b>' : '') +
+        (roiX ? ' &mdash; roughly <b>' + roiX.toFixed(1) + '&times;</b> return on AI spend.' : '.');
+    } else {
+      nar2 = 'At these settings the case is <b>net negative (' + fk(net) + '/yr)</b> &mdash; AI cost exceeds modelled savings. Raise adoption or narrow scope before proceeding.';
+    }
+    var nar3 = 'The benefit is concentrated: <b>' + top2names + '</b> drive about <b>' + top2share + '%</b> of the saving.';
+    var nar4 = (best.i === lvl)
+      ? LEVEL_NAMES[lvl] + ' is also the highest-net model at this team size.'
+      : 'Of the four models, <b>' + best.name + '</b> gives the highest net (' + fk(best.net) + '/yr) on these inputs.';
+
+    // ---- header ----
+    var d = new Date();
+    var dateStr = d.toLocaleDateString(undefined, {year:'numeric', month:'long', day:'numeric'});
+    var html = '<div class="snap-head"><h1>AI in SDLC &mdash; ROI Business Case Summary</h1>' +
+      '<div class="sub">Maturity model: <b>' + LEVEL_NAMES[lvl] + '</b> (' + mdl.label + ') &middot; Generated ' + dateStr + '</div></div>';
+
+    // ---- Executive read (synthesis) ----
+    html += '<div class="snap-read"><div class="rh">Executive read</div>' +
+      '<p>' + nar1 + '</p><p>' + nar2 + '</p><p>' + nar3 + ' ' + nar4 + '</p></div>';
+
+    // ---- 1. Inputs given ----
+    html += '<h2>1 &middot; Inputs given</h2>' +
+      '<div class="snap-kv">' +
+      '<div><span>Baseline team size</span><br><b>' + p.fte + ' FTE</b></div>' +
+      '<div><span>Fully-loaded cost / FTE</span><br><b>' + fm(p.rate) + ' / yr</b></div>' +
+      '<div><span>AI adoption across team</span><br><b>' + Math.round(p.adopt * 100) + '%</b></div>' +
+      '<div><span>Ramp / productivity overhead</span><br><b>' + Math.round(p.overhead * 100) + '%</b></div>' +
+      '<div><span>Maturity model</span><br><b>' + LEVEL_NAMES[lvl] + ' &mdash; ' + mdl.label + '</b></div>' +
+      '<div><span>Primary LLM assumed</span><br><b>' + llmLbl + '</b></div>' +
+      '</div>';
+
+    // ---- 2. Modelling done ----
+    html += '<h2>2 &middot; Modelling done</h2>' +
+      '<p class="snap-note">FTE saved = &Sigma; (phase effort share &times; team size &times; AI reduction &times; adoption &times; (1 &minus; overhead)), ' +
+      'scaled by the chosen maturity model (&times;' + mdl.mult + '). Gross saving = FTE saved &times; loaded rate. ' +
+      'Net benefit = gross saving &minus; all-in annual AI cost.</p>';
+    html += '<!--SYN-MODEL-->';
+    html += '<table><thead><tr><th>SDLC phase</th><th>% effort</th><th>AI reduction</th><th>FTE saved</th><th>$ saved / yr</th></tr></thead><tbody>';
+    var tFte = 0, tSav = 0;
+    PHASES.forEach(function(ph) {
+      var nf = ph.pct * p.fte * ph.aiR * p.adopt * (1 - p.overhead) * mdl.mult;
+      var sv = nf * p.rate;
+      tFte += nf; tSav += sv;
+      html += '<tr><td><b>' + ph.name + '</b></td><td>' + Math.round(ph.pct * 100) + '%</td>' +
+        '<td>' + Math.round(ph.aiR * 100) + '%</td><td>' + nf.toFixed(2) + '</td><td>' + fk(sv) + '</td></tr>';
+    });
+    html += '<tr class="tot"><td>Total</td><td>100%</td><td>~' + Math.round(avgEff * 100) + '% avg</td>' +
+      '<td>' + tFte.toFixed(2) + '</td><td>' + fk(tSav) + '</td></tr>';
+    html += '</tbody></table>';
+
+    // cost components
+    var tok = tokAnn(p), saas = saasAnn(p), sf = sfAnn(p), infra = infraAnn(p), train = tr.an;
+    html += '<table style="margin-top:8px"><thead><tr><th>All-in annual AI cost</th><th>Amount / yr</th></tr></thead><tbody>' +
+      '<tr><td>API / token costs</td><td>' + fk(tok) + '</td></tr>' +
+      '<tr><td>SaaS licences</td><td>' + fk(saas) + '</td></tr>' +
+      '<tr><td>Salesforce add-ons</td><td>' + fk(sf) + '</td></tr>' +
+      '<tr><td>Infrastructure</td><td>' + fk(infra) + '</td></tr>' +
+      '<tr><td>Training (annual)</td><td>' + fk(train) + '</td></tr>' +
+      '<tr class="tot"><td>Total annual AI cost</td><td>' + fk(cost) + '</td></tr>' +
+      '<tr><td>One-off enablement (paid once)</td><td>' + fk(tr.oo) + '</td></tr>' +
+      '</tbody></table>';
+
+    // ---- 3. Outcomes ----
+    html += '<h2>3 &middot; Outcomes (' + LEVEL_NAMES[lvl] + ' model)</h2>' +
+      '<!--SYN-OUT-->' +
+      '<div class="snap-grid">' +
+      metric('Avg effort reduction', Math.round(avgEff * 100) + '%', 'Across all phases', '#7500C0') +
+      metric('FTE freed up', fteSaved.toFixed(1) + ' FTE', 'On baseline team', '#3B6D11') +
+      metric('Gross annual saving', fk(gross), 'Effort value', '#3B6D11') +
+      metric('Total AI cost', fk(cost), 'All-in / yr', '#854F0B') +
+      metric('Net annual benefit', fk(net), 'After all AI costs', net > 0 ? '#3B6D11' : '#B3261E') +
+      metric('Payback period', pbFmt(pb), 'One-off recovery', '#854F0B') +
+      '</div>';
+
+    // ---- 4. Net total for the customer ----
+    html += '<h2>4 &middot; Net total view for the customer</h2>';
+    var net3 = net * 3 - tr.oo;
+    html += '<div class="snap-grid">' +
+      metric('Net benefit / year', fk(net), LEVEL_NAMES[lvl] + ' model', net > 0 ? '#3B6D11' : '#B3261E') +
+      metric('3-year net benefit', fk(net3), 'After one-off enablement', net3 > 0 ? '#3B6D11' : '#B3261E') +
+      metric('Payback period', pbFmt(pb), 'To recover set-up', '#854F0B') +
+      '</div>';
+    html += '<p class="snap-note" style="margin-top:8px">How the maturity models compare on the same inputs:</p>';
+    html += '<table><thead><tr><th>Model</th><th>FTE saved</th><th>Gross / yr</th><th>AI cost / yr</th><th>Net / yr</th><th>3-yr net</th></tr></thead><tbody>';
+    MODELS_DEF.forEach(function(m, i) {
+      var pp = Object.assign({}, p, {level: i});
+      var gFte = calcSaving(pp, i);
+      var gG = gFte * p.rate;
+      var gC = totalCost(pp);
+      var gN = gG - gC;
+      var g3 = gN * 3 - trainCosts(pp).oo;
+      var isCur = (i === lvl);
+      html += '<tr' + (isCur ? ' class="tot"' : '') + '><td>' + m.name + (isCur ? ' (selected)' : '') + (m.rec ? ' &#9733;' : '') + '</td>' +
+        '<td>' + gFte.toFixed(1) + '</td><td>' + fk(gG) + '</td><td>' + fk(gC) + '</td><td>' + fk(gN) + '</td><td>' + fk(g3) + '</td></tr>';
+    });
+    html += '</tbody></table>';
+    html += '<!--SYN-NET-->';
+
+    html += '<div class="snap-foot">Generated from the AI SDLC ROI tool. All figures are modelled estimates based on the inputs above and configurable assumptions; ' +
+      'they are not a quotation. &#9733; = recommended model.</div>';
+
+    // ---- inject per-section synthesis lines ----
+    var synModel = '<p class="snap-syn">Top drivers of the saving: ' + top3names + '.</p>';
+    var synOut = '<p class="snap-syn">' +
+      (net > 0
+        ? 'Net positive at ' + fk(net) + '/yr' + (roiX ? ' (~' + roiX.toFixed(1) + '&times; on AI spend)' : '') + '; payback ' + pbFmt(pb) + '.'
+        : 'Net negative at these settings &mdash; AI cost outweighs modelled savings.') +
+      ' Main cost sensitivity: <b>' + domc.n + '</b> (' + fk(domc.v) + '/yr), the largest line and first to move the net.</p>';
+    var synNet = '<p class="snap-syn">' + nar4 + '</p>';
+    html = html
+      .replace('<!--SYN-MODEL-->', synModel)
+      .replace('<!--SYN-OUT-->', synOut)
+      .replace('<!--SYN-NET-->', synNet);
+
+    return html;
+  }
+
+  function doPrint() {
+    var sheet = document.getElementById('snapshot-sheet');
+    if (!sheet) {
+      sheet = document.createElement('div');
+      sheet.id = 'snapshot-sheet';
+      document.body.appendChild(sheet);
+    }
+    sheet.innerHTML = build();
+    window.print();
+  }
+
+  function injectUI() {
+    injectStyle();
+    var exec = document.getElementById('tab-exec');
+    if (!exec || document.getElementById('snap-btn')) { return; }
+    var bar = document.createElement('div');
+    bar.style.cssText = 'display:flex;justify-content:flex-end;margin-bottom:10px';
+    var btn = document.createElement('button');
+    btn.id = 'snap-btn';
+    btn.className = 'ebtn';
+    btn.innerHTML = '&#128424; Print / Save as PDF';
+    btn.title = 'Generate a one-page printable summary of the current inputs, modelling and outcomes';
+    btn.addEventListener('click', doPrint);
+    bar.appendChild(btn);
+    exec.insertBefore(bar, exec.firstChild);
+  }
+
+  return { init: function() { injectUI(); } };
+})();
+Snapshot.init();
+
+// MODULE: SalesforceConnect
+// Depends on: window.SF_ORG_SNAPSHOT (set here), window.buildSFOrgGrounding (set here)
+// Adds: SF connect card at top of Use case estimator tab; org grounding injected into runEstimator
+var SalesforceConnect = (function() {
+
+  var VERCEL = 'https://aisdlcroi.vercel.app';
+  var CARD_ID = 'sf-connect-card';
+
+  function b64url(arr) {
+    var binary = '';
+    for (var i = 0; i < arr.length; i++) { binary += String.fromCharCode(arr[i]); }
+    return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+  }
+
+  function generateVerifier() {
+    var arr = new Uint8Array(32);
+    crypto.getRandomValues(arr);
+    return b64url(arr);
+  }
+
+  function generateChallenge(verifier) {
+    var enc = new TextEncoder().encode(verifier);
+    return crypto.subtle.digest('SHA-256', enc).then(function(hash) {
+      return b64url(new Uint8Array(hash));
+    });
+  }
+
+  function ss(key, val) {
+    try {
+      if (val === null) { sessionStorage.removeItem(key); }
+      else { sessionStorage.setItem(key, val); }
+    } catch(e) {}
+  }
+
+  function sg(key) {
+    try { return sessionStorage.getItem(key); } catch(e) { return null; }
+  }
+
+  function getCard() { return document.getElementById(CARD_ID); }
+
+  function setCardHtml(html) {
+    var c = getCard();
+    if (c) { c.innerHTML = html; }
+  }
+
+  function showNotConnected() {
+    var h = '<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px">';
+    h += '<div>';
+    h += '<div style="font-weight:600;font-size:13px;color:#1a1320;margin-bottom:4px">Connect your Salesforce org <span style="font-size:11px;font-weight:normal;color:#999">(optional)</span></div>';
+    h += '<div style="font-size:12px;color:#666">Ground estimates in your real codebase: Apex classes, LWC, Aura, flows, users and licences.</div>';
+    h += '</div>';
+    h += '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:4px">';
+    h += '<button id="sf-connect-prod" class="ebtn">Connect Production</button>';
+    h += '<button id="sf-connect-sandbox" class="ebtn">Connect Sandbox</button>';
+    h += '</div></div>';
+    setCardHtml(h);
+    var prodBtn = document.getElementById('sf-connect-prod');
+    var sbBtn = document.getElementById('sf-connect-sandbox');
+    if (prodBtn) { prodBtn.addEventListener('click', function() { startConnect(false); }); }
+    if (sbBtn) { sbBtn.addEventListener('click', function() { startConnect(true); }); }
+  }
+
+  function showConnected(meta) {
+    var licStr = '';
+    if (meta.sfLicenses && meta.sfLicenses.length > 0) {
+      var names = [];
+      for (var i = 0; i < Math.min(meta.sfLicenses.length, 3); i++) {
+        if (meta.sfLicenses[i].used > 0) { names.push(meta.sfLicenses[i].name); }
+      }
+      if (names.length > 0) { licStr = ' &middot; ' + names.join(', '); }
+    }
+    var h = '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">';
+    h += '<div>';
+    h += '<div style="font-weight:600;font-size:13px;color:#1D9E75;margin-bottom:4px">&#10003; Connected: ' + (meta.orgName || 'Salesforce Org') + '</div>';
+    h += '<div style="font-size:12px;color:#555">';
+    h += meta.apexClasses + ' Apex &middot; ' + meta.lwcComponents + ' LWC &middot; ' + meta.auraComponents + ' Aura &middot; ' + meta.flows + ' flows &middot; ' + meta.activeUsers + ' users' + licStr;
+    h += '</div>';
+    h += '<div style="font-size:11px;color:#999;margin-top:3px">Org context will be included in your next estimate.</div>';
+    h += '</div>';
+    h += '<button id="sf-disconnect" class="ebtn" style="font-size:11px">Disconnect</button>';
+    h += '</div>';
+    setCardHtml(h);
+    var discBtn = document.getElementById('sf-disconnect');
+    if (discBtn) { discBtn.addEventListener('click', disconnect); }
+  }
+
+  function showStatus(msg) {
+    setCardHtml(
+      '<div style="font-size:13px;color:#555;display:flex;align-items:center;gap:8px">' +
+      '<div style="width:14px;height:14px;border:2px solid #e6e1ec;border-top-color:#A100FF;border-radius:50%;animation:spin 0.8s linear infinite;flex-shrink:0"></div>' +
+      msg + '</div>'
+    );
+  }
+
+  function showError(msg) {
+    var h = '<div style="font-size:13px;color:#c0392b;margin-bottom:8px">Connection failed: ' + msg + '</div>';
+    h += '<button id="sf-retry" class="ebtn">Try again</button>';
+    setCardHtml(h);
+    var retryBtn = document.getElementById('sf-retry');
+    if (retryBtn) { retryBtn.addEventListener('click', showNotConnected); }
+  }
+
+  function buildOrgGrounding(org) {
+    var lines = [];
+    lines.push('=== CONNECTED SALESFORCE ORG - ground ALL estimates in this real data ===');
+    lines.push('Organisation: ' + org.orgName + ' (' + (org.orgType || 'Salesforce') + ')');
+    lines.push('Active users: ' + org.activeUsers + ' (use as team/stakeholder base signal)');
+    lines.push('');
+    lines.push('EXISTING CODEBASE:');
+    lines.push('  Apex classes: ' + org.apexClasses + (org.apexClasses > 100 ? ' - LARGE codebase, high regression risk' : org.apexClasses > 30 ? ' - moderate codebase' : ' - small codebase'));
+    lines.push('  Apex triggers: ' + org.apexTriggers + (org.apexTriggers > 10 ? ' - significant trigger debt' : org.apexTriggers === 0 ? ' - no trigger debt' : ' - some triggers'));
+    lines.push('  LWC components: ' + org.lwcComponents + (org.lwcComponents === 0 ? ' - no LWC yet, greenfield frontend' : ' - existing LWC to integrate with'));
+    lines.push('  Aura components: ' + org.auraComponents + (org.auraComponents > 0 ? ' - legacy Aura present, migration effort needed' : ''));
+    lines.push('  Active flows: ' + org.flows + (org.flows > 20 ? ' - heavy automation, integration complexity HIGH' : org.flows > 5 ? ' - moderate automation' : ' - light automation'));
+    if (org.sfLicenses && org.sfLicenses.length > 0) {
+      var active = [];
+      for (var i = 0; i < org.sfLicenses.length; i++) {
+        if (org.sfLicenses[i].used > 0) { active.push(org.sfLicenses[i]); }
+      }
+      if (active.length > 0) {
+        lines.push('');
+        lines.push('LICENCES IN USE (set toolMonthlyCost to 0 for tools covered by these):');
+        for (var j = 0; j < Math.min(active.length, 8); j++) {
+          lines.push('  ' + active[j].name + ': ' + active[j].used + '/' + active[j].total + ' seats');
+        }
+      }
+    }
+    lines.push('');
+    lines.push('MANDATORY GROUNDING RULES:');
+    lines.push('1. Scale durations to THIS org: ' + org.apexClasses + ' Apex classes = ramp-up and regression testing time.');
+    lines.push('2. AI tools are MORE effective in an established codebase - reflect higher AI productivity for Apex tasks.');
+    lines.push('3. Prefer tools that work natively with Salesforce. If covered by existing licence, set toolMonthlyCost to 0.');
+    lines.push('4. Include at least one risk specific to this org (e.g. regression against ' + org.apexClasses + ' Apex classes).');
+    if (org.auraComponents > 0) {
+      lines.push('5. Reference the Aura-to-LWC migration consideration (' + org.auraComponents + ' Aura components).');
+    }
+    lines.push('=== END ORG CONTEXT ===');
+    return lines.join('\n');
+  }
+
+  function startConnect(sandbox) {
+    showStatus('Initialising secure connection...');
+    var verifier = generateVerifier();
+    ss('sf_pkce_verifier', verifier);
+    ss('sf_sandbox', sandbox ? '1' : '0');
+    Promise.all([
+      generateChallenge(verifier),
+      fetch(VERCEL + '/api/sf/config').then(function(r) { return r.json(); })
+    ]).then(function(results) {
+      var challenge = results[0];
+      var cfg = results[1];
+      if (cfg.error) { throw new Error(cfg.error); }
+      var redirectUri = window.location.origin + window.location.pathname;
+      var loginUrl = sandbox ? 'https://test.salesforce.com' : 'https://login.salesforce.com';
+      var authUrl = loginUrl + '/services/oauth2/authorize' +
+        '?response_type=code' +
+        '&client_id=' + encodeURIComponent(cfg.clientId) +
+        '&redirect_uri=' + encodeURIComponent(redirectUri) +
+        '&scope=' + encodeURIComponent('api') +
+        '&code_challenge=' + encodeURIComponent(challenge) +
+        '&code_challenge_method=S256';
+      window.location.href = authUrl;
+    }).catch(function(e) {
+      showError((e && e.message) ? e.message : String(e));
+    });
+  }
+
+  function handleCallback() {
+    var params = new URLSearchParams(window.location.search);
+    var code = params.get('code');
+    var sfError = params.get('error');
+    try { history.replaceState({}, document.title, window.location.pathname); } catch(e) {}
+    var navUc = document.getElementById('nav-usecase');
+    if (navUc) { navUc.click(); }
+    if (sfError) {
+      showError('Salesforce returned: ' + sfError);
+      return;
+    }
+    if (!code) { showError('No authorisation code received.'); return; }
+    var verifier = sg('sf_pkce_verifier') || '';
+    var sandbox = sg('sf_sandbox') === '1';
+    ss('sf_pkce_verifier', null);
+    ss('sf_sandbox', null);
+    if (!verifier) {
+      showError('Session expired - please try connecting again.');
+      return;
+    }
+    var redirectUri = window.location.origin + window.location.pathname;
+    showStatus('Exchanging authorisation code...');
+    fetch(VERCEL + '/api/sf/exchange', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: code, codeVerifier: verifier, redirectUri: redirectUri, sandbox: sandbox })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.error) { throw new Error(data.error); }
+      ss('sf_access_token', data.accessToken);
+      ss('sf_instance_url', data.instanceUrl);
+      showStatus('Loading org metadata...');
+      return fetch(VERCEL + '/api/sf/metadata-proxy', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accessToken: data.accessToken, instanceUrl: data.instanceUrl })
+      });
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(meta) {
+      if (meta.error) { throw new Error(meta.error); }
+      ss('sf_org_snapshot', JSON.stringify(meta));
+      window.SF_ORG_SNAPSHOT = meta;
+      showConnected(meta);
+    })
+    .catch(function(e) {
+      showError((e && e.message) ? e.message : String(e));
+    });
+  }
+
+  function disconnect() {
+    ss('sf_access_token', null);
+    ss('sf_instance_url', null);
+    ss('sf_org_snapshot', null);
+    window.SF_ORG_SNAPSHOT = null;
+    showNotConnected();
+  }
+
+  function injectUI() {
+    var tab = document.getElementById('tab-usecase');
+    if (!tab || document.getElementById(CARD_ID)) { return; }
+    var card = document.createElement('div');
+    card.id = CARD_ID;
+    card.className = 'card';
+    card.style.cssText = 'border-left:3px solid #00A1E0;margin-bottom:12px;padding:12px 16px';
+    tab.insertBefore(card, tab.children[1] || null);
+  }
+
+  return {
+    init: function() {
+      injectUI();
+      window.buildSFOrgGrounding = buildOrgGrounding;
+      var snap = sg('sf_org_snapshot');
+      if (snap) {
+        try {
+          window.SF_ORG_SNAPSHOT = JSON.parse(snap);
+          showConnected(window.SF_ORG_SNAPSHOT);
+          return;
+        } catch(e) {}
+      }
+      var params = new URLSearchParams(window.location.search);
+      if (params.get('code') && sg('sf_pkce_verifier')) {
+        handleCallback();
+        return;
+      }
+      showNotConnected();
+    }
+  };
+})();
+SalesforceConnect.init();
 </script>
 </body>
 </html>
