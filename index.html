@@ -4045,7 +4045,7 @@ var SalesforceConnect = (function() {
       var challenge = results[0];
       var cfg = results[1];
       if (cfg.error) { throw new Error(cfg.error); }
-      var redirectUri = window.location.origin + window.location.pathname;
+      var redirectUri = window.location.origin;
       var loginUrl = sandbox ? 'https://test.salesforce.com' : 'https://login.salesforce.com';
       var authUrl = loginUrl + '/services/oauth2/authorize' +
         '?response_type=code' +
@@ -4080,7 +4080,7 @@ var SalesforceConnect = (function() {
       showError('Session expired - please try connecting again.');
       return;
     }
-    var redirectUri = window.location.origin + window.location.pathname;
+    var redirectUri = window.location.origin;
     showStatus('Exchanging authorisation code...');
     fetch(VERCEL + '/api/sf/exchange', {
       method: 'POST',
